@@ -7,6 +7,14 @@ updates:
     groups:
       dependencias:
         patterns: ['*']
+    ignore:
+      # @astrojs/check solo admite TypeScript 5 y 6. Quitar cuando admita la 7.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      # Los tipos deben seguir a la versión de Node del proyecto (.nvmrc: 24 LTS).
+      # Quitar al migrar el proyecto a la siguiente LTS.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     open-pull-requests-limit: 5
 
   - package-ecosystem: github-actions
