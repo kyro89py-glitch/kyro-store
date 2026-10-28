@@ -1,4 +1,5 @@
 ---
+import { getActiveProducts, getCategories } from '../../lib/catalog';
 import { routes } from '../../lib/urls';
 import Wordmark from '../brand/Wordmark.astro';
 import CartToggle from '../cart/CartToggle.astro';
@@ -16,17 +17,21 @@ const nav = [
   { label: 'Marca', href: routes.brand() },
 ];
 const isCurrent = (href: string) => path === href || (href !== routes.home() && path.startsWith(href));
+const categories = getCategories(await getActiveProducts()).map((category) => ({
+  label: category.name,
+  href: routes.category(category.slug),
+}));
 ---
 
 <kyro-header class:list={['site-header', `site-header--${variant}`]}>
   <div class="site-header__inner">
     <nav class="site-header__nav" aria-label="Principal">
-      <MobileMenu links={nav} />
+      <MobileMenu links={nav} categories={categories} />
       <ul class="site-header__links" role="list">
         {
           nav.map((item) => (
             <li>
-              <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+              <a class="nav-link" href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
                 {item.label}
               </a>
             </li>
@@ -86,15 +91,6 @@ const isCurrent = (href: string) => path === href || (href !== routes.home() && 
 
   .site-header__links a {
     font-size: var(--text-sm);
-    font-stretch: 112%;
-    letter-spacing: 0.03em;
-    text-decoration: none;
-  }
-
-  .site-header__links a:hover,
-  .site-header__links a[aria-current='page'] {
-    text-decoration: underline;
-    text-decoration-color: var(--color-champagne);
   }
 
   .site-header__brand {

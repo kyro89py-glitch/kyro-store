@@ -24,6 +24,18 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], baseURL: fixturesURL },
     },
     {
+      name: 'tableta',
+      testIgnore: /production\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 820, height: 1180 },
+        deviceScaleFactor: 2,
+        isMobile: true,
+        hasTouch: true,
+        baseURL: fixturesURL,
+      },
+    },
+    {
       name: 'movil',
       testIgnore: /production\.spec\.ts/,
       use: { ...devices['Pixel 7'], baseURL: fixturesURL },

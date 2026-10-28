@@ -9,6 +9,8 @@ export interface Category {
   name: string;
   slug: string;
   count: number;
+  /** Primera foto del primer producto de la categoría (orden del catálogo). */
+  cover: Product['data']['images'][number] | undefined;
 }
 
 function compareProducts(a: Product, b: Product): number {
@@ -47,15 +49,9 @@ export function getCategories(products: Product[]): Category[] {
     const slug = categorySlug(product);
     const category = categories.get(slug);
     if (category) category.count += 1;
-    else categories.set(slug, { name: product.data.category, slug, count: 1 });
+    else categories.set(slug, { name: product.data.category, slug, count: 1, cover: product.data.images[0] });
   }
   return [...categories.values()].sort((a, b) => a.name.localeCompare(b.name, store.locale));
-}
-
-/** Destacados primero; si no hay ninguno marcado, el orden normal del catálogo. */
-export function getFeatured(products: Product[], limit: number): Product[] {
-  const featured = products.filter((product) => product.data.featured);
-  return (featured.length > 0 ? featured : products).slice(0, limit);
 }
 
 export function isPurchasable(product: Product): boolean {

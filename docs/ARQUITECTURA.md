@@ -36,6 +36,19 @@ navegador: localStorage {sku, cantidad} ──┴──▶ carrito = precios de 
 - Nombres, imágenes y precios del carrito salen siempre de `/catalog.json`, generado en
   el build con los productos activos. En la fase 2 el servidor volverá a calcular todo.
 - Las variantes que dejan de existir se eliminan solas del carrito.
+- La portada se compone solo con datos reales (`lib/catalog-views.ts`): novedades por
+  `releasedAt`, destacados por `featured`, categorías con la primera foto de su catálogo.
+  Una sección sin datos no se muestra.
+- La imagen editorial de la portada vive en su propia colección (`src/content/campaign/`)
+  con procedencia y licencia obligatorias; si es provisional, el sitio muestra el crédito.
+
+## SEO básico
+
+- Título, descripción, `canonical` y Open Graph por página; datos estructurados de
+  `Organization`/`WebSite` en la portada y de `Product` en cada ficha.
+- `robots.txt` y `noindex` bloquean la indexación mientras `store.indexable` sea `false`.
+- `/sitemap.xml` se genera solo cuando la tienda sea indexable y tenga dominio
+  (`KYRO_SITE_URL`); hasta entonces no existe.
 
 ## Seguridad
 
@@ -51,7 +64,8 @@ navegador: localStorage {sku, cantidad} ──┴──▶ carrito = precios de 
 
 ## Accesibilidad y movimiento
 
-- Pruebas automáticas con axe (WCAG 2.2 AA) en todas las páginas y en el panel del carrito.
+- Pruebas automáticas con axe (WCAG 2.2 AA) en todas las páginas y en el panel del
+  carrito, en escritorio, tableta y móvil.
 - Navegación completa por teclado, foco visible en champán, diálogos nativos (`<dialog>`),
   anuncios por `aria-live` al cambiar el carrito.
 - Una sola animación automática (la apertura de la portada). Con `prefers-reduced-motion`

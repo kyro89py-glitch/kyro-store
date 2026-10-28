@@ -1,0 +1,58 @@
+---
+import type { Product } from '../../lib/catalog';
+import ProductCard from './ProductCard.astro';
+
+// Composición editorial: la primera pieza destacada ocupa el doble de espacio.
+interface Props {
+  products: Product[];
+  label: string;
+}
+const { products, label } = Astro.props;
+---
+
+<ul class="featured" role="list" aria-label={label}>
+  {
+    products.map((product, index) => (
+      <li class:list={['featured__item', { 'featured__item--lead': index === 0 }]}>
+        <ProductCard
+          product={product}
+          sizes={
+            index === 0
+              ? '(min-width: 72rem) 45vw, (min-width: 48rem) 62vw, 92vw'
+              : '(min-width: 72rem) 22vw, (min-width: 48rem) 31vw, 46vw'
+          }
+        />
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .featured {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-xl) var(--space-sm);
+  }
+
+  .featured__item--lead {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 48rem) {
+    .featured {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-2xl) var(--space-lg);
+    }
+
+    .featured__item--lead {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+  }
+
+  @media (min-width: 72rem) {
+    .featured {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+</style>
