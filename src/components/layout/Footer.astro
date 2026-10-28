@@ -1,48 +1,75 @@
 ---
+import { copy } from '../../config/copy';
 import { store } from '../../config/store';
+import { getActiveProducts, getCategories } from '../../lib/catalog';
 import { routes } from '../../lib/urls';
 import Wordmark from '../brand/Wordmark.astro';
 
 const year = new Date().getFullYear();
+const categories = getCategories(await getActiveProducts()).slice(0, 6);
+const hasContact = Boolean(store.contact.email) || store.social.length > 0;
 ---
 
 <footer class="site-footer">
   <div class="container site-footer__inner">
-    <a class="site-footer__brand" href={routes.home()} aria-label="KYRO, inicio">
-      <Wordmark />
-    </a>
+    <div class="site-footer__brand">
+      <a class="site-footer__wordmark" href={routes.home()} aria-label="KYRO, inicio">
+        <Wordmark />
+      </a>
+      <p class="site-footer__statement">{copy.footer.statement}</p>
+    </div>
 
     <nav class="site-footer__nav" aria-label="Pie de página">
-      <ul role="list">
-        <li><a href={routes.shop()}>Tienda</a></li>
-        <li><a href={routes.brand()}>Marca</a></li>
-        <li><a href={routes.cart()}>Carrito</a></li>
-      </ul>
-      {
-        store.social.length > 0 && (
-          <ul role="list" aria-label="Redes sociales">
-            {store.social.map((link) => (
+      <div class="site-footer__group">
+        <h2 class="site-footer__heading">Tienda</h2>
+        <ul role="list">
+          <li><a class="nav-link" href={routes.shop()}>Toda la tienda</a></li>
+          {
+            categories.map((category) => (
               <li>
-                <a href={link.url} rel="noopener noreferrer" target="_blank">
-                  {link.label}
+                <a class="nav-link" href={routes.category(category.slug)}>
+                  {category.name}
                 </a>
               </li>
-            ))}
-          </ul>
-        )
-      }
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="site-footer__group">
+        <h2 class="site-footer__heading">KYRO</h2>
+        <ul role="list">
+          <li><a class="nav-link" href={routes.brand()}>La marca</a></li>
+          <li><a class="nav-link" href={routes.cart()}>Carrito</a></li>
+        </ul>
+      </div>
+
       {
-        store.contact.email && (
-          <ul role="list" aria-label="Contacto">
-            <li>
-              <a href={`mailto:${store.contact.email}`}>{store.contact.email}</a>
-            </li>
-          </ul>
+        hasContact && (
+          <div class="site-footer__group">
+            <h2 class="site-footer__heading">Contacto</h2>
+            <ul role="list">
+              {store.contact.email && (
+                <li>
+                  <a class="nav-link" href={`mailto:${store.contact.email}`}>
+                    {store.contact.email}
+                  </a>
+                </li>
+              )}
+              {store.social.map((link) => (
+                <li>
+                  <a class="nav-link" href={link.url} rel="noopener noreferrer" target="_blank">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         )
       }
     </nav>
 
-    <p class="site-footer__legal muted">© {year} {store.name}</p>
+    <p class="site-footer__legal">© {year} {store.name}</p>
   </div>
 </footer>
 
@@ -56,47 +83,67 @@ const year = new Date().getFullYear();
 
   .site-footer__inner {
     display: grid;
-    gap: var(--space-xl);
+    gap: var(--space-2xl);
   }
 
   .site-footer__brand {
-    justify-self: start;
-    font-size: var(--text-xl);
+    display: grid;
+    justify-items: start;
+    gap: var(--space-md);
+  }
+
+  .site-footer__wordmark {
+    font-size: var(--text-2xl);
     text-decoration: none;
   }
 
+  .site-footer__statement {
+    max-width: 24em;
+    color: var(--color-ivory-muted);
+    font-size: var(--text-sm);
+  }
+
   .site-footer__nav {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
     gap: var(--space-xl);
   }
 
-  .site-footer__nav ul {
+  .site-footer__group {
+    display: grid;
+    align-content: start;
+    gap: var(--space-sm);
+  }
+
+  .site-footer__heading {
+    color: var(--color-ivory-muted);
+    font-size: var(--text-xs);
+    font-stretch: 112%;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+  }
+
+  .site-footer__group ul {
     display: grid;
     gap: var(--space-xs);
   }
 
-  .site-footer__nav a {
+  .site-footer__group a {
     font-size: var(--text-sm);
-    font-stretch: 112%;
-    letter-spacing: 0.03em;
-    text-decoration: none;
-  }
-
-  .site-footer__nav a:hover {
-    text-decoration: underline;
-    text-decoration-color: var(--color-champagne);
   }
 
   .site-footer__legal {
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--color-line);
+    color: var(--color-ivory-muted);
     font-size: var(--text-xs);
     letter-spacing: 0.03em;
   }
 
-  @media (min-width: 48rem) {
+  @media (min-width: 60rem) {
     .site-footer__inner {
-      grid-template-columns: 1fr auto;
-      align-items: start;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      column-gap: var(--space-2xl);
     }
 
     .site-footer__legal {

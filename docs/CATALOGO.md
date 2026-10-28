@@ -46,7 +46,8 @@ details:                 # opcional
 composition: Texto de composición   # opcional
 care:                    # opcional
   - Instrucción de cuidado
-featured: false          # opcional; destaca la pieza en la portada
+featured: false          # opcional; la muestra en "Destacados" de la portada
+releasedAt: 2026-01-31   # opcional; fecha REAL de lanzamiento, la muestra en "Novedades"
 position: 0              # opcional; orden en los listados (menor primero)
 ---
 
@@ -65,6 +66,24 @@ Descripción larga opcional, en Markdown.
 | `variants` | Entre 1 y 30. `available` es obligatorio: la tienda nunca supone que hay existencias. |
 | `sku` | Mayúsculas, números y guiones; único en todo el catálogo. |
 | `category` | Genera la URL de la categoría; dos categorías no pueden escribirse distinto y producir la misma URL. |
+| `releasedAt` | Opcional, formato `AAAA-MM-DD`. Usa solo fechas reales de lanzamiento. |
+
+## Cómo se llena la portada
+
+Cada sección aparece solo cuando hay datos reales para ella; nunca se rellena con otros
+productos:
+
+| Sección | Qué muestra |
+| --- | --- |
+| Novedades | Hasta 4 productos con `releasedAt`, del más reciente al más antiguo. |
+| Categorías | Una tarjeta por categoría, con la primera foto del primer producto (según `position`). |
+| Destacados | Hasta 5 productos con `featured: true`; el primero ocupa el doble de espacio. |
+| Colección | Solo si hay productos pero ninguno tiene fecha ni está destacado: los 8 primeros. |
+
+Sin productos activos, la portada muestra "La primera colección está en preparación.".
+
+Las tarjetas indican **Disponible** si al menos una variante tiene `available: true`, y
+**No disponible** si ninguna lo tiene.
 
 Si algo no cumple, `npm run build` falla con un mensaje que indica el campo.
 
@@ -77,13 +96,12 @@ Si algo no cumple, `npm run build` falla con un mensaje que indica el campo.
 - El texto alternativo describe lo que se ve ("Sobrecamisa negra vista de frente, con
   cuello camisero"), no el nombre de marketing.
 
-## Imagen o vídeo de campaña en la portada
+## Imagen editorial de la portada
 
-La apertura de la portada (`src/components/brand/HeroFrame.astro`) acepta una imagen o un
-vídeo en su slot `media`. Hasta que exista material de campaña, muestra la composición
-de luz y grano sin fotografía.
+Se configura aparte, en `src/content/campaign/`. Ver [IMAGENES.md](IMAGENES.md).
 
 ## Probar sin productos reales
 
-`npm run dev:fixtures` arranca el sitio con el catálogo de `tests/fixtures/catalog/`
-(productos ficticios, moneda `XTS` y un aviso visible en todas las páginas).
+`npm run dev:fixtures` arranca el sitio con los datos de `tests/fixtures/` (productos
+ficticios, moneda `XTS`, una imagen de portada abstracta y un aviso visible en todas
+las páginas).

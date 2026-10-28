@@ -45,6 +45,44 @@ test.describe('portada', () => {
     await expect(page).toHaveURL(/\/tienda\/$/);
   });
 
+  test('la imagen de campaña ocupa el encuadre y declara su procedencia', async ({ page }) => {
+    await page.goto('/');
+    const hero = page.locator('.hero');
+    await expect(hero.getByRole('img', { name: 'Imagen abstracta de prueba en tonos grafito y champán' })).toBeVisible();
+    await expect(hero.locator('figcaption')).toContainText('Imagen provisional');
+    await expect(hero.locator('figcaption')).toContainText('uso interno de pruebas');
+  });
+
+  test('secciones en orden: novedades, categorías y destacados', async ({ page }) => {
+    await page.goto('/');
+    const titles = page.getByRole('main').getByRole('heading', { level: 2 });
+    await expect(titles).toHaveText(['Novedades', 'Categorías', 'Destacados']);
+    await expect(page.getByText('La primera colección está en preparación.')).toHaveCount(0);
+  });
+
+  test('novedades: solo productos con fecha, el más reciente primero', async ({ page }) => {
+    await page.goto('/');
+    const names = page.getByRole('list', { name: 'Novedades' }).getByRole('heading', { level: 3 });
+    await expect(names).toHaveText(['Prenda de prueba 2', 'Prenda de prueba 1']);
+  });
+
+  test('categorías: una tarjeta por categoría con su recuento y enlace', async ({ page }) => {
+    await page.goto('/');
+    const tiles = page.getByRole('list', { name: 'Categorías' }).getByRole('link');
+    await expect(tiles).toHaveCount(2);
+    await expect(tiles.first()).toContainText('Categoría de prueba A');
+    await expect(tiles.first()).toContainText('2 piezas');
+    await tiles.nth(1).click();
+    await expect(page).toHaveURL(/\/tienda\/categoria-de-prueba-b\/$/);
+  });
+
+  test('destacados: solo los marcados, el primero en grande', async ({ page }) => {
+    await page.goto('/');
+    const items = page.getByRole('list', { name: 'Destacados' }).getByRole('listitem');
+    await expect(items.getByRole('heading', { level: 3 })).toHaveText(['Prenda de prueba 1', 'Prenda de prueba 4']);
+    await expect(items.first()).toHaveClass(/featured__item--lead/);
+  });
+
   test('con movimiento reducido todo es visible al instante', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
@@ -57,7 +95,7 @@ test.describe('catálogo', () => {
   test('muestra solo productos activos, nunca borradores', async ({ page }) => {
     await page.goto('/tienda/');
     const cards = page.getByRole('list', { name: 'Tienda' }).getByRole('listitem');
-    await expect(cards).toHaveCount(3);
+    await expect(cards).toHaveCount(4);
     await expect(page.getByText('Borrador de prueba')).toHaveCount(0);
     const draft = await page.request.get('/producto/borrador-de-prueba/');
     expect(draft.status()).toBe(404);
@@ -69,6 +107,13 @@ test.describe('catálogo', () => {
     await expect(page).toHaveURL(/\/tienda\/categoria-de-prueba-a\/$/);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Categoría de prueba A');
     await expect(page.getByRole('list', { name: 'Categoría de prueba A' }).getByRole('listitem')).toHaveCount(2);
+  });
+
+  test('las tarjetas muestran la disponibilidad del catálogo', async ({ page }) => {
+    await page.goto('/tienda/');
+    const card = (name: string) => page.getByRole('article').filter({ has: page.getByRole('heading', { name }) });
+    await expect(card('Prenda de prueba 1')).toContainText('Disponible');
+    await expect(card('Prenda de prueba 3')).toContainText('No disponible');
   });
 
   test('marca los productos sin opciones disponibles', async ({ page }) => {
@@ -183,9 +228,22 @@ test.describe('carrito', () => {
   });
 });
 
+test.describe('pie de página', () => {
+  test('enlaza tienda, categorías, marca y carrito; sin contacto inventado', async ({ page }) => {
+    await page.goto('/');
+    const footer = page.getByRole('contentinfo');
+    for (const name of ['Toda la tienda', 'Categoría de prueba A', 'Categoría de prueba B', 'La marca', 'Carrito']) {
+      await expect(footer.getByRole('link', { name, exact: true })).toBeVisible();
+    }
+    // store.contact y store.social están vacíos: no debe aparecer ningún bloque de contacto.
+    await expect(footer.getByRole('heading', { name: 'Contacto' })).toHaveCount(0);
+    await expect(footer.locator('a[href^="mailto:"]')).toHaveCount(0);
+  });
+});
+
 test.describe('menú móvil', () => {
-  test('se abre, navega y se cierra con Escape', async ({ page, isMobile }) => {
-    test.skip(!isMobile, 'solo en móvil');
+  test('se abre, navega y se cierra con Escape', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) >= 768, 'solo en pantallas estrechas');
     await page.goto('/');
     await page.getByRole('button', { name: 'Menú' }).click();
     const menu = page.getByRole('dialog', { name: 'Menú' });
@@ -195,5 +253,14 @@ test.describe('menú móvil', () => {
     await page.getByRole('button', { name: 'Menú' }).click();
     await menu.getByRole('link', { name: 'Tienda' }).click();
     await expect(page).toHaveURL(/\/tienda\/$/);
+  });
+
+  test('incluye las categorías del catálogo', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) >= 768, 'solo en pantallas estrechas');
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Menú' }).click();
+    const menu = page.getByRole('dialog', { name: 'Menú' });
+    await menu.getByRole('link', { name: 'Categoría de prueba A' }).click();
+    await expect(page).toHaveURL(/\/tienda\/categoria-de-prueba-a\/$/);
   });
 });

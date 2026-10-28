@@ -184,11 +184,16 @@ p {
   transition:
     background-color var(--duration-fast) var(--ease-out),
     border-color var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out);
+    color var(--duration-fast) var(--ease-out),
+    translate var(--duration-fast) var(--ease-out);
 }
 
 .button:hover {
   --button-border: var(--color-ivory);
+}
+
+.button:active:not(:disabled) {
+  translate: 0 1px;
 }
 
 .button--primary {
@@ -214,17 +219,45 @@ p {
   cursor: not-allowed;
 }
 
+/*
+ * Enlaces con subrayado animado: al pasar el cursor o enfocar, una línea champán
+ * crece de izquierda a derecha. `.text-link` parte de una línea tenue visible;
+ * `.nav-link` no muestra línea hasta la interacción (o si es la página actual).
+ */
+.text-link,
+.nav-link {
+  --underline-base: transparent;
+
+  padding-bottom: 0.18em;
+  background:
+    linear-gradient(var(--color-champagne), var(--color-champagne)) 0 100% / 0% 1px no-repeat,
+    linear-gradient(var(--underline-base), var(--underline-base)) 0 100% / 100% 1px no-repeat;
+  text-decoration: none;
+  transition: background-size var(--duration-base) var(--ease-out);
+}
+
 .text-link {
+  --underline-base: var(--color-line-strong);
+
   color: var(--color-ivory);
   font-size: var(--text-sm);
   font-stretch: 112%;
   letter-spacing: 0.03em;
-  text-decoration-color: var(--color-line-strong);
-  transition: text-decoration-color var(--duration-fast) var(--ease-out);
 }
 
-.text-link:hover {
-  text-decoration-color: var(--color-champagne);
+.nav-link {
+  font-stretch: 112%;
+  letter-spacing: 0.03em;
+}
+
+.text-link:hover,
+.text-link:focus-visible,
+.nav-link:hover,
+.nav-link:focus-visible,
+.nav-link[aria-current='page'] {
+  background-size:
+    100% 1px,
+    100% 1px;
 }
 
 /* ---------- Diálogos (menú y carrito) ---------- */

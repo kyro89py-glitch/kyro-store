@@ -1,28 +1,68 @@
 ---
+import { Picture } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
 import { copy } from '../../config/copy';
 import { routes } from '../../lib/urls';
 
 /*
  * Apertura de la portada: una cartela de cine. El encuadre se abre desde una
- * rendija hasta un formato real de cine (1.37:1 académico en móvil, 1.85:1 en
- * tableta, 2.39:1 panorámico en escritorio) y el
- * logotipo aparece con un barrido de luz. Es la única animación automática del
- * sitio. Todo es CSS: sin JavaScript y sin coste si se pide movimiento reducido.
+ * rendija hasta un formato real de cine (1.37:1 académico en vertical, 1.85:1 en
+ * tableta horizontal, 2.39:1 panorámico en escritorio) y el logotipo aparece con un barrido
+ * de luz. Es la única animación automática del sitio. Todo es CSS: sin JavaScript
+ * y sin coste si se pide movimiento reducido.
  *
- * Cuando exista fotografía o vídeo de campaña, se coloca en el slot "media" y
- * ocupa el encuadre.
+ * Con una imagen de campaña (src/content/campaign/) la fotografía ocupa el
+ * encuadre; sin ella, una composición de luz y grano. Nunca se usa una imagen sin
+ * procedencia y licencia declaradas.
  */
-const hasMedia = Astro.slots.has('media');
+interface Props {
+  campaign?: CollectionEntry<'campaign'> | undefined;
+}
+const { campaign } = Astro.props;
+const media = campaign?.data;
 ---
 
 <section class="hero" aria-labelledby="hero-title" data-header-sentinel>
-  <div class="hero__frame" data-has-media={hasMedia ? '' : undefined}>
-    {hasMedia ? <slot name="media" /> : <div class="hero__light" aria-hidden="true" />}
-    <div class="hero__grain" aria-hidden="true"></div>
-    <h1 class="hero__title" id="hero-title">
-      <span class="wordmark hero__wordmark">KYRO</span>
-    </h1>
-  </div>
+  <figure class="hero__figure">
+    <div class="hero__frame" data-has-media={media ? '' : undefined}>
+      {
+        media ? (
+          <Picture
+            class:list={['hero__image', `hero__image--${media.focus}`]}
+            src={media.image}
+            alt={media.alt}
+            widths={[640, 960, 1280, 1600, 2000, 2560]}
+            sizes="(min-width: 90rem) 90rem, 100vw"
+            formats={['avif', 'webp']}
+            loading="eager"
+            fetchpriority="high"
+          />
+        ) : (
+          <div class="hero__light" aria-hidden="true" />
+        )
+      }
+      {media && <div class="hero__scrim" aria-hidden="true" />}
+      <div class="hero__grain" aria-hidden="true"></div>
+      <h1 class="hero__title" id="hero-title">
+        <span class="wordmark hero__wordmark">KYRO</span>
+      </h1>
+    </div>
+    {
+      media?.credit && (
+        <figcaption class="hero__credit">
+          {media.provisional ? 'Imagen provisional · ' : 'Fotografía: '}
+          {media.credit.url ? (
+            <a href={media.credit.url} rel="noopener noreferrer" target="_blank">
+              {media.credit.author} / {media.credit.source}
+            </a>
+          ) : (
+            `${media.credit.author} / ${media.credit.source}`
+          )}
+          {` (${media.credit.license})`}
+        </figcaption>
+      )
+    }
+  </figure>
 
   <div class="hero__caption">
     <p class="hero__line editorial-italic">{copy.hero.line}</p>
@@ -34,6 +74,8 @@ const hasMedia = Astro.slots.has('media');
 </section>
 
 <style>
+  /* En vertical (móvil, tableta) el encuadre académico deja ver el comienzo de la
+     tienda; en horizontal la apertura ocupa la pantalla en formato panorámico. */
   .hero {
     --frame-ratio: 1.37;
 
@@ -41,45 +83,100 @@ const hasMedia = Astro.slots.has('media');
     align-content: center;
     justify-items: center;
     gap: var(--space-xl);
-    min-height: 92svh;
-    padding: calc(var(--header-height) + var(--space-lg)) 0 var(--space-2xl);
+    padding: calc(var(--header-height) + var(--space-xl)) 0 var(--space-2xl);
     background: var(--color-obsidian-deep);
   }
 
   @media (min-width: 40rem) {
     .hero {
-      --frame-ratio: 1.85;
-      min-height: 100svh;
       padding-inline: var(--gutter);
     }
   }
 
-  @media (min-width: 64rem) {
+  @media (min-width: 40rem) and (orientation: landscape) {
+    .hero {
+      --frame-ratio: 1.85;
+      min-height: 100svh;
+    }
+  }
+
+  @media (min-width: 64rem) and (orientation: landscape) {
     .hero {
       --frame-ratio: 2.39;
     }
+  }
+
+  .hero__figure {
+    display: grid;
+    gap: var(--space-xs);
+    width: min(100%, var(--max-width), calc((100svh - 18rem) * var(--frame-ratio)));
+    min-width: min(100%, 20rem);
+    margin: 0;
   }
 
   .hero__frame {
     position: relative;
     display: grid;
     place-items: center;
-    width: min(100%, var(--max-width), calc((100svh - 18rem) * var(--frame-ratio)));
-    min-width: min(100%, 20rem);
     aspect-ratio: var(--frame-ratio);
     overflow: hidden;
     background: var(--color-obsidian);
     animation: aperture 1300ms var(--ease-in-out) both;
   }
 
-  .hero__frame > :global(img),
-  .hero__frame > :global(picture),
-  .hero__frame > :global(video) {
+  .hero__frame > :global(picture) {
     position: absolute;
     inset: 0;
+  }
+
+  .hero__frame :global(.hero__image) {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    animation: settle 2600ms var(--ease-out) both;
+  }
+
+  .hero__frame :global(.hero__image--top) {
+    object-position: 50% 15%;
+  }
+
+  .hero__frame :global(.hero__image--bottom) {
+    object-position: 50% 85%;
+  }
+
+  .hero__frame :global(.hero__image--left) {
+    object-position: 20% 50%;
+  }
+
+  .hero__frame :global(.hero__image--right) {
+    object-position: 80% 50%;
+  }
+
+  /* Velo para que el logotipo se lea sobre cualquier fotografía. */
+  .hero__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 55% at 50% 50%, rgb(8 9 10 / 0.42), transparent 75%),
+      linear-gradient(180deg, rgb(8 9 10 / 0.15), rgb(8 9 10 / 0.45));
+  }
+
+  .hero__credit {
+    padding-inline: var(--gutter);
+    color: var(--color-ivory-muted);
+    font-size: var(--text-xs);
+    letter-spacing: 0.02em;
+    text-align: right;
+  }
+
+  @media (min-width: 40rem) {
+    .hero__credit {
+      padding-inline: 0;
+    }
+  }
+
+  .hero__credit a {
+    text-decoration-color: var(--color-line-strong);
   }
 
   /* Luz de proyector: un foco cálido y un destello anamórfico horizontal. */
@@ -162,6 +259,15 @@ const hasMedia = Astro.slots.has('media');
     }
     to {
       clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes settle {
+    from {
+      scale: 1.06;
+    }
+    to {
+      scale: 1;
     }
   }
 

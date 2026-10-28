@@ -15,5 +15,6 @@ variants:
   - sku: TEST-002-U
     label: Única
     available: true
+releasedAt: 2026-10-15
 position: 2
 ---

@@ -15,6 +15,29 @@ test('sin productos, la portada y la tienda muestran el estado vacío', async ({
   expect(errors).toEqual([]);
 });
 
+test('sin datos, la portada no muestra secciones vacías ni imagen de campaña', async ({ page }) => {
+  await page.goto('/');
+  const titles = page.getByRole('main').getByRole('heading', { level: 2 });
+  await expect(titles).toHaveText(['Colección']);
+  await expect(page.locator('.hero img')).toHaveCount(0);
+  await expect(page.locator('.hero figcaption')).toHaveCount(0);
+});
+
+test('el pie de página no inventa categorías ni contacto', async ({ page }) => {
+  await page.goto('/');
+  const footer = page.getByRole('contentinfo');
+  await expect(footer.getByRole('link', { name: 'Toda la tienda' })).toBeVisible();
+  await expect(footer.getByRole('link', { name: /Categoría/ })).toHaveCount(0);
+  await expect(footer.getByRole('heading', { name: 'Contacto' })).toHaveCount(0);
+});
+
+test('no hay sitemap mientras la tienda no se lance', async ({ page }) => {
+  const sitemap = await page.request.get('/sitemap.xml');
+  expect(sitemap.status()).toBe(404);
+  const robots = await (await page.request.get('/robots.txt')).text();
+  expect(robots).not.toContain('Sitemap:');
+});
+
 test('ningún producto de prueba se cuela en producción', async ({ page }) => {
   const catalog = await (await page.request.get('/catalog.json')).json();
   expect(catalog).toEqual({ version: 1, currency: null, variants: {} });

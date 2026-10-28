@@ -9,11 +9,17 @@ interface Props {
   /** true para las primeras tarjetas visibles: se cargan sin esperar. */
   priority?: boolean;
   headingLevel?: 'h2' | 'h3' | undefined;
+  /** Ancho que ocupa la tarjeta, para elegir la imagen adecuada. */
+  sizes?: string | undefined;
 }
-const { product, priority = false, headingLevel: Heading = 'h3' } = Astro.props;
+const {
+  product,
+  priority = false,
+  headingLevel: Heading = 'h3',
+  sizes = '(min-width: 72rem) 22vw, (min-width: 48rem) 31vw, 46vw',
+} = Astro.props;
 const [cover, alternate] = product.data.images;
 const purchasable = isPurchasable(product);
-const sizes = '(min-width: 72rem) 22vw, (min-width: 48rem) 31vw, 46vw';
 const widths = [320, 480, 640, 800, 1000];
 ---
 
@@ -53,7 +59,9 @@ const widths = [320, 480, 640, 800, 1000];
       <p class="product-card__price">
         <Price amount={product.data.price.amount} currency={product.data.price.currency} />
       </p>
-      {!purchasable && <p class="product-card__status">No disponible</p>}
+      <p class="product-card__availability" data-available={purchasable ? 'true' : 'false'}>
+        {purchasable ? 'Disponible' : 'No disponible'}
+      </p>
     </div>
   </a>
 </article>
@@ -126,8 +134,14 @@ const widths = [320, 480, 640, 800, 1000];
     color: var(--color-ivory-muted);
   }
 
-  .product-card__status {
+  /* Sale de `available` en el catálogo; nunca se supone stock. */
+  .product-card__availability {
     font-size: var(--text-xs);
+    letter-spacing: 0.02em;
+    color: var(--color-ivory-muted);
+  }
+
+  .product-card__availability[data-available='false'] {
     color: var(--color-champagne);
   }
 

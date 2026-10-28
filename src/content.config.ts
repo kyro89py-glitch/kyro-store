@@ -15,9 +15,10 @@ import { z } from 'astro/zod';
  * producto no puede publicarse incompleto. Ver docs/CATALOGO.md.
  */
 
-// Con KYRO_CATALOG=fixtures se usa el catálogo de prueba (nunca en producción).
-const catalogBase =
-  process.env.KYRO_CATALOG === 'fixtures' ? './tests/fixtures/catalog' : './src/content/products';
+// Con KYRO_CATALOG=fixtures se usan los datos de prueba (nunca en producción).
+const useFixtures = process.env.KYRO_CATALOG === 'fixtures';
+const catalogBase = useFixtures ? './tests/fixtures/catalog' : './src/content/products';
+const campaignBase = useFixtures ? './tests/fixtures/campaign' : './src/content/campaign';
 
 const products = defineCollection({
   loader: glob({
@@ -69,6 +70,8 @@ const products = defineCollection({
         composition: z.string().trim().min(1).optional(),
         care: z.array(z.string().trim().min(1)).max(20).default([]),
         featured: z.boolean().default(false),
+        /** Fecha real de lanzamiento (AAAA-MM-DD). Solo los productos con fecha aparecen en "Novedades". */
+        releasedAt: z.coerce.date().optional(),
         /** Orden en listados (menor primero). */
         position: z.number().int().default(0),
       })
@@ -87,4 +90,45 @@ const products = defineCollection({
       }),
 });
 
-export const collections = { products };
+/**
+ * Imágenes de campaña (por ahora, la imagen editorial de la portada).
+ *
+ *   src/content/campaign/portada.md + la fotografía en la misma carpeta
+ *
+ * Toda imagen debe declarar su procedencia y licencia. Una imagen que no sea de KYRO
+ * se marca como provisional y el sitio muestra su crédito. Ver docs/IMAGENES.md.
+ */
+const campaign = defineCollection({
+  // README.md documenta la carpeta y no es una imagen de campaña.
+  loader: glob({ pattern: ['*.md', '!README.md'], base: campaignBase }),
+  schema: ({ image }) =>
+    z
+      .object({
+        placement: z.literal('hero'),
+        image: image(),
+        alt: z.string().trim().min(1, 'La imagen necesita texto alternativo').max(200),
+        /** Zona de la foto que se conserva al recortar en móvil y escritorio. */
+        focus: z.enum(['center', 'top', 'bottom', 'left', 'right']).default('center'),
+        /** true si no es fotografía propia de KYRO (banco de imágenes, prueba…). */
+        provisional: z.boolean(),
+        credit: z
+          .object({
+            author: z.string().trim().min(1),
+            source: z.string().trim().min(1),
+            license: z.string().trim().min(1),
+            url: z.url().optional(),
+          })
+          .optional(),
+      })
+      .superRefine((entry, ctx) => {
+        if (entry.provisional && !entry.credit) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['credit'],
+            message: 'Una imagen provisional debe declarar autor, fuente y licencia.',
+          });
+        }
+      }),
+});
+
+export const collections = { products, campaign };

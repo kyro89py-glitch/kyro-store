@@ -11,7 +11,7 @@ cinematográfica.
 
 | Página | Ruta | Estado |
 | --- | --- | --- |
-| Portada con apertura cinematográfica | `/` | Lista |
+| Portada: apertura cinematográfica, novedades, categorías y destacados | `/` | Lista; cada sección aparece solo con datos reales |
 | Tienda y categorías | `/tienda/`, `/tienda/<categoria>/` | Lista (vacía hasta cargar productos) |
 | Ficha de producto | `/producto/<slug>/` | Lista |
 | Carrito (panel lateral y página) | `/carrito/` | Funciona en el navegador; el pago está desactivado |
@@ -28,7 +28,7 @@ cinematográfica.
 ```bash
 npm ci                 # instala dependencias exactas del lockfile
 npm run dev            # servidor local con el catálogo real (vacío)
-npm run dev:fixtures   # servidor local con el catálogo de PRUEBA
+npm run dev:fixtures   # servidor local con los datos de PRUEBA (productos e imagen de portada)
 npm run build          # build de producción en dist/
 npm run check          # comprobación de tipos y plantillas
 npm test               # pruebas unitarias (Vitest)
@@ -36,7 +36,9 @@ npm run test:e2e       # pruebas en navegador (Playwright), requiere los dos bui
 npm run verify         # todo lo anterior, en orden
 ```
 
-Para las pruebas en navegador, instala Chromium una vez: `npx playwright install chromium`.
+Para las pruebas en navegador, instala Chromium una vez (y de nuevo cada vez que se
+actualice Playwright): `npx playwright install chromium`. Se prueban cuatro perfiles:
+escritorio, tableta, móvil y el build de producción.
 
 ## Estructura
 
@@ -44,8 +46,9 @@ Para las pruebas en navegador, instala Chromium una vez: `npx playwright install
 src/
   config/store.ts      Ajustes de la tienda (contacto, redes, indexación, pago)
   config/copy.ts       Textos de marca (borrador para revisión)
-  content.config.ts    Esquema estricto del catálogo
+  content.config.ts    Esquemas estrictos del catálogo y de las imágenes de campaña
   content/products/    Catálogo real: una carpeta por producto
+  content/campaign/    Imagen editorial de la portada, con procedencia y licencia
   components/          layout · brand · catalog · product · cart
   layouts/             Plantilla base (cabecera, pie, carrito, CSP)
   lib/                 Lógica sin interfaz: catálogo, precios, rutas, carrito
@@ -54,21 +57,23 @@ src/
 tests/
   unit/                Vitest
   e2e/                 Playwright + auditoría de accesibilidad (axe)
-  fixtures/catalog/    Productos de PRUEBA (moneda XTS); nunca llegan a producción
-docs/                  Arquitectura, catálogo y plan de pagos
+  fixtures/            Productos e imagen de portada de PRUEBA (moneda XTS); nunca llegan a producción
+docs/                  Arquitectura, catálogo, imágenes, recursos provisionales y plan de pagos
 ```
 
 ## Documentación
 
 - [Arquitectura y decisiones técnicas](docs/ARQUITECTURA.md)
 - [Cómo cargar productos reales](docs/CATALOGO.md)
+- [Imágenes: procedencia, licencia y portada](docs/IMAGENES.md)
+- [Recursos provisionales y de terceros](docs/RECURSOS-PROVISIONALES.md)
 - [Fase 2: pagos y pedidos](docs/FASE-2-PAGOS.md)
 - [Seguridad](SECURITY.md)
 
 ## Pendiente de KYRO
 
 - Logotipo oficial en SVG (hoy hay un logotipo tipográfico provisional).
-- Fotografía de producto y de campaña.
+- Fotografía de producto y de campaña, con licencia (ver `docs/IMAGENES.md`).
 - Productos reales: nombres, precios, moneda, tallas y disponibilidad.
 - Revisión de los textos de `src/config/copy.ts`.
 - Datos de contacto y redes (`src/config/store.ts`).
