@@ -1,0 +1,82 @@
+---
+import { routes } from '../../lib/urls';
+---
+
+<!--
+  Sin JavaScript es un enlace normal a /carrito/. Con JavaScript abre el panel
+  lateral y muestra la cantidad de artículos.
+-->
+<kyro-cart-toggle>
+  <a class="cart-toggle" href={routes.cart()} data-cart-link>
+    <span data-cart-label>Carrito</span>
+    <span class="cart-toggle__count" data-cart-count hidden></span>
+  </a>
+</kyro-cart-toggle>
+
+<style>
+  .cart-toggle {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+    padding: var(--space-xs) 0;
+    font-size: var(--text-sm);
+    font-stretch: 112%;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+  }
+
+  .cart-toggle:hover [data-cart-label] {
+    text-decoration: underline;
+    text-decoration-color: var(--color-champagne);
+  }
+
+  .cart-toggle__count {
+    min-width: 1.5em;
+    color: var(--color-champagne);
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+
+<script>
+  import { getCart, onCartChange, openCart } from '../../lib/cart/client';
+  import { itemCount } from '../../lib/cart/state';
+
+  class KyroCartToggle extends HTMLElement {
+    #unsubscribe: (() => void) | undefined;
+
+    connectedCallback() {
+      const link = this.querySelector<HTMLAnchorElement>('[data-cart-link]');
+      const count = this.querySelector<HTMLElement>('[data-cart-count]');
+      if (!link || !count) return;
+
+      const render = () => {
+        const total = itemCount(getCart());
+        count.hidden = total === 0;
+        count.textContent = String(total);
+        link.setAttribute(
+          'aria-label',
+          total === 0 ? 'Carrito, vacío' : `Carrito, ${total} ${total === 1 ? 'artículo' : 'artículos'}`,
+        );
+      };
+
+      // Si la página tiene panel lateral, se abre en lugar de navegar.
+      link.addEventListener('click', (event) => {
+        if (!document.querySelector('kyro-cart-drawer')) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        openCart();
+      });
+
+      render();
+      this.#unsubscribe = onCartChange(render);
+    }
+
+    disconnectedCallback() {
+      this.#unsubscribe?.();
+    }
+  }
+
+  if (!customElements.get('kyro-cart-toggle')) {
+    customElements.define('kyro-cart-toggle', KyroCartToggle);
+  }
+</script>

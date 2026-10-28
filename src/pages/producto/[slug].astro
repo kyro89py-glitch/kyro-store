@@ -1,0 +1,234 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import Price from '../../components/catalog/Price.astro';
+import ProductForm from '../../components/product/ProductForm.astro';
+import ProductGallery from '../../components/product/ProductGallery.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { categorySlug, getActiveProducts, isPurchasable, type Product } from '../../lib/catalog';
+import { toDecimalString } from '../../lib/money';
+import { toJsonLd } from '../../lib/text';
+import { routes } from '../../lib/urls';
+
+export const getStaticPaths = (async () => {
+  const products = await getActiveProducts();
+  return products.map((product) => ({ params: { slug: product.id }, props: { product } }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  product: Product;
+}
+const { product } = Astro.props;
+const { data } = product;
+const { Content } = await render(product);
+const hasDescription = Boolean(product.body?.trim());
+
+// Datos estructurados para buscadores: solo lo que figura en el catálogo.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: data.name,
+  description: data.summary,
+  sku: data.variants[0]?.sku,
+  brand: { '@type': 'Brand', name: 'KYRO' },
+  offers: {
+    '@type': 'Offer',
+    price: toDecimalString(data.price.amount, data.price.currency),
+    priceCurrency: data.price.currency,
+    availability: isPurchasable(product) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    ...(Astro.site ? { url: new URL(routes.product(product.id), Astro.site).href } : {}),
+  },
+};
+---
+
+<BaseLayout title={data.name} description={data.summary}>
+  <script type="application/ld+json" slot="head" set:html={toJsonLd(jsonLd)} />
+
+  <article class="product">
+    <div class="product__gallery">
+      <ProductGallery images={data.images} />
+    </div>
+
+    <div class="product__info">
+      <div class="product__sticky">
+        <nav class="product__breadcrumb" aria-label="Ruta">
+          <a href={routes.shop()}>Tienda</a>
+          <span aria-hidden="true">/</span>
+          <a href={routes.category(categorySlug(product))}>{data.category}</a>
+        </nav>
+
+        <h1 class="product__name editorial">{data.name}</h1>
+        <p class="product__price">
+          <Price amount={data.price.amount} currency={data.price.currency} />
+        </p>
+        <p class="product__summary muted">{data.summary}</p>
+
+        <ProductForm product={product} />
+
+        <div class="product__details">
+          {
+            hasDescription && (
+              <details open>
+                <summary>Descripción</summary>
+                <div class="product__prose">
+                  <Content />
+                </div>
+              </details>
+            )
+          }
+          {
+            data.details.length > 0 && (
+              <details>
+                <summary>Detalles</summary>
+                <ul class="product__list">
+                  {data.details.map((detail) => (
+                    <li>{detail}</li>
+                  ))}
+                </ul>
+              </details>
+            )
+          }
+          {
+            data.composition && (
+              <details>
+                <summary>Composición</summary>
+                <p>{data.composition}</p>
+              </details>
+            )
+          }
+          {
+            data.care.length > 0 && (
+              <details>
+                <summary>Cuidados</summary>
+                <ul class="product__list">
+                  {data.care.map((item) => (
+                    <li>{item}</li>
+                  ))}
+                </ul>
+              </details>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .product {
+    display: grid;
+    gap: var(--space-xl);
+  }
+
+  .product__info {
+    padding-inline: var(--gutter);
+  }
+
+  .product__sticky {
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .product__breadcrumb {
+    display: flex;
+    gap: var(--space-xs);
+    color: var(--color-ivory-muted);
+    font-size: var(--text-sm);
+    font-stretch: 112%;
+    letter-spacing: 0.03em;
+  }
+
+  .product__breadcrumb a {
+    text-decoration: none;
+  }
+
+  .product__breadcrumb a:hover {
+    color: var(--color-ivory);
+    text-decoration: underline;
+  }
+
+  .product__name {
+    font-size: var(--text-3xl);
+  }
+
+  .product__price {
+    font-size: var(--text-lg);
+  }
+
+  .product__summary {
+    max-width: var(--measure);
+    margin-bottom: var(--space-md);
+  }
+
+  .product__details {
+    margin-top: var(--space-lg);
+    border-top: 1px solid var(--color-line);
+  }
+
+  .product__details details {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .product__details summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-block: var(--space-md);
+    font-size: var(--text-sm);
+    font-stretch: 112%;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .product__details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .product__details summary::after {
+    content: '+';
+    font-size: var(--text-md);
+    color: var(--color-ivory-muted);
+    transition: rotate var(--duration-base) var(--ease-out);
+  }
+
+  .product__details details[open] summary::after {
+    rotate: 45deg;
+  }
+
+  .product__details details > :not(summary) {
+    padding-bottom: var(--space-lg);
+    max-width: var(--measure);
+    color: var(--color-ivory-muted);
+    font-size: var(--text-sm);
+  }
+
+  .product__prose :global(p + p) {
+    margin-top: var(--space-sm);
+  }
+
+  .product__list {
+    display: grid;
+    gap: var(--space-2xs);
+    padding-left: 1.1em;
+  }
+
+  @media (min-width: 60rem) {
+    .product {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: var(--space-2xl);
+      width: min(100% - 2 * var(--gutter), var(--max-width));
+      margin: var(--space-lg) auto 0;
+    }
+
+    .product__info {
+      padding-inline: 0;
+    }
+
+    .product__sticky {
+      position: sticky;
+      top: calc(var(--header-height) + var(--space-xl));
+      padding-block: var(--space-lg);
+    }
+  }
+</style>

@@ -1,0 +1,144 @@
+---
+import { routes } from '../../lib/urls';
+
+interface Props {
+  links: { label: string; href: string }[];
+}
+const { links } = Astro.props;
+const items = [{ label: 'Inicio', href: routes.home() }, ...links, { label: 'Carrito', href: routes.cart() }];
+---
+
+<kyro-menu class="menu">
+  <button class="menu__open" type="button" aria-haspopup="dialog" data-menu-open>Menú</button>
+  <dialog class="menu__dialog" aria-label="Menú">
+    <div class="menu__panel">
+      <div class="menu__bar">
+        <button class="menu__close" type="button" data-menu-close>Cerrar</button>
+      </div>
+      <ul class="menu__list" role="list">
+        {
+          items.map((item) => (
+            <li>
+              <a class="menu__link editorial" href={item.href}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </dialog>
+</kyro-menu>
+
+<style>
+  .menu__open,
+  .menu__close {
+    padding: var(--space-xs) 0;
+    border: 0;
+    background: none;
+    font-size: var(--text-sm);
+    font-stretch: 112%;
+    letter-spacing: 0.03em;
+  }
+
+  .menu__dialog {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    background: var(--color-obsidian-deep);
+    opacity: 0;
+    transition:
+      opacity var(--duration-base) var(--ease-out),
+      overlay var(--duration-base) allow-discrete,
+      display var(--duration-base) allow-discrete;
+  }
+
+  .menu__dialog[open] {
+    opacity: 1;
+  }
+
+  @starting-style {
+    .menu__dialog[open] {
+      opacity: 0;
+    }
+  }
+
+  .menu__panel {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100%;
+    padding-inline: var(--gutter);
+  }
+
+  .menu__bar {
+    display: flex;
+    align-items: center;
+    min-height: var(--header-height);
+  }
+
+  .menu__list {
+    display: grid;
+    align-content: center;
+    gap: var(--space-md);
+    padding-bottom: var(--space-3xl);
+  }
+
+  .menu__link {
+    font-size: var(--text-3xl);
+    text-decoration: none;
+  }
+
+  .menu__link:hover {
+    color: var(--color-champagne);
+  }
+
+  .menu__list li {
+    opacity: 0;
+    translate: 0 0.5rem;
+    transition:
+      opacity var(--duration-slow) var(--ease-out),
+      translate var(--duration-slow) var(--ease-out);
+  }
+
+  .menu__dialog[open] .menu__list li {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  @starting-style {
+    .menu__dialog[open] .menu__list li {
+      opacity: 0;
+      translate: 0 0.5rem;
+    }
+  }
+
+  .menu__list li:nth-child(2) { transition-delay: 40ms; }
+  .menu__list li:nth-child(3) { transition-delay: 80ms; }
+  .menu__list li:nth-child(4) { transition-delay: 120ms; }
+
+  @media (min-width: 48rem) {
+    .menu {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  class KyroMenu extends HTMLElement {
+    connectedCallback() {
+      const dialog = this.querySelector('dialog');
+      if (!dialog) return;
+      this.querySelector('[data-menu-open]')?.addEventListener('click', () => dialog.showModal());
+      this.querySelector('[data-menu-close]')?.addEventListener('click', () => dialog.close());
+      // Si la pantalla crece hasta escritorio con el menú abierto, se cierra.
+      window.matchMedia('(min-width: 48rem)').addEventListener('change', (event) => {
+        if (event.matches) dialog.close();
+      });
+    }
+  }
+
+  if (!customElements.get('kyro-menu')) {
+    customElements.define('kyro-menu', KyroMenu);
+  }
+</script>

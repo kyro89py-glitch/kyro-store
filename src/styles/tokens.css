@@ -1,0 +1,65 @@
+/*
+ * Tokens de diseño de KYRO.
+ * Paleta de marca: negro obsidiana, blanco marfil y champán discreto.
+ * Las familias tipográficas (--font-editorial, --font-grotesk) las define la API de
+ * fuentes de Astro (astro.config.mjs) con métricas de reserva para evitar saltos.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Color */
+  --color-obsidian: #0e1012;
+  --color-obsidian-deep: #08090a;
+  --color-surface: #16191c;
+  --color-surface-raised: #1d2124;
+  --color-ivory: #f1ece3;
+  --color-ivory-muted: #a7a198;
+  --color-champagne: #c8b38a;
+  --color-line: rgb(241 236 227 / 0.14);
+  --color-line-strong: rgb(241 236 227 / 0.34);
+  --color-scrim: rgb(8 9 10 / 0.72);
+
+  /* Tipografía: escala de cuarta justa (1.333) */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.333rem;
+  --text-xl: clamp(1.5rem, 1.32rem + 0.8vw, 1.777rem);
+  --text-2xl: clamp(1.777rem, 1.45rem + 1.5vw, 2.369rem);
+  --text-3xl: clamp(2.2rem, 1.6rem + 2.8vw, 3.157rem);
+  --text-4xl: clamp(2.6rem, 1.7rem + 4.4vw, 4.209rem);
+  --text-wordmark-hero: clamp(3.5rem, 0.8rem + 13.5vw, 11rem);
+
+  --leading-tight: 1.08;
+  --leading-snug: 1.3;
+  --leading-body: 1.62;
+
+  /* Espacio */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: clamp(3rem, 2rem + 4vw, 5rem);
+  --space-3xl: clamp(4.5rem, 2.5rem + 8vw, 9rem);
+
+  --gutter: clamp(1rem, 0.4rem + 2.6vw, 2.5rem);
+  --max-width: 90rem;
+  --measure: 34em;
+  --header-height: 4rem;
+
+  /* Movimiento */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 160ms;
+  --duration-base: 320ms;
+  --duration-slow: 560ms;
+}
+
+@media (min-width: 60rem) {
+  :root {
+    --header-height: 4.75rem;
+  }
+}

@@ -1,0 +1,19 @@
+---
+import { formatPrice } from '../../lib/money';
+
+interface Props {
+  amount: number;
+  currency: string;
+  class?: string;
+}
+const { amount, currency, class: className } = Astro.props;
+---
+
+<span class:list={['price', className]}>{formatPrice(amount, currency)}</span>
+
+<style>
+  .price {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+</style>

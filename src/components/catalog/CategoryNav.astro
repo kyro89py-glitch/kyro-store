@@ -1,0 +1,71 @@
+---
+import type { Category } from '../../lib/catalog';
+import { routes } from '../../lib/urls';
+
+interface Props {
+  categories: Category[];
+  /** Slug de la categoría actual; undefined en "Todo". */
+  current?: string | undefined;
+}
+const { categories, current } = Astro.props;
+---
+
+{
+  categories.length > 1 && (
+    <nav class="category-nav" aria-label="Categorías">
+      <ul role="list">
+        <li>
+          <a href={routes.shop()} aria-current={current === undefined ? 'page' : undefined}>
+            Todo
+          </a>
+        </li>
+        {categories.map((category) => (
+          <li>
+            <a
+              href={routes.category(category.slug)}
+              aria-current={current === category.slug ? 'page' : undefined}
+            >
+              {category.name}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+<style>
+  .category-nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+  }
+
+  .category-nav ul {
+    display: flex;
+    gap: var(--space-lg);
+    width: max-content;
+  }
+
+  .category-nav a {
+    display: block;
+    padding-block: var(--space-xs);
+    color: var(--color-ivory-muted);
+    font-size: var(--text-sm);
+    font-stretch: 112%;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .category-nav a:hover {
+    color: var(--color-ivory);
+  }
+
+  .category-nav a[aria-current='page'] {
+    color: var(--color-ivory);
+    text-decoration: underline;
+    text-decoration-color: var(--color-champagne);
+  }
+</style>

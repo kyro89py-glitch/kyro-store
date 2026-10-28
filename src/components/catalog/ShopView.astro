@@ -1,0 +1,55 @@
+---
+import type { Category, Product } from '../../lib/catalog';
+import CategoryNav from './CategoryNav.astro';
+import EmptyCollection from './EmptyCollection.astro';
+import ProductGrid from './ProductGrid.astro';
+
+// Vista compartida por /tienda/ y /tienda/<categoria>/.
+interface Props {
+  title: string;
+  products: Product[];
+  categories: Category[];
+  currentCategory?: string | undefined;
+}
+const { title, products, categories, currentCategory } = Astro.props;
+const count = products.length;
+---
+
+<div class="shop container">
+  <header class="shop__head">
+    <h1 class="shop__title editorial">{title}</h1>
+    {count > 0 && <p class="shop__count muted">{count} {count === 1 ? 'pieza' : 'piezas'}</p>}
+  </header>
+  <CategoryNav categories={categories} current={currentCategory} />
+  <div class="shop__results">
+    {count > 0 ? <ProductGrid products={products} label={title} headingLevel="h2" /> : <EmptyCollection />}
+  </div>
+</div>
+
+<style>
+  .shop {
+    padding-top: var(--space-2xl);
+  }
+
+  .shop__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .shop__title {
+    font-size: var(--text-4xl);
+  }
+
+  .shop__count {
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .shop__results {
+    margin-top: var(--space-xl);
+  }
+</style>

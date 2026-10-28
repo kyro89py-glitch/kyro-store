@@ -1,0 +1,23 @@
+---
+import CartView from '../components/cart/CartView.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Carrito" description="Tu selección de piezas KYRO." cartDrawer={false}>
+  <div class="cart-page container">
+    <h1 class="cart-page__title editorial">Carrito</h1>
+    <CartView variant="page" />
+  </div>
+</BaseLayout>
+
+<style>
+  .cart-page {
+    max-width: 52rem;
+    padding-top: var(--space-2xl);
+  }
+
+  .cart-page__title {
+    margin-bottom: var(--space-xl);
+    font-size: var(--text-4xl);
+  }
+</style>

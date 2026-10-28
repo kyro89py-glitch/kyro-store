@@ -1,0 +1,10 @@
+---
+// Logotipo tipográfico provisional. Cuando KYRO entregue el logotipo oficial (SVG),
+// se reemplaza aquí y cambia en todo el sitio.
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<span class:list={['wordmark', className]}>KYRO</span>

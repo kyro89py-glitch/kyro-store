@@ -1,0 +1,142 @@
+---
+import { Picture } from 'astro:assets';
+import type { Product } from '../../lib/catalog';
+
+interface Props {
+  images: Product['data']['images'];
+}
+const { images } = Astro.props;
+const widths = [480, 720, 960, 1280, 1600, 2000];
+---
+
+<kyro-gallery class="gallery">
+  <ul class="gallery__track" role="list" aria-label="Fotografías del producto" tabindex="0" data-gallery-track>
+    {
+      images.map((image, index) => (
+        <li class="gallery__slide">
+          <Picture
+            src={image.src}
+            alt={image.alt}
+            widths={widths}
+            sizes="(min-width: 60rem) 58vw, 100vw"
+            formats={['avif', 'webp']}
+            loading={index === 0 ? 'eager' : 'lazy'}
+            fetchpriority={index === 0 ? 'high' : 'auto'}
+          />
+        </li>
+      ))
+    }
+  </ul>
+  {
+    images.length > 1 && (
+      <p class="gallery__counter" aria-hidden="true">
+        <span data-gallery-current>1</span> / {images.length}
+      </p>
+    )
+  }
+</kyro-gallery>
+
+<style>
+  .gallery {
+    position: relative;
+    display: block;
+  }
+
+  /* Móvil: carrusel horizontal con desplazamiento nativo. */
+  .gallery__track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 100%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .gallery__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gallery__slide {
+    scroll-snap-align: start;
+    aspect-ratio: 4 / 5;
+    background: var(--color-surface);
+    overflow: hidden;
+  }
+
+  .gallery__slide :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .gallery__counter {
+    position: absolute;
+    right: var(--gutter);
+    bottom: var(--space-md);
+    padding: var(--space-2xs) var(--space-xs);
+    background: var(--color-scrim);
+    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.06em;
+  }
+
+  /* Escritorio: imágenes apiladas; la primera a sangre, el resto en pares. */
+  @media (min-width: 60rem) {
+    .gallery__track {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-xs);
+      overflow: visible;
+    }
+
+    .gallery__slide:first-child,
+    .gallery__slide:last-child:nth-child(even) {
+      grid-column: 1 / -1;
+    }
+
+    .gallery__counter {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // Actualiza el contador "1 / N" del carrusel móvil. El carrusel solo es una parada
+  // del tabulador (para desplazarlo con las flechas) cuando realmente se desplaza.
+  class KyroGallery extends HTMLElement {
+    #observer: IntersectionObserver | undefined;
+    #resize: ResizeObserver | undefined;
+
+    connectedCallback() {
+      const track = this.querySelector<HTMLElement>('[data-gallery-track]');
+      if (!track) return;
+      this.#resize = new ResizeObserver(() => {
+        track.tabIndex = track.scrollWidth > track.clientWidth ? 0 : -1;
+      });
+      this.#resize.observe(track);
+
+      const current = this.querySelector('[data-gallery-current]');
+      if (!current) return;
+      const slides = [...track.children];
+      this.#observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) current.textContent = String(slides.indexOf(entry.target) + 1);
+          }
+        },
+        { root: track, threshold: 0.6 },
+      );
+      for (const slide of slides) this.#observer.observe(slide);
+    }
+
+    disconnectedCallback() {
+      this.#observer?.disconnect();
+      this.#resize?.disconnect();
+    }
+  }
+
+  if (!customElements.get('kyro-gallery')) {
+    customElements.define('kyro-gallery', KyroGallery);
+  }
+</script>

@@ -1,0 +1,42 @@
+---
+import type { Product } from '../../lib/catalog';
+import ProductCard from './ProductCard.astro';
+
+interface Props {
+  products: Product[];
+  label: string;
+  headingLevel?: 'h2' | 'h3';
+}
+const { products, label, headingLevel } = Astro.props;
+---
+
+<ul class="product-grid" role="list" aria-label={label}>
+  {
+    products.map((product, index) => (
+      <li>
+        <ProductCard product={product} priority={index < 2} headingLevel={headingLevel} />
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-xl) var(--space-sm);
+  }
+
+  @media (min-width: 48rem) {
+    .product-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-2xl) var(--space-lg);
+    }
+  }
+
+  @media (min-width: 72rem) {
+    .product-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+</style>

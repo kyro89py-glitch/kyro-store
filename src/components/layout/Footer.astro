@@ -1,0 +1,106 @@
+---
+import { store } from '../../config/store';
+import { routes } from '../../lib/urls';
+import Wordmark from '../brand/Wordmark.astro';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container site-footer__inner">
+    <a class="site-footer__brand" href={routes.home()} aria-label="KYRO, inicio">
+      <Wordmark />
+    </a>
+
+    <nav class="site-footer__nav" aria-label="Pie de página">
+      <ul role="list">
+        <li><a href={routes.shop()}>Tienda</a></li>
+        <li><a href={routes.brand()}>Marca</a></li>
+        <li><a href={routes.cart()}>Carrito</a></li>
+      </ul>
+      {
+        store.social.length > 0 && (
+          <ul role="list" aria-label="Redes sociales">
+            {store.social.map((link) => (
+              <li>
+                <a href={link.url} rel="noopener noreferrer" target="_blank">
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+      {
+        store.contact.email && (
+          <ul role="list" aria-label="Contacto">
+            <li>
+              <a href={`mailto:${store.contact.email}`}>{store.contact.email}</a>
+            </li>
+          </ul>
+        )
+      }
+    </nav>
+
+    <p class="site-footer__legal muted">© {year} {store.name}</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--space-3xl);
+    padding-block: var(--space-2xl) var(--space-xl);
+    border-top: 1px solid var(--color-line);
+    background: var(--color-obsidian-deep);
+  }
+
+  .site-footer__inner {
+    display: grid;
+    gap: var(--space-xl);
+  }
+
+  .site-footer__brand {
+    justify-self: start;
+    font-size: var(--text-xl);
+    text-decoration: none;
+  }
+
+  .site-footer__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xl);
+  }
+
+  .site-footer__nav ul {
+    display: grid;
+    gap: var(--space-xs);
+  }
+
+  .site-footer__nav a {
+    font-size: var(--text-sm);
+    font-stretch: 112%;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+  }
+
+  .site-footer__nav a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--color-champagne);
+  }
+
+  .site-footer__legal {
+    font-size: var(--text-xs);
+    letter-spacing: 0.03em;
+  }
+
+  @media (min-width: 48rem) {
+    .site-footer__inner {
+      grid-template-columns: 1fr auto;
+      align-items: start;
+    }
+
+    .site-footer__legal {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

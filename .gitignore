@@ -1,0 +1,23 @@
+# Dependencias y builds
+node_modules/
+dist/
+.fixtures-dist/
+.astro/
+
+# Pruebas
+test-results/
+playwright-report/
+blob-report/
+
+# Entorno y secretos: nunca se suben
+.env
+.env.*
+!.env.example
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+*.log
+.vscode/*
+!.vscode/extensions.json
+.idea/

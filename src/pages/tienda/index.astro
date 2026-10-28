@@ -1,0 +1,12 @@
+---
+import ShopView from '../../components/catalog/ShopView.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getActiveProducts, getCategories } from '../../lib/catalog';
+
+const products = await getActiveProducts();
+const categories = getCategories(products);
+---
+
+<BaseLayout title="Tienda" description="Todas las piezas disponibles de KYRO.">
+  <ShopView title="Tienda" products={products} categories={categories} />
+</BaseLayout>

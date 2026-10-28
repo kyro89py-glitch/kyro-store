@@ -1,0 +1,30 @@
+---
+import type { GetStaticPaths } from 'astro';
+import ShopView from '../../components/catalog/ShopView.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { categorySlug, getActiveProducts, getCategories, type Category, type Product } from '../../lib/catalog';
+
+export const getStaticPaths = (async () => {
+  const products = await getActiveProducts();
+  const categories = getCategories(products);
+  return categories.map((category) => ({
+    params: { categoria: category.slug },
+    props: {
+      category,
+      categories,
+      products: products.filter((product) => categorySlug(product) === category.slug),
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  category: Category;
+  categories: Category[];
+  products: Product[];
+}
+const { category, categories, products } = Astro.props;
+---
+
+<BaseLayout title={category.name} description={`${category.name} de KYRO.`}>
+  <ShopView title={category.name} products={products} categories={categories} currentCategory={category.slug} />
+</BaseLayout>

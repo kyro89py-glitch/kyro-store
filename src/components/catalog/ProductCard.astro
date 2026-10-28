@@ -1,0 +1,140 @@
+---
+import { Picture } from 'astro:assets';
+import { isPurchasable, type Product } from '../../lib/catalog';
+import { routes } from '../../lib/urls';
+import Price from './Price.astro';
+
+interface Props {
+  product: Product;
+  /** true para las primeras tarjetas visibles: se cargan sin esperar. */
+  priority?: boolean;
+  headingLevel?: 'h2' | 'h3' | undefined;
+}
+const { product, priority = false, headingLevel: Heading = 'h3' } = Astro.props;
+const [cover, alternate] = product.data.images;
+const purchasable = isPurchasable(product);
+const sizes = '(min-width: 72rem) 22vw, (min-width: 48rem) 31vw, 46vw';
+const widths = [320, 480, 640, 800, 1000];
+---
+
+<article class="product-card">
+  <a class="product-card__link" href={routes.product(product.id)}>
+    <div class="product-card__media">
+      {
+        cover && (
+          <Picture
+            class="product-card__image"
+            src={cover.src}
+            alt={cover.alt}
+            widths={widths}
+            sizes={sizes}
+            formats={['avif', 'webp']}
+            loading={priority ? 'eager' : 'lazy'}
+            fetchpriority={priority ? 'high' : 'auto'}
+          />
+        )
+      }
+      {
+        alternate && (
+          <Picture
+            class="product-card__image product-card__image--alternate"
+            src={alternate.src}
+            alt=""
+            widths={widths}
+            sizes={sizes}
+            formats={['avif', 'webp']}
+            loading="lazy"
+          />
+        )
+      }
+    </div>
+    <div class="product-card__info">
+      <Heading class="product-card__name">{product.data.name}</Heading>
+      <p class="product-card__price">
+        <Price amount={product.data.price.amount} currency={product.data.price.currency} />
+      </p>
+      {!purchasable && <p class="product-card__status">No disponible</p>}
+    </div>
+  </a>
+</article>
+
+<style>
+  .product-card__link {
+    display: grid;
+    gap: var(--space-sm);
+    text-decoration: none;
+  }
+
+  .product-card__media {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+
+  .product-card__media :global(picture),
+  .product-card__media :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product-card__media :global(img) {
+    transition:
+      opacity var(--duration-slow) var(--ease-out),
+      scale 1200ms var(--ease-out);
+  }
+
+  /* Al pasar el cursor: segunda fotografía si existe, si no un acercamiento leve. */
+  .product-card__media :global(.product-card__image--alternate),
+  .product-card__media :global(.product-card__image--alternate img) {
+    opacity: 0;
+  }
+
+  @media (hover: hover) {
+    .product-card__link:hover .product-card__media :global(.product-card__image--alternate),
+    .product-card__link:hover .product-card__media :global(.product-card__image--alternate img) {
+      opacity: 1;
+    }
+
+    .product-card__link:hover .product-card__media :global(img) {
+      scale: 1.025;
+    }
+  }
+
+  .product-card__info {
+    display: grid;
+    gap: var(--space-2xs);
+  }
+
+  .product-card__name {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: var(--leading-snug);
+    letter-spacing: 0.01em;
+  }
+
+  .product-card__link:hover .product-card__name {
+    text-decoration: underline;
+    text-decoration-color: var(--color-champagne);
+  }
+
+  .product-card__price {
+    font-size: var(--text-sm);
+    color: var(--color-ivory-muted);
+  }
+
+  .product-card__status {
+    font-size: var(--text-xs);
+    color: var(--color-champagne);
+  }
+
+  @media (min-width: 48rem) {
+    .product-card__name,
+    .product-card__price {
+      font-size: var(--text-base);
+    }
+  }
+</style>

@@ -1,0 +1,84 @@
+---
+import { copy } from '../config/copy';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { routes } from '../lib/urls';
+---
+
+<BaseLayout title={copy.brand.title} description={copy.brand.intro}>
+  <article class="brand container">
+    <header class="brand__head">
+      <h1 class="brand__title editorial">{copy.brand.title}</h1>
+      <p class="brand__intro editorial">{copy.brand.intro}</p>
+    </header>
+
+    <div class="brand__principles">
+      {
+        copy.brand.principles.map((principle) => (
+          <section class="principle">
+            <h2 class="principle__title editorial-italic">{principle.title}</h2>
+            <p class="principle__text muted">{principle.text}</p>
+          </section>
+        ))
+      }
+    </div>
+
+    <a class="button" href={routes.shop()}>Ver la tienda</a>
+  </article>
+</BaseLayout>
+
+<style>
+  .brand {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3xl);
+    padding-top: var(--space-2xl);
+  }
+
+  .brand__head {
+    display: grid;
+    gap: var(--space-xl);
+  }
+
+  .brand__title {
+    font-size: var(--text-4xl);
+  }
+
+  .brand__intro {
+    max-width: 20em;
+    font-size: var(--text-3xl);
+    line-height: 1.18;
+  }
+
+  .brand__principles {
+    display: grid;
+    gap: var(--space-2xl);
+    width: 100%;
+  }
+
+  .principle {
+    display: grid;
+    gap: var(--space-sm);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--color-line);
+  }
+
+  .principle__title {
+    font-size: var(--text-2xl);
+  }
+
+  .principle__text {
+    max-width: var(--measure);
+  }
+
+  @media (min-width: 60rem) {
+    .brand__principles {
+      padding-left: calc(100% / 12 * 4);
+    }
+
+    .principle {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--space-xl);
+      align-items: baseline;
+    }
+  }
+</style>

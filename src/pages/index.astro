@@ -1,0 +1,73 @@
+---
+import HeroFrame from '../components/brand/HeroFrame.astro';
+import EmptyCollection from '../components/catalog/EmptyCollection.astro';
+import ProductGrid from '../components/catalog/ProductGrid.astro';
+import { copy } from '../config/copy';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getActiveProducts, getFeatured } from '../lib/catalog';
+import { routes } from '../lib/urls';
+
+const products = await getActiveProducts();
+const featured = getFeatured(products, 8);
+---
+
+<BaseLayout header="overlay">
+  <HeroFrame />
+
+  <section class="collection container" aria-labelledby="collection-title">
+    <header class="section-head">
+      <h2 class="section-head__title editorial" id="collection-title">{copy.home.collectionTitle}</h2>
+      {products.length > 0 && <a class="text-link" href={routes.shop()}>Ver toda la tienda</a>}
+    </header>
+    {
+      featured.length > 0 ? (
+        <ProductGrid products={featured} label="Piezas destacadas" />
+      ) : (
+        <EmptyCollection headingLevel="h3" />
+      )
+    }
+  </section>
+
+  <section class="manifesto container" aria-label="La marca">
+    <p class="manifesto__text editorial">{copy.home.manifesto}</p>
+    <a class="text-link" href={routes.brand()}>Conocer la marca</a>
+  </section>
+</BaseLayout>
+
+<style>
+  .collection {
+    padding-top: var(--space-3xl);
+  }
+
+  .section-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+
+  .section-head__title {
+    font-size: var(--text-3xl);
+  }
+
+  .manifesto {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-xl);
+    padding-top: var(--space-3xl);
+  }
+
+  .manifesto__text {
+    max-width: 22em;
+    font-size: var(--text-3xl);
+    line-height: 1.18;
+  }
+
+  @media (min-width: 60rem) {
+    .manifesto {
+      padding-left: calc(100% / 12 * 4);
+    }
+  }
+</style>

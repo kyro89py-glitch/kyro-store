@@ -1,0 +1,419 @@
+---
+import { store } from '../../config/store';
+import { routes } from '../../lib/urls';
+
+interface Props {
+  /** "drawer" en el panel lateral, "page" en /carrito/. */
+  variant: 'drawer' | 'page';
+}
+const { variant } = Astro.props;
+const noteId = `cart-note-${variant}`;
+---
+
+<kyro-cart-view class:list={['cart', `cart--${variant}`]}>
+  <noscript>
+    <p class="cart__message">El carrito necesita JavaScript activado en tu navegador.</p>
+  </noscript>
+
+  <p class="cart__message muted" data-cart-error hidden>
+    No se pudo cargar el catálogo. Revisa tu conexión y vuelve a abrir el carrito.
+  </p>
+
+  <div class="cart__empty" data-cart-empty hidden>
+    <p class="cart__empty-title editorial">Tu carrito está vacío.</p>
+    <a class="button" href={routes.shop()}>Ver la tienda</a>
+  </div>
+
+  <ul class="cart__lines" role="list" data-cart-lines hidden></ul>
+
+  <div class="cart__summary" data-cart-summary hidden>
+    <p class="cart__notice" data-cart-unavailable hidden>
+      Algunas piezas ya no están disponibles y no se suman al subtotal.
+    </p>
+    <dl class="cart__totals">
+      <dt>Subtotal</dt>
+      <dd data-cart-subtotal></dd>
+    </dl>
+    {
+      store.checkout.enabled ? null : (
+        <>
+          <button class="button button--primary button--block" type="button" disabled aria-describedby={noteId}>
+            Pagar
+          </button>
+          <p class="cart__note muted" id={noteId}>
+            El pago en línea todavía no está activo. Tu selección queda guardada en este dispositivo.
+          </p>
+        </>
+      )
+    }
+  </div>
+
+  <p class="visually-hidden" aria-live="polite" data-cart-announcer></p>
+
+  <template data-cart-line-template>
+    <li class="cart-line">
+      <a class="cart-line__media" data-line-link tabindex="-1" aria-hidden="true">
+        <img data-line-image alt="" loading="lazy" decoding="async" />
+      </a>
+      <div class="cart-line__body">
+        <p class="cart-line__name"><a data-line-link data-line-name></a></p>
+        <p class="cart-line__variant muted" data-line-variant></p>
+        <p class="cart-line__unavailable" data-line-unavailable hidden>Ya no está disponible.</p>
+        <div class="cart-line__controls">
+          <div class="quantity" role="group" data-line-quantity-group>
+            <button class="quantity__step" type="button" data-line-decrease>
+              <span aria-hidden="true">−</span>
+            </button>
+            <output class="quantity__value" data-line-quantity></output>
+            <button class="quantity__step" type="button" data-line-increase>
+              <span aria-hidden="true">+</span>
+            </button>
+          </div>
+          <button class="cart-line__remove" type="button" data-line-remove>Quitar</button>
+        </div>
+      </div>
+      <p class="cart-line__total" data-line-total></p>
+    </li>
+  </template>
+</kyro-cart-view>
+
+<style>
+  .cart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .cart__message {
+    font-size: var(--text-sm);
+  }
+
+  .cart__empty {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-lg);
+    padding-block: var(--space-xl);
+  }
+
+  .cart__empty-title {
+    font-size: var(--text-2xl);
+  }
+
+  .cart__lines {
+    display: grid;
+  }
+
+  .cart-line {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr auto;
+    gap: var(--space-md);
+    padding-block: var(--space-lg);
+    border-top: 1px solid var(--color-line);
+  }
+
+  .cart-line:last-child {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .cart-line__media {
+    display: block;
+    aspect-ratio: 4 / 5;
+    background: var(--color-surface);
+    overflow: hidden;
+  }
+
+  .cart-line__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cart-line__body {
+    display: grid;
+    align-content: start;
+    gap: var(--space-2xs);
+    min-width: 0;
+  }
+
+  .cart-line__name {
+    font-size: var(--text-base);
+    font-weight: 500;
+    line-height: var(--leading-snug);
+  }
+
+  .cart-line__name a {
+    text-decoration: none;
+  }
+
+  .cart-line__name a:hover {
+    text-decoration: underline;
+  }
+
+  .cart-line__variant,
+  .cart-line__unavailable {
+    font-size: var(--text-sm);
+  }
+
+  .cart-line__unavailable {
+    color: var(--color-champagne);
+  }
+
+  .cart-line__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-md);
+    margin-top: var(--space-xs);
+  }
+
+  .quantity {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 2px;
+  }
+
+  .quantity__step {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 0;
+    background: transparent;
+    font-size: var(--text-md);
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  .quantity__step:hover:not(:disabled) {
+    color: var(--color-champagne);
+  }
+
+  .quantity__step:disabled {
+    color: var(--color-line-strong);
+    cursor: not-allowed;
+  }
+
+  .quantity__value {
+    min-width: 2ch;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cart-line__remove {
+    padding: var(--space-xs) 0;
+    border: 0;
+    background: none;
+    color: var(--color-ivory-muted);
+    font-size: var(--text-sm);
+    text-decoration: underline;
+    text-decoration-color: var(--color-line-strong);
+    text-underline-offset: 0.28em;
+  }
+
+  .cart-line__remove:hover {
+    color: var(--color-ivory);
+  }
+
+  .cart-line__total {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .cart-line[data-unavailable] .cart-line__total {
+    color: var(--color-ivory-muted);
+    text-decoration: line-through;
+  }
+
+  .cart__summary {
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .cart__notice {
+    font-size: var(--text-sm);
+    color: var(--color-champagne);
+  }
+
+  .cart__totals {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: var(--text-md);
+  }
+
+  .cart__totals dd {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cart__note {
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+  }
+
+  @media (min-width: 48rem) {
+    .cart--page .cart-line {
+      grid-template-columns: 8rem 1fr auto;
+      gap: var(--space-lg);
+    }
+  }
+</style>
+
+<script>
+  import { store } from '../../config/store';
+  import { getCart, loadCatalog, onCartChange, updateCart } from '../../lib/cart/client';
+  import { removeItem, setQuantity, summarize, type CartSummaryLine } from '../../lib/cart/state';
+  import type { CatalogIndex } from '../../lib/cart/types';
+  import { formatPrice } from '../../lib/money';
+
+  const max = store.cart.maxQuantityPerLine;
+
+  // Todo el contenido dinámico se escribe con textContent/setAttribute: ningún dato
+  // del catálogo o del almacenamiento local se interpreta como HTML.
+  class KyroCartView extends HTMLElement {
+    #catalog: CatalogIndex | undefined;
+    #status: 'idle' | 'loading' | 'error' = 'idle';
+    #unsubscribe: (() => void) | undefined;
+
+    connectedCallback() {
+      this.#unsubscribe = onCartChange(() => this.render());
+      this.addEventListener('click', (event) => this.#handleClick(event));
+      this.refresh();
+    }
+
+    disconnectedCallback() {
+      this.#unsubscribe?.();
+    }
+
+    /** Vuelve a cargar el catálogo si hace falta y pinta el carrito. */
+    async refresh() {
+      if (getCart().lines.length === 0) {
+        this.render();
+        return;
+      }
+      this.#status = 'loading';
+      try {
+        this.#catalog = await loadCatalog();
+        this.#status = 'idle';
+      } catch {
+        this.#status = 'error';
+      }
+      this.#part('[data-cart-error]').hidden = this.#status !== 'error';
+      this.render();
+    }
+
+    render() {
+      const cart = getCart();
+      const empty = cart.lines.length === 0;
+      this.#part('[data-cart-empty]').hidden = !empty;
+
+      const list = this.#part<HTMLUListElement>('[data-cart-lines]');
+      const summaryBox = this.#part('[data-cart-summary]');
+      if (empty || !this.#catalog) {
+        if (empty) list.replaceChildren();
+        list.hidden = true;
+        summaryBox.hidden = true;
+        // Sin catálogo todavía: se pide una vez; tras un error se reintenta al reabrir.
+        if (!empty && !this.#catalog && this.#status === 'idle') void this.refresh();
+        return;
+      }
+
+      const summary = summarize(cart, this.#catalog);
+      const currency = summary.currency;
+      if (!currency) return;
+
+      const focusedSku = (document.activeElement?.closest('[data-sku]') as HTMLElement | null)?.dataset['sku'];
+      const focusedAction = (document.activeElement as HTMLElement | null)?.dataset;
+      list.replaceChildren(...summary.lines.map((line) => this.#renderLine(line, currency)));
+      list.hidden = false;
+      summaryBox.hidden = false;
+      this.#part('[data-cart-subtotal]').textContent = formatPrice(summary.subtotal, currency);
+      this.#part('[data-cart-unavailable]').hidden = !summary.hasUnavailable;
+
+      // Mantiene el foco del teclado en la misma línea tras volver a pintar.
+      if (focusedSku && focusedAction) {
+        const selector = 'lineIncrease' in focusedAction ? '[data-line-increase]' : '[data-line-decrease]';
+        const target =
+          list.querySelector<HTMLElement>(`[data-sku="${CSS.escape(focusedSku)}"] ${selector}:not(:disabled)`) ??
+          list.querySelector<HTMLElement>(`[data-sku="${CSS.escape(focusedSku)}"] [data-line-remove]`);
+        target?.focus();
+      }
+    }
+
+    #renderLine(line: CartSummaryLine, currency: string): HTMLLIElement {
+      const template = this.#part<HTMLTemplateElement>('[data-cart-line-template]');
+      const fragment = template.content.cloneNode(true) as DocumentFragment;
+      const item = fragment.querySelector('li') as HTMLLIElement;
+      item.dataset['sku'] = line.sku;
+      if (!line.available) item.dataset['unavailable'] = '';
+
+      for (const link of item.querySelectorAll<HTMLAnchorElement>('[data-line-link]')) {
+        link.href = line.url;
+      }
+      const image = item.querySelector<HTMLImageElement>('[data-line-image]');
+      if (image && line.image) {
+        image.src = line.image.src;
+        image.width = line.image.width;
+        image.height = line.image.height;
+      } else {
+        image?.remove();
+      }
+
+      this.#set(item, '[data-line-name]', line.productName);
+      this.#set(item, '[data-line-variant]', `${line.optionName}: ${line.label}`);
+      this.#set(item, '[data-line-quantity]', String(line.quantity));
+      this.#set(item, '[data-line-total]', formatPrice(line.lineTotal, currency));
+      (item.querySelector('[data-line-unavailable]') as HTMLElement).hidden = line.available;
+
+      const name = `${line.productName}, ${line.optionName.toLowerCase()} ${line.label}`;
+      item.querySelector('[data-line-quantity-group]')?.setAttribute('aria-label', `Cantidad de ${name}`);
+      const decrease = item.querySelector<HTMLButtonElement>('[data-line-decrease]');
+      const increase = item.querySelector<HTMLButtonElement>('[data-line-increase]');
+      decrease?.setAttribute('aria-label', `Restar una unidad de ${name}`);
+      increase?.setAttribute('aria-label', `Sumar una unidad de ${name}`);
+      if (decrease) decrease.disabled = line.quantity <= 1;
+      if (increase) increase.disabled = !line.available || line.quantity >= max;
+      item.querySelector('[data-line-remove]')?.setAttribute('aria-label', `Quitar ${name}`);
+      return item;
+    }
+
+    #handleClick(event: MouseEvent) {
+      const button = (event.target as Element).closest('button');
+      const sku = button?.closest<HTMLElement>('[data-sku]')?.dataset['sku'];
+      if (!button || !sku) return;
+      const quantity = getCart().lines.find((line) => line.sku === sku)?.quantity ?? 0;
+
+      if ('lineIncrease' in button.dataset) {
+        updateCart((state) => setQuantity(state, sku, quantity + 1, max));
+        this.#announce(`Cantidad: ${quantity + 1}.`);
+      } else if ('lineDecrease' in button.dataset) {
+        updateCart((state) => setQuantity(state, sku, Math.max(quantity - 1, 1), max));
+        this.#announce(`Cantidad: ${Math.max(quantity - 1, 1)}.`);
+      } else if ('lineRemove' in button.dataset) {
+        const index = getCart().lines.findIndex((line) => line.sku === sku);
+        updateCart((state) => removeItem(state, sku));
+        this.#announce('Pieza quitada del carrito.');
+        // La línea desaparece: el foco pasa a la siguiente o al estado vacío.
+        const remaining = this.querySelectorAll<HTMLElement>('[data-line-remove]');
+        const next = remaining[Math.min(index, remaining.length - 1)];
+        (next ?? this.querySelector<HTMLElement>('[data-cart-empty] a'))?.focus();
+      }
+    }
+
+    #announce(message: string) {
+      this.#part('[data-cart-announcer]').textContent = message;
+    }
+
+    #set(root: ParentNode, selector: string, text: string) {
+      const element = root.querySelector(selector);
+      if (element) element.textContent = text;
+    }
+
+    #part<T extends HTMLElement = HTMLElement>(selector: string): T {
+      return this.querySelector(selector) as T;
+    }
+  }
+
+  if (!customElements.get('kyro-cart-view')) {
+    customElements.define('kyro-cart-view', KyroCartView);
+  }
+</script>

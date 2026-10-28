@@ -1,0 +1,192 @@
+---
+import type { Product } from '../../lib/catalog';
+import { isPurchasable } from '../../lib/catalog';
+
+interface Props {
+  product: Product;
+}
+const { product } = Astro.props;
+const { variants, optionName } = product.data;
+const purchasable = isPurchasable(product);
+const available = variants.filter((variant) => variant.available);
+// Con una sola opción disponible no hay nada que elegir: queda seleccionada.
+const preselected = available.length === 1 ? available[0]?.sku : undefined;
+const optionId = `option-${product.id}`;
+---
+
+<kyro-product-form>
+  <form class="product-form" novalidate>
+    <fieldset class="variants" aria-describedby={`${optionId}-error`}>
+      <legend class="variants__legend">{optionName}</legend>
+      <div class="variants__options">
+        {
+          variants.map((variant) => (
+            <label class="variant">
+              <input
+                class="variant__input"
+                type="radio"
+                name="sku"
+                value={variant.sku}
+                disabled={!variant.available}
+                checked={variant.sku === preselected}
+              />
+              <span class="variant__label">
+                {variant.label}
+                {!variant.available && <span class="visually-hidden">(no disponible)</span>}
+              </span>
+            </label>
+          ))
+        }
+      </div>
+      <p class="product-form__error" id={`${optionId}-error`} data-form-error hidden>
+        Selecciona una opción de {optionName.toLowerCase()} para continuar.
+      </p>
+    </fieldset>
+
+    <button class="button button--primary button--block" type="submit" disabled={!purchasable}>
+      {purchasable ? 'Añadir al carrito' : 'No disponible'}
+    </button>
+    <p class="product-form__status" role="status" data-form-status></p>
+    <noscript>
+      <p class="product-form__status">Para añadir piezas al carrito, activa JavaScript en tu navegador.</p>
+    </noscript>
+  </form>
+</kyro-product-form>
+
+<style>
+  .product-form {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  .variants {
+    display: grid;
+    gap: var(--space-sm);
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .variants__legend {
+    margin-bottom: var(--space-sm);
+    font-size: var(--text-sm);
+    font-stretch: 112%;
+    letter-spacing: 0.03em;
+    color: var(--color-ivory-muted);
+  }
+
+  .variants__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .variant {
+    position: relative;
+  }
+
+  .variant__input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .variant__input:disabled {
+    cursor: not-allowed;
+  }
+
+  .variant__label {
+    display: grid;
+    place-items: center;
+    min-width: 3.25rem;
+    min-height: 3rem;
+    padding: 0 var(--space-md);
+    border: 1px solid var(--color-line-strong);
+    border-radius: 2px;
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out);
+  }
+
+  .variant__input:hover:not(:disabled) + .variant__label {
+    border-color: var(--color-ivory);
+  }
+
+  .variant__input:checked + .variant__label {
+    border-color: var(--color-ivory);
+    background: var(--color-ivory);
+    color: var(--color-obsidian);
+  }
+
+  .variant__input:focus-visible + .variant__label {
+    outline: 2px solid var(--color-champagne);
+    outline-offset: 3px;
+  }
+
+  .variant__input:disabled + .variant__label {
+    border-color: var(--color-line);
+    color: var(--color-ivory-muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--color-ivory-muted);
+  }
+
+  .product-form__error {
+    font-size: var(--text-sm);
+    color: var(--color-champagne);
+  }
+
+  .product-form__status {
+    min-height: 1.5em;
+    font-size: var(--text-sm);
+    color: var(--color-ivory-muted);
+  }
+</style>
+
+<script>
+  import { store } from '../../config/store';
+  import { getCart, openCart, updateCart } from '../../lib/cart/client';
+  import { addItem, quantityOf } from '../../lib/cart/state';
+
+  const max = store.cart.maxQuantityPerLine;
+
+  class KyroProductForm extends HTMLElement {
+    connectedCallback() {
+      const form = this.querySelector('form');
+      const error = this.querySelector<HTMLElement>('[data-form-error]');
+      const status = this.querySelector<HTMLElement>('[data-form-status]');
+      if (!form || !error || !status) return;
+
+      form.addEventListener('change', () => {
+        error.hidden = true;
+      });
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const sku = new FormData(form).get('sku');
+        if (typeof sku !== 'string') {
+          error.hidden = false;
+          form.querySelector<HTMLInputElement>('input[name="sku"]:not(:disabled)')?.focus();
+          return;
+        }
+
+        if (quantityOf(getCart(), sku) >= max) {
+          status.textContent = `Ya tienes el máximo de ${max} unidades de esta opción en el carrito.`;
+          return;
+        }
+
+        updateCart((state) => addItem(state, sku, 1, max));
+        status.textContent = 'Añadido al carrito.';
+        openCart();
+      });
+    }
+  }
+
+  if (!customElements.get('kyro-product-form')) {
+    customElements.define('kyro-product-form', KyroProductForm);
+  }
+</script>

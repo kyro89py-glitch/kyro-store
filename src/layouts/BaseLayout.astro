@@ -1,0 +1,93 @@
+---
+import { Font } from 'astro:assets';
+import CartDrawer from '../components/cart/CartDrawer.astro';
+import Footer from '../components/layout/Footer.astro';
+import Header from '../components/layout/Header.astro';
+import { store } from '../config/store';
+import { href } from '../lib/urls';
+import '../styles/base.css';
+
+interface Props {
+  /** Título de la página, sin la marca (se añade sola). */
+  title?: string;
+  description?: string;
+  header?: 'solid' | 'overlay';
+  /** En /carrito/ el carrito ya ocupa la página: no hace falta el panel lateral. */
+  cartDrawer?: boolean;
+}
+
+const { title, description = store.description, header = 'solid', cartDrawer = true } = Astro.props;
+const fullTitle = title ? `${title} — ${store.name}` : `${store.name} — Moda urbana`;
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+const indexable = store.indexable && !__KYRO_FIXTURES__;
+---
+
+<!doctype html>
+<html lang={store.locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={indexable ? 'index, follow' : 'noindex, nofollow'} />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="theme-color" content="#0e1012" />
+    <meta name="color-scheme" content="dark" />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={store.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <link rel="icon" href={href('favicon.svg')} type="image/svg+xml" />
+    <Font cssVariable="--font-grotesk" preload />
+    <Font cssVariable="--font-editorial" preload={[{ style: 'normal' }]} />
+    <slot name="head" />
+  </head>
+  <body>
+    {
+      __KYRO_FIXTURES__ && (
+        <p class="fixture-banner" role="note">
+          Catálogo de prueba: los productos de esta vista no son reales.
+        </p>
+      )
+    }
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <Header variant={header} />
+    <main id="contenido" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+    {cartDrawer && <CartDrawer />}
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: fixed;
+    top: var(--space-xs);
+    left: var(--space-xs);
+    z-index: 100;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--color-ivory);
+    color: var(--color-obsidian);
+    font-size: var(--text-sm);
+    translate: 0 -200%;
+  }
+
+  .skip-link:focus {
+    translate: 0 0;
+  }
+
+  main:focus {
+    outline: none;
+  }
+
+  .fixture-banner {
+    padding: var(--space-xs) var(--gutter);
+    background: var(--color-champagne);
+    color: var(--color-obsidian);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-align: center;
+  }
+</style>

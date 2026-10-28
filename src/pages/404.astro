@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { routes } from '../lib/urls';
+---
+
+<BaseLayout title="Página no encontrada">
+  <div class="not-found container">
+    <h1 class="not-found__title editorial">Esta página no existe.</h1>
+    <p class="muted">Puede que el enlace esté mal escrito o que la página se haya movido.</p>
+    <div class="not-found__actions">
+      <a class="button button--primary" href={routes.shop()}>Ver la tienda</a>
+      <a class="text-link" href={routes.home()}>Volver al inicio</a>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .not-found {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-lg);
+    padding-block: var(--space-3xl) var(--space-xl);
+  }
+
+  .not-found__title {
+    font-size: var(--text-4xl);
+  }
+
+  .not-found__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-md) var(--space-xl);
+    margin-top: var(--space-md);
+  }
+</style>
