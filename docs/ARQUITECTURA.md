@@ -62,7 +62,10 @@ navegador: localStorage {sku, cantidad} ──┴──▶ carrito = precios de 
 - **Sin secretos** en el repositorio (`.env` ignorado; `.env.example` documenta variables).
 - **Indexación bloqueada** (`noindex` + `robots.txt`) hasta que `store.indexable` sea `true`.
 - **Catálogo de prueba aislado:** se activa con `KYRO_CATALOG=fixtures`, compila en
-  `.fixtures-dist/`, muestra un aviso visible y usa la moneda de pruebas `XTS`.
+  `.fixtures-dist/` (demostración) o `.e2e-dist/` (pruebas, con logotipo de prueba),
+  muestra un aviso visible y usa la moneda de pruebas `XTS`.
+- **Un servidor de desarrollo por carpeta:** `scripts/run-astro.mjs` impide arrancar
+  `dev` y `dev:fixtures` a la vez, porque comparten la caché de contenido de Astro.
 - **Cadena de suministro:** lockfile, `npm ci`, Dependabot y acciones de GitHub fijadas por commit.
 
 ## Accesibilidad y movimiento

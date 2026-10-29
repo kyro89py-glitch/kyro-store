@@ -27,15 +27,28 @@ cinematográfica.
 ## Comandos
 
 ```bash
-npm ci                 # instala dependencias exactas del lockfile
-npm run dev            # servidor local con el catálogo real (vacío)
-npm run dev:fixtures   # servidor local con los datos de PRUEBA (productos e imagen de portada)
-npm run build          # build de producción en dist/
-npm run check          # comprobación de tipos y plantillas
-npm test               # pruebas unitarias (Vitest)
-npm run test:e2e       # pruebas en navegador (Playwright), requiere los dos builds
-npm run verify         # todo lo anterior, en orden
+npm ci                   # instala dependencias exactas del lockfile
+npm run dev              # servidor local con el catálogo real (vacío)
+npm run dev:fixtures     # servidor local de DEMOSTRACIÓN con datos de prueba
+npm run build            # build de producción en dist/
+npm run build:fixtures   # build de demostración en .fixtures-dist/
+npm run preview:fixtures # sirve ese build de demostración
+npm run check            # comprobación de tipos y plantillas
+npm test                 # pruebas unitarias (Vitest)
+npm run build:e2e        # build para las pruebas en navegador, en .e2e-dist/
+npm run test:e2e         # pruebas en navegador (Playwright); requiere build y build:e2e
+npm run verify           # todo lo anterior, en orden
 ```
+
+**Un solo servidor de desarrollo a la vez.** `npm run dev` y `npm run dev:fixtures`
+comparten la caché de contenido de Astro: si ya hay uno en marcha, el otro se detiene
+con un aviso. Para cambiar de uno a otro, detén el actual con `npx astro dev stop` o
+Ctrl+C.
+
+La demostración usa productos e imagen de portada de prueba, con el aviso "Catálogo de
+prueba" en todas las páginas, y el logotipo real. Solo el build de las pruebas en
+navegador (`build:e2e`) usa además un logotipo de prueba, para verificar que el sitio
+adopta el SVG oficial cuando existe.
 
 Para las pruebas en navegador, instala Chromium una vez (y de nuevo cada vez que se
 actualice Playwright): `npx playwright install chromium`. Se prueban cuatro perfiles:

@@ -2,6 +2,7 @@
 node_modules/
 dist/
 .fixtures-dist/
+.e2e-dist/
 .astro/
 
 # Pruebas

@@ -20,11 +20,12 @@ cualquier lanzamiento.
 | --- | --- | --- |
 | Productos ficticios (moneda `XTS`) | `tests/fixtures/catalog/` | Escritos para las pruebas |
 | Imágenes abstractas de producto y de portada | `tests/fixtures/**/*.jpg` | Generadas con `tests/fixtures/generate-images.mjs` (degradados SVG) |
-| Logotipo de prueba (rectángulos) | `tests/fixtures/brand/logo.svg` | Dibujado para verificar el uso del SVG oficial |
+| Logotipo de prueba (rectángulos) | `tests/fixtures/brand/logo.svg` | Dibujado para verificar el uso del SVG oficial; solo en el build de las pruebas e2e |
 | Página informativa de prueba | `tests/fixtures/pages/` | Texto marcado como no real |
 
-Se compilan solo con `KYRO_CATALOG=fixtures`, en `.fixtures-dist/`, con un aviso visible
-de "Catálogo de prueba" en todas las páginas.
+Se compilan solo con `KYRO_CATALOG=fixtures`: la demostración en `.fixtures-dist/` y el
+build de las pruebas e2e (con el logotipo de prueba) en `.e2e-dist/`. Ambos muestran un
+aviso visible de "Catálogo de prueba" en todas las páginas.
 
 ## Definitivos de terceros
 
