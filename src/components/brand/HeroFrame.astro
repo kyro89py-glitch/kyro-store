@@ -3,6 +3,7 @@ import { Picture } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 import { copy } from '../../config/copy';
 import { routes } from '../../lib/urls';
+import Wordmark from './Wordmark.astro';
 
 /*
  * Apertura de la portada: una cartela de cine. El encuadre se abre desde una
@@ -44,7 +45,7 @@ const media = campaign?.data;
       {media && <div class="hero__scrim" aria-hidden="true" />}
       <div class="hero__grain" aria-hidden="true"></div>
       <h1 class="hero__title" id="hero-title">
-        <span class="wordmark hero__wordmark">KYRO</span>
+        <Wordmark class="hero__wordmark" />
       </h1>
     </div>
     {
@@ -206,9 +207,24 @@ const media = campaign?.data;
     font-size: var(--text-wordmark-hero);
   }
 
-  /* El barrido de luz atraviesa las letras una sola vez. */
   .hero__wordmark {
     display: block;
+    animation: wordmark-in 1400ms var(--ease-out) 700ms both;
+  }
+
+  /* Logotipo oficial en SVG: mismo gesto de entrada, sin barrido (solo funciona en texto). */
+  .hero__wordmark.logo {
+    height: 0.72em;
+    max-width: min(80vw, 100%);
+    color: var(--color-ivory);
+  }
+
+  [data-has-media] .hero__wordmark.logo {
+    filter: drop-shadow(0 0.02em 0.4em rgb(8 9 10 / 0.35));
+  }
+
+  /* Logotipo tipográfico: el barrido de luz atraviesa las letras una sola vez. */
+  .hero__wordmark.wordmark {
     background: linear-gradient(
         100deg,
         var(--color-ivory) 0%,
@@ -227,7 +243,7 @@ const media = campaign?.data;
       light-sweep 2400ms var(--ease-in-out) 900ms both;
   }
 
-  [data-has-media] .hero__wordmark {
+  [data-has-media] .hero__wordmark.wordmark {
     text-shadow: 0 0.02em 0.4em rgb(8 9 10 / 0.35);
   }
 

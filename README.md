@@ -16,6 +16,7 @@ cinematográfica.
 | Ficha de producto | `/producto/<slug>/` | Lista |
 | Carrito (panel lateral y página) | `/carrito/` | Funciona en el navegador; el pago está desactivado |
 | Marca | `/marca/` | Lista; textos en borrador |
+| Páginas informativas (términos, envíos…) | `/info/<slug>/` | Preparadas; aparecen cuando KYRO aporte los textos |
 | Página 404 | — | Lista |
 
 ## Requisitos
@@ -49,6 +50,8 @@ src/
   content.config.ts    Esquemas estrictos del catálogo y de las imágenes de campaña
   content/products/    Catálogo real: una carpeta por producto
   content/campaign/    Imagen editorial de la portada, con procedencia y licencia
+  content/pages/       Páginas informativas redactadas por KYRO
+  assets/brand/        Logotipo oficial (logo.svg) cuando exista
   components/          layout · brand · catalog · product · cart
   layouts/             Plantilla base (cabecera, pie, carrito, CSP)
   lib/                 Lógica sin interfaz: catálogo, precios, rutas, carrito
@@ -65,6 +68,7 @@ docs/                  Arquitectura, catálogo, imágenes, recursos provisionale
 
 - [Arquitectura y decisiones técnicas](docs/ARQUITECTURA.md)
 - [Cómo cargar productos reales](docs/CATALOGO.md)
+- [Sistema de marca y brief de fotografía](docs/MARCA.md)
 - [Imágenes: procedencia, licencia y portada](docs/IMAGENES.md)
 - [Recursos provisionales y de terceros](docs/RECURSOS-PROVISIONALES.md)
 - [Fase 2: pagos y pedidos](docs/FASE-2-PAGOS.md)
@@ -72,11 +76,12 @@ docs/                  Arquitectura, catálogo, imágenes, recursos provisionale
 
 ## Pendiente de KYRO
 
-- Logotipo oficial en SVG (hoy hay un logotipo tipográfico provisional).
+- Logotipo oficial en SVG (hoy hay un logotipo tipográfico provisional; requisitos en `docs/MARCA.md`).
 - Fotografía de producto y de campaña, con licencia (ver `docs/IMAGENES.md`).
 - Productos reales: nombres, precios, moneda, tallas y disponibilidad.
 - Revisión de los textos de `src/config/copy.ts`.
 - Datos de contacto y redes (`src/config/store.ts`).
+- Textos de términos, privacidad, envíos y devoluciones (`src/content/pages/`).
 - País de facturación, para elegir la pasarela de pago.
 
 ## Licencias de terceros

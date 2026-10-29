@@ -51,7 +51,7 @@ La misma foto se recorta a tres formatos de cine:
 
 ## Fotografía de producto
 
-Ver [CATALOGO.md](CATALOGO.md#fotografía).
+Ver [CATALOGO.md](CATALOGO.md#fotografía) y el brief de sesión en [MARCA.md](MARCA.md#fotografía-brief-para-la-sesión).
 
 ## Lista de comprobación de licencia
 

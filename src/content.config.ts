@@ -19,6 +19,7 @@ import { z } from 'astro/zod';
 const useFixtures = process.env.KYRO_CATALOG === 'fixtures';
 const catalogBase = useFixtures ? './tests/fixtures/catalog' : './src/content/products';
 const campaignBase = useFixtures ? './tests/fixtures/campaign' : './src/content/campaign';
+const pagesBase = useFixtures ? './tests/fixtures/pages' : './src/content/pages';
 
 const products = defineCollection({
   loader: glob({
@@ -131,4 +132,25 @@ const campaign = defineCollection({
       }),
 });
 
-export const collections = { products, campaign };
+/**
+ * Páginas informativas (términos, privacidad, envíos, cambios y devoluciones…).
+ *
+ *   src/content/pages/<slug>.md → /info/<slug>/
+ *
+ * Los textos los redacta y aprueba KYRO: el sitio no incluye ninguno de ejemplo.
+ * Una página solo aparece en el pie cuando existe su archivo.
+ */
+const pages = defineCollection({
+  // README.md documenta la carpeta y no es una página.
+  loader: glob({ pattern: ['*.md', '!README.md'], base: pagesBase }),
+  schema: z.object({
+    title: z.string().trim().min(1).max(80),
+    description: z.string().trim().min(1).max(200),
+    /** Obligatoria: los textos legales siempre muestran su fecha de vigencia. */
+    updatedAt: z.coerce.date(),
+    /** Orden en el pie de página (menor primero). */
+    order: z.number().int().default(0),
+  }),
+});
+
+export const collections = { products, campaign, pages };

@@ -142,6 +142,14 @@ p {
   color: var(--color-ivory-muted);
 }
 
+/* En alto contraste los degradados del subrayado pueden desaparecer: la página
+   actual se marca con un subrayado normal. */
+@media (forced-colors: active) {
+  .nav-link[aria-current='page'] {
+    text-decoration: underline;
+  }
+}
+
 /* ---------- Logotipo provisional ---------- */
 
 /*
@@ -157,6 +165,15 @@ p {
   margin-inline-end: -0.3em;
   line-height: 1;
   text-transform: uppercase;
+}
+
+/* Logotipo oficial en SVG (src/assets/brand/logo.svg): toma el tamaño del texto
+   que lo rodea y su color, igual que el tipográfico. */
+.logo {
+  display: block;
+  height: 0.8em;
+  width: auto;
+  color: inherit;
 }
 
 /* ---------- Botones ---------- */

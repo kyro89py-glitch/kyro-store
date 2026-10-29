@@ -2,11 +2,13 @@
 import { copy } from '../../config/copy';
 import { store } from '../../config/store';
 import { getActiveProducts, getCategories } from '../../lib/catalog';
+import { getInfoPages } from '../../lib/pages';
 import { routes } from '../../lib/urls';
 import Wordmark from '../brand/Wordmark.astro';
 
 const year = new Date().getFullYear();
 const categories = getCategories(await getActiveProducts()).slice(0, 6);
+const infoPages = await getInfoPages();
 const hasContact = Boolean(store.contact.email) || store.social.length > 0;
 ---
 
@@ -43,6 +45,23 @@ const hasContact = Boolean(store.contact.email) || store.social.length > 0;
           <li><a class="nav-link" href={routes.cart()}>Carrito</a></li>
         </ul>
       </div>
+
+      {
+        infoPages.length > 0 && (
+          <div class="site-footer__group">
+            <h2 class="site-footer__heading">Información</h2>
+            <ul role="list">
+              {infoPages.map((page) => (
+                <li>
+                  <a class="nav-link" href={routes.info(page.id)}>
+                    {page.data.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
 
       {
         hasContact && (
