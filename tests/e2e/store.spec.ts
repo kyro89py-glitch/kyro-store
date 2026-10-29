@@ -51,25 +51,26 @@ test.describe('páginas', () => {
 });
 
 test.describe('portada', () => {
-  test('la cartela muestra la marca y lleva a la tienda', async ({ page }) => {
+  test('la escena muestra la marca y lleva a las colecciones', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1, name: 'KYRO' })).toBeVisible();
-    await page.getByRole('main').getByRole('link', { name: 'Explorar la colección' }).click();
-    await expect(page).toHaveURL(/\/tienda\/$/);
+    await page.getByRole('main').getByRole('link', { name: 'Explorar las colecciones' }).click();
+    await expect(page).toHaveURL(/#colecciones$/);
+    await expect(page.getByRole('heading', { level: 2, name: 'Colecciones' })).toBeInViewport();
   });
 
-  test('la imagen de campaña ocupa el encuadre y declara su procedencia', async ({ page }) => {
+  test('la imagen de campaña acompaña al manifiesto y declara su procedencia', async ({ page }) => {
     await page.goto('/');
-    const hero = page.locator('.hero');
-    await expect(hero.getByRole('img', { name: 'Imagen abstracta de prueba en tonos grafito y champán' })).toBeVisible();
-    await expect(hero.locator('figcaption')).toContainText('Imagen provisional');
-    await expect(hero.locator('figcaption')).toContainText('uso interno de pruebas');
+    const manifesto = page.locator('.manifesto');
+    await expect(manifesto.getByRole('img', { name: 'Imagen abstracta de prueba en tonos grafito y champán' })).toBeAttached();
+    await expect(manifesto.locator('figcaption')).toContainText('Imagen provisional');
+    await expect(manifesto.locator('figcaption')).toContainText('uso interno de pruebas');
   });
 
-  test('secciones en orden: novedades, categorías y destacados', async ({ page }) => {
+  test('secciones en orden: colecciones, novedades y destacados', async ({ page }) => {
     await page.goto('/');
     const titles = page.getByRole('main').getByRole('heading', { level: 2 });
-    await expect(titles).toHaveText(['Novedades', 'Categorías', 'Destacados']);
+    await expect(titles).toHaveText(['Colecciones', 'Novedades', 'Destacados']);
     await expect(page.getByText('La primera colección está en preparación.')).toHaveCount(0);
   });
 
@@ -79,14 +80,39 @@ test.describe('portada', () => {
     await expect(names).toHaveText(['Prenda de prueba 2', 'Prenda de prueba 1']);
   });
 
-  test('categorías: una tarjeta por categoría con su recuento y enlace', async ({ page }) => {
+  test('colecciones: un panel por categoría real, más toda la tienda', async ({ page }) => {
     await page.goto('/');
-    const tiles = page.getByRole('list', { name: 'Categorías' }).getByRole('link');
-    await expect(tiles).toHaveCount(2);
-    await expect(tiles.first()).toContainText('Categoría de prueba A');
-    await expect(tiles.first()).toContainText('2 piezas');
-    await tiles.nth(1).click();
+    const panels = page.getByRole('list', { name: 'Colecciones' }).getByRole('link');
+    await expect(panels).toHaveCount(3);
+    await expect(panels.first()).toContainText('Categoría de prueba A');
+    await expect(panels.first()).toContainText('2 piezas');
+    await expect(panels.nth(2)).toContainText('Toda la tienda');
+    await expect(panels.nth(2)).toContainText('4 piezas');
+    await expect(panels.nth(2)).toHaveAttribute('href', /\/tienda\/$/);
+    // Con el teclado, el recorrido trae el panel enfocado al frente.
+    await panels.nth(1).focus();
+    await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/\/tienda\/categoria-de-prueba-b\/$/);
+  });
+
+  test('colecciones: los paneles avanzan en profundidad con el desplazamiento', async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator('[data-colecciones]');
+    await expect(section).toHaveAttribute('data-modo', '3d');
+    await section.scrollIntoViewIfNeeded();
+    const pos = () => section.evaluate((element) => Number(getComputedStyle(element).getPropertyValue('--pos') || 0));
+    await page.evaluate(() => {
+      const track = document.querySelector('.colecciones__pista') as HTMLElement;
+      scrollTo(0, track.getBoundingClientRect().top + scrollY + (track.offsetHeight - innerHeight));
+    });
+    await expect.poll(pos).toBeGreaterThan(1.9);
+  });
+
+  test('la foto del panel y la portada de la categoría comparten nombre de transición', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('.panel [data-vt]').first()).toHaveAttribute('data-vt', 'c-categoria-de-prueba-a');
+    await page.goto('/tienda/categoria-de-prueba-a/');
+    await expect(page.locator('.shop__cover')).toHaveAttribute('data-vt', 'c-categoria-de-prueba-a');
   });
 
   test('destacados: solo los marcados, el primero en grande', async ({ page }) => {
@@ -99,8 +125,10 @@ test.describe('portada', () => {
   test('con movimiento reducido todo es visible al instante', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
-    const opacity = await page.locator('.hero__caption').evaluate((element) => getComputedStyle(element).opacity);
+    const opacity = await page.locator('.escena__hud').evaluate((element) => getComputedStyle(element).opacity);
     expect(opacity).toBe('1');
+    // Las colecciones forman una composición quieta.
+    await expect(page.locator('[data-colecciones]')).not.toHaveAttribute('data-modo', '3d');
   });
 });
 
@@ -298,8 +326,8 @@ test.describe('alto contraste (forced colors)', () => {
   test('el logotipo de la portada sigue siendo visible', async ({ page }) => {
     await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'reduce' });
     await page.goto('/');
-    const color = await page.locator('.hero__title').evaluate((element) => {
-      const target = element.querySelector('.hero__wordmark, svg') ?? element;
+    const color = await page.locator('.escena__titulo').evaluate((element) => {
+      const target = element.querySelector('.escena__marca, svg') ?? element;
       return getComputedStyle(target).color;
     });
     expect(color).not.toMatch(/rgba\(\d+, \d+, \d+, 0\)/);

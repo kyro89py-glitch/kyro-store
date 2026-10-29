@@ -1,5 +1,5 @@
 ---
-import type { SvgComponent } from 'astro/types';
+import { OfficialLogo } from './logo';
 
 /*
  * Logotipo de KYRO en todo el sitio.
@@ -25,12 +25,7 @@ interface Props {
 }
 const { class: className, variant = 'mark', reveal = false, dimensional, ...rest } = Astro.props;
 
-// Rutas fijas: Vite las resuelve al compilar. Solo el build de las pruebas e2e usa un
-// logotipo de prueba, para verificar este camino sin tocar los archivos reales.
-const logos = __KYRO_TEST_LOGO__
-  ? import.meta.glob<{ default: SvgComponent }>('/tests/fixtures/brand/logo.svg', { eager: true })
-  : import.meta.glob<{ default: SvgComponent }>('/src/assets/brand/logo.svg', { eager: true });
-const Logo = Object.values(logos)[0]?.default;
+const Logo = OfficialLogo;
 const letters = [...'KYRO'];
 ---
 

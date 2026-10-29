@@ -103,6 +103,12 @@ el centro → las letras de KYRO suben una a una desde una máscara → aparece 
 aparecen las acciones. Después la luz deriva despacio; con ratón, un foco sigue al cursor;
 al desplazarse, la pantalla y el nombre se separan (paralaje con `animation-timeline`).
 
+**Portada inmersiva «Cámara oscura»** (exploración; ver
+[EXPERIENCIA-INMERSIVA.md](EXPERIENCIA-INMERSIVA.md)): KYRO en volumen sobre un suelo de
+obsidiana que lo refleja, un haz de luz con polvo en suspensión y una cámara que el
+desplazamiento mueve con inercia hasta las colecciones, presentadas como fotogramas que
+llegan desde el fondo.
+
 **Vocabulario al desplazarse** (`data-reveal`, `src/scripts/reveal.ts` + `base.css`). Cada
 pieza se revela una sola vez al entrar en pantalla; las que entran juntas se escalonan
 90 ms en orden de lectura:

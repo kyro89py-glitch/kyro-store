@@ -69,7 +69,7 @@ src/
   layouts/             Plantilla base (cabecera, pie, carrito, CSP)
   lib/                 Lógica sin interfaz: catálogo, precios, rutas, carrito
   pages/               Rutas del sitio
-  scripts/             Revelados al desplazarse y wordmark en 3D (exploración; ver docs/MARCA.md)
+  scripts/             Revelados al desplazarse y 3D propio (scripts/3d: mundo de la portada; exploración)
   styles/              Tokens de diseño y estilos base
 tests/
   unit/                Vitest
@@ -87,6 +87,7 @@ docs/                  Arquitectura, catálogo, imágenes, recursos provisionale
 - [Recursos provisionales y de terceros](docs/RECURSOS-PROVISIONALES.md)
 - [Fase 2: pagos y pedidos](docs/FASE-2-PAGOS.md)
 - [Rendimiento: cómo medir, línea base y limitaciones](docs/RENDIMIENTO.md)
+- [Experiencia inmersiva «Cámara oscura»: referencia, propuesta y límites](docs/EXPERIENCIA-INMERSIVA.md)
 - [Seguridad](SECURITY.md)
 
 ## Pendiente de KYRO

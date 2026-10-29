@@ -12,7 +12,6 @@ export const copy = {
   home: {
     collectionTitle: 'Colección',
     newArrivalsTitle: 'Novedades',
-    categoriesTitle: 'Categorías',
     featuredTitle: 'Destacados',
     manifesto:
       'KYRO entiende la ciudad como una escena. Líneas limpias, una paleta contenida y el espacio justo para que quien la lleva sea el protagonista.',

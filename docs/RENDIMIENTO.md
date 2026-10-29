@@ -51,6 +51,37 @@ Lectura:
   limitaciones): con WebGL desactivado, la misma página no tiene tareas largas.
 - **CLS = 0** en todas las páginas: los efectos no mueven el contenido.
 
+## Después: portada inmersiva «Cámara oscura» (rama `experiencia-inmersiva`)
+
+Producción (catálogo real vacío), mismo método:
+
+| Perfil | Ruta | FCP ms | LCP ms | CLS | TBT ms | Fotograma mediana / p95 ms |
+| --- | --- | --- | --- | --- | --- | --- |
+| escritorio | / | 168 | 1560 | 0 | 2561 | 116,7 / 216,7 |
+| escritorio | / sin WebGL | 204 | 264 | 0 | 0 | 16,7 / 16,7 |
+| escritorio | /tienda/ | 176 | 292 | 0 | 158 | 16,7 / 16,8 |
+| movil | / | 816 | 2232 | 0 | 1682 | 16,7 / 166,7 |
+| movil | / sin WebGL | 808 | 2068 | 0 | 0 | 16,7 / 16,8 |
+| movil | /tienda/ | 744 | 1056 | 0 | 141 | 16,7 / 16,8 |
+
+Demostración (datos de prueba, con paneles de colecciones): portada LCP 1720 ms en
+escritorio y 2280 ms en móvil; la ficha de producto, LCP 268 ms y 940 ms, TBT ~120 ms (la
+ficha no lleva 3D).
+
+Peso del 3D (gzip, se carga aparte): núcleo con la geometría ~8,9 kB, mundo de la portada
+~4,4 kB, KYRO del pie y del menú ~1,7 kB: **~15 kB en total**.
+
+Lectura:
+
+- **LCP por debajo de 2,5 s** en ambos perfiles. La frase de la portada entra a los 0,45 s
+  (al retrasarla 1,6 s por la apertura, el LCP subía a ~2,9 s; se corrigió).
+- **Todo el TBT de la portada es WebGL por software**: con WebGL desactivado es 0 ms. En
+  un dispositivo con GPU ese trabajo no ocupa el hilo principal del mismo modo, pero
+  **no se ha podido comprobar aquí**.
+- El resto de páginas no cambia (la tienda sigue en ~0,3 s de LCP en escritorio).
+- El dibujo se detiene cuando la escena está quieta o fuera de pantalla: el coste se
+  concentra en la apertura y mientras se desplaza.
+
 ## Limitaciones del entorno de desarrollo
 
 - **No hay GPU.** Chromium dibuja WebGL con SwiftShader (una GPU emulada en la CPU). Por
@@ -62,8 +93,11 @@ Lectura:
   en un teléfono.
 - `astro preview` sirve los archivos **sin comprimir**; los tamaños de red de la tabla de
   arriba no llevan gzip/brotli. Los pesos comprimidos se calculan aparte sobre `dist/`.
-- **Vídeo:** Playwright puede grabar el recorrido, pero con WebGL por software el vídeo
-  saldría a ~12 fps y no representaría el movimiento real.
+- **Vídeo:** grabado en tiempo real, con WebGL por software saldría a ~12 fps. Los vídeos
+  de demostración se graban con el reloj de la página detenido y avanzado 1/30 s por
+  fotograma (reloj de Playwright): muestran el ritmo real del 3D, pero no prueban que un
+  dispositivo lo dibuje a 30/60 fps. Las animaciones CSS (la frase, la pista) no siguen
+  ese reloj y en el vídeo aparecen antes de tiempo.
 - Lighthouse no está instalado; se usan Playwright y DevTools directamente.
 
 ## Qué hay que comprobar en un dispositivo real

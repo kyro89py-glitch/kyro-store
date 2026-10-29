@@ -1,0 +1,530 @@
+---
+import { Picture } from 'astro:assets';
+import type { Category, Product } from '../../lib/catalog';
+import { routes } from '../../lib/urls';
+import EmptyCollection from './EmptyCollection.astro';
+
+/*
+ * Colecciones de la portada: fotogramas suspendidos en profundidad.
+ *
+ * Cada panel es un enlace real (una categoría del catálogo, más "Toda la tienda"). Con
+ * JavaScript y sin "reducir movimiento", la sección se fija y el desplazamiento acerca los
+ * paneles desde el fondo de uno en uno (CSS 3D; el script solo actualiza --pos). Con
+ * ratón, el panel enfocado se inclina hacia el cursor y su brillo lo sigue; con el dedo,
+ * cede al tocarlo. Sin JavaScript o con movimiento reducido, los paneles forman una
+ * composición editorial quieta. Sin productos, se muestra el estado vacío: no hay
+ * paneles inventados.
+ */
+interface Props {
+  categories: Category[];
+  products: Product[];
+}
+const { categories, products } = Astro.props;
+
+const pieces = (count: number) => `${count} ${count === 1 ? 'pieza' : 'piezas'}`;
+const panels = [
+  ...categories.map((category) => ({
+    name: category.name,
+    href: routes.category(category.slug),
+    count: pieces(category.count),
+    cover: category.cover,
+    vt: `c-${category.slug}`,
+  })),
+  ...(products.length > 0
+    ? [{ name: 'Toda la tienda', href: routes.shop(), count: pieces(products.length), cover: products[0]?.data.images[0], vt: undefined }]
+    : []),
+];
+const total = String(panels.length).padStart(2, '0');
+---
+
+<section
+  class="colecciones"
+  id="colecciones"
+  aria-labelledby="colecciones-titulo"
+  data-escena-galeria
+  data-colecciones={panels.length > 1 ? '' : undefined}
+>
+  <div class="colecciones__pista">
+    <div class="colecciones__escenario">
+      <header class="colecciones__cabecera container">
+        <h2 class="colecciones__titulo display" id="colecciones-titulo" data-reveal="title">Colecciones</h2>
+        {
+          panels.length > 1 && (
+            <p class="colecciones__contador" aria-hidden="true">
+              <span data-colecciones-actual>01</span>
+              <span class="colecciones__contador-linea" />
+              {total}
+            </p>
+          )
+        }
+      </header>
+
+      {
+        panels.length === 0 ? (
+          <div class="container">
+            <EmptyCollection headingLevel="h3" divider={false} />
+          </div>
+        ) : (
+          <ul class="colecciones__paneles" role="list" aria-label="Colecciones">
+            {panels.map((panel, index) => (
+              <li class="panel">
+                <a class="panel__enlace" href={panel.href}>
+                  <div class="panel__marco" data-vt={panel.vt}>
+                    {panel.cover && (
+                      <Picture
+                        class="panel__foto"
+                        src={panel.cover.src}
+                        alt=""
+                        widths={[480, 720, 960, 1280]}
+                        sizes="(min-width: 48rem) 40vh, 80vw"
+                        formats={['avif', 'webp']}
+                        loading={index < 2 ? 'eager' : 'lazy'}
+                      />
+                    )}
+                    <span class="panel__brillo" aria-hidden="true" />
+                    <span class="panel__texto">
+                      <span class="panel__indice" aria-hidden="true">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <span class="panel__nombre">{panel.name}</span>
+                      <span class="panel__pie">
+                        <span class="panel__cuenta">{panel.count}</span>
+                        <span class="panel__accion" aria-hidden="true">
+                          Ver
+                        </span>
+                      </span>
+                    </span>
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+
+      {
+        panels.length > 1 && (
+          <p class="colecciones__ayuda" aria-hidden="true">
+            Desliza para recorrerlas
+          </p>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .colecciones {
+    position: relative;
+    padding-top: var(--space-3xl);
+  }
+
+  .colecciones__cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+  }
+
+  .colecciones__contador {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding-bottom: 0.8em;
+    color: var(--color-ivory-muted);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+  }
+
+  .colecciones__contador [data-colecciones-actual] {
+    color: var(--color-ivory);
+  }
+
+  .colecciones__contador-linea {
+    width: 2rem;
+    height: 1px;
+    background: var(--color-line-strong);
+  }
+
+  .colecciones__ayuda {
+    display: none;
+  }
+
+  /* ---------- Composición quieta (sin JavaScript o con movimiento reducido) ---------- */
+
+  .colecciones__paneles {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 78%;
+    gap: var(--space-sm);
+    padding-inline: var(--gutter);
+    padding-bottom: var(--space-md);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .panel {
+    scroll-snap-align: start;
+  }
+
+  @media (min-width: 48rem) {
+    .colecciones__paneles {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+      gap: var(--space-lg);
+      width: min(100% - 2 * var(--gutter), var(--max-width));
+      margin-inline: auto;
+      padding-inline: 0;
+      overflow: visible;
+    }
+  }
+
+  /* ---------- Panel: fotograma de obsidiana ---------- */
+
+  .panel__enlace {
+    display: block;
+    color: var(--color-ivory);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .panel__marco {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border-radius: 3px;
+    background: linear-gradient(160deg, #1a1d21, #0b0c0e);
+    box-shadow:
+      inset 0 0 0 1px rgb(241 236 227 / 0.14),
+      inset 0 1px 0 rgb(241 236 227 / 0.22),
+      0 40px 80px -30px rgb(0 0 0 / 0.85);
+    transition: scale var(--duration-fast) var(--ease-out);
+  }
+
+  .panel__enlace:active .panel__marco {
+    scale: 0.97;
+  }
+
+  .panel__marco :global(.panel__foto),
+  .panel__marco :global(.panel__foto img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Velo para leer el texto sobre cualquier fotografía. */
+  .panel__marco::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgb(8 9 10 / 0.85), rgb(8 9 10 / 0.1) 55%, transparent);
+    pointer-events: none;
+  }
+
+  /* Reflejo de cristal: una franja de luz cruza el panel. */
+  .panel__brillo {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+        112deg,
+        transparent 38%,
+        rgb(241 236 227 / 0.13) 48%,
+        rgb(241 236 227 / 0.04) 54%,
+        transparent 62%
+      )
+      calc(50% + var(--brillo, 0) * 100%) 0 / 260% 100% no-repeat;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  .panel__texto {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 2;
+    display: grid;
+    gap: var(--space-2xs);
+    padding: var(--space-lg);
+  }
+
+  .panel__indice {
+    color: var(--color-champagne);
+    font-size: var(--text-xs);
+    font-stretch: 112%;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+  }
+
+  .panel__nombre {
+    font-family: var(--font-editorial);
+    font-size: clamp(1.9rem, 1.3rem + 2vw, 3rem);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .panel__pie {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-md);
+    margin-top: var(--space-xs);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--color-line-strong);
+    font-size: var(--text-sm);
+    font-stretch: 112%;
+    letter-spacing: 0.03em;
+  }
+
+  .panel__cuenta {
+    color: var(--color-ivory-muted);
+  }
+
+  .panel__accion::after {
+    content: ' →';
+    display: inline-block;
+    transition: translate var(--duration-base) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .panel__enlace:hover .panel__accion::after,
+    .panel__enlace:focus-visible .panel__accion::after {
+      translate: 0.3em 0;
+    }
+  }
+
+  .panel__enlace:focus-visible {
+    outline: none;
+  }
+
+  .panel__enlace:focus-visible .panel__marco {
+    outline: 2px solid var(--color-champagne);
+    outline-offset: 4px;
+  }
+
+  /* ---------- Fotogramas en profundidad (con JavaScript; ver el script) ---------- */
+
+  .colecciones[data-modo='3d'] {
+    padding-top: 0;
+  }
+
+  .colecciones[data-modo='3d'] .colecciones__pista {
+    height: calc(var(--n, 3) * 75svh + 100svh);
+  }
+
+  .colecciones[data-modo='3d'] .colecciones__escenario {
+    position: sticky;
+    top: 0;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100svh;
+    padding-top: calc(var(--header-height) + var(--space-lg));
+    overflow: clip;
+    perspective: 1100px;
+    perspective-origin: 50% 48%;
+  }
+
+  .colecciones[data-modo='3d'] .colecciones__cabecera {
+    position: relative;
+    z-index: 2;
+    width: min(100% - 2 * var(--gutter), var(--max-width));
+    margin-bottom: 0;
+  }
+
+  .colecciones[data-modo='3d'] .colecciones__titulo {
+    font-size: clamp(2.6rem, 1.6rem + 4vw, 6rem);
+  }
+
+  .colecciones[data-modo='3d'] .colecciones__paneles {
+    position: relative;
+    display: block;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    transform-style: preserve-3d;
+  }
+
+  .colecciones[data-modo='3d'] .panel {
+    /* Distancia (en paneles) entre este fotograma y el que está en foco. */
+    --d: calc(var(--i, 0) - var(--pos, 0));
+    --foco: clamp(0, 1 - var(--d) * var(--d), 1);
+    --side: 1;
+    --panel-h: min(62svh, 34rem);
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--panel-h) * 0.8);
+    margin: calc(var(--panel-h) / -2) 0 0 calc(var(--panel-h) * -0.4);
+    transform-style: preserve-3d;
+    /* Llegan desde el fondo por su lado, pasan al centro y siguen hacia la cámara. */
+    transform: translate3d(
+        calc(var(--side) * (var(--d) * var(--d) * 6vw + var(--d) * 9vw)),
+        calc(var(--d) * -2.5svh),
+        calc(var(--d) * -640px)
+      )
+      rotateY(calc(var(--side) * var(--d) * -16deg + var(--tx, 0) * 9deg * var(--foco)))
+      rotateX(calc(var(--ty, 0) * -6deg * var(--foco)));
+    /* Aparecen al acercarse y se desvanecen enseguida al pasar junto a la cámara. */
+    opacity: calc(clamp(0, 3.4 - var(--d), 1) * clamp(0, 1 + var(--d) * 2.8, 1));
+    will-change: transform, opacity;
+  }
+
+  .colecciones[data-modo='3d'] .panel:nth-child(even) {
+    --side: -1;
+  }
+
+  .colecciones[data-modo='3d'] .panel__enlace {
+    transform-style: preserve-3d;
+  }
+
+  .colecciones[data-modo='3d'] .panel__marco {
+    --brillo: calc(var(--d) * 0.6 + var(--tx, 0) * 0.5);
+
+    overflow: visible;
+    transform-style: preserve-3d;
+  }
+
+  /* Canto del fotograma: una placa oscura detrás, visible al girar. */
+  .colecciones[data-modo='3d'] .panel__marco::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 3px;
+    background: #050506;
+    box-shadow: inset 0 0 0 1px rgb(241 236 227 / 0.08);
+    transform: translateZ(-22px);
+  }
+
+  .colecciones[data-modo='3d'] .panel__marco :global(.panel__foto),
+  .colecciones[data-modo='3d'] .panel__marco::after,
+  .colecciones[data-modo='3d'] .panel__brillo {
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  /* Los fotogramas fuera de foco se oscurecen; el texto solo se lee en el que manda. */
+  .colecciones[data-modo='3d'] .panel__marco::after {
+    background:
+      linear-gradient(0deg, rgb(8 9 10 / 0.85), rgb(8 9 10 / 0.1) 55%, transparent),
+      rgb(8 9 10 / calc((1 - var(--foco)) * 0.6));
+  }
+
+  .colecciones[data-modo='3d'] .panel__texto {
+    opacity: calc(var(--foco) * 1.4 - 0.2);
+  }
+
+  .colecciones[data-modo='3d'] .colecciones__ayuda {
+    display: block;
+    position: relative;
+    z-index: 2;
+    padding-bottom: var(--space-lg);
+    color: var(--color-ivory-muted);
+    font-size: var(--text-xs);
+    font-stretch: 112%;
+    letter-spacing: 0.08em;
+    text-align: center;
+    opacity: calc(1 - var(--pos, 0) * 2);
+  }
+
+  @media (max-width: 47.99rem) {
+    .colecciones[data-modo='3d'] .colecciones__escenario {
+      perspective: 800px;
+    }
+
+    .colecciones[data-modo='3d'] .panel {
+      --panel-h: min(60svh, 104vw);
+    }
+  }
+</style>
+
+<script>
+  // Fotogramas en profundidad: el desplazamiento por la pista fija la sección y mueve
+  // --pos (el panel en foco) con inercia. Todo el movimiento lo hace el CSS.
+  const root = document.querySelector<HTMLElement>('[data-colecciones]');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const fine = matchMedia('(hover: hover) and (pointer: fine)');
+
+  if (root && !reduced.matches) {
+    const track = root.querySelector<HTMLElement>('.colecciones__pista');
+    const stage = root.querySelector<HTMLElement>('.colecciones__escenario');
+    const counter = root.querySelector<HTMLElement>('[data-colecciones-actual]');
+    const panels = [...root.querySelectorAll<HTMLElement>('.panel')];
+    const n = panels.length;
+
+    if (track && stage && n > 1) {
+      // CSSOM (no atributos style en el HTML): compatible con la CSP.
+      root.style.setProperty('--n', String(n));
+      panels.forEach((panel, i) => panel.style.setProperty('--i', String(i)));
+      root.dataset['modo'] = '3d';
+
+      let target = 0;
+      let value = 0;
+      let last = 0;
+      let frame = 0;
+      const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
+
+      const span = () => track.getBoundingClientRect().height - innerHeight;
+      const measure = () => {
+        const rect = track.getBoundingClientRect();
+        target = Math.min(1, Math.max(0, -rect.top / Math.max(span(), 1))) * (n - 1);
+        request();
+      };
+
+      const step = (time: number) => {
+        frame = 0;
+        const dt = last ? Math.min((time - last) / 1000, 0.1) : 0.016;
+        last = time;
+        const k = 1 - Math.exp(-dt * 7);
+        value += (target - value) * k;
+        pointer.x += (pointer.tx - pointer.x) * k;
+        pointer.y += (pointer.ty - pointer.y) * k;
+        root.style.setProperty('--pos', value.toFixed(4));
+        stage.style.setProperty('--tx', pointer.x.toFixed(4));
+        stage.style.setProperty('--ty', pointer.y.toFixed(4));
+        if (counter) counter.textContent = String(Math.round(value) + 1).padStart(2, '0');
+        const moving = Math.abs(target - value) + Math.abs(pointer.tx - pointer.x) + Math.abs(pointer.ty - pointer.y);
+        if (moving > 0.0005) request();
+        else last = 0;
+      };
+      const request = () => {
+        if (!frame) frame = requestAnimationFrame(step);
+      };
+
+      addEventListener('scroll', measure, { passive: true });
+      addEventListener('resize', measure, { passive: true });
+      measure();
+
+      if (fine.matches) {
+        stage.addEventListener('pointermove', (event) => {
+          const rect = stage.getBoundingClientRect();
+          pointer.tx = (event.clientX - rect.left) / rect.width - 0.5;
+          pointer.ty = (event.clientY - rect.top) / rect.height - 0.5;
+          request();
+        });
+        stage.addEventListener('pointerleave', () => {
+          pointer.tx = 0;
+          pointer.ty = 0;
+          request();
+        });
+      }
+
+      // Teclado: al enfocar un panel, el recorrido lo trae al frente.
+      panels.forEach((panel, i) => {
+        panel.addEventListener('focusin', () => {
+          const top = track.getBoundingClientRect().top + scrollY;
+          scrollTo({ top: top + (span() * i) / (n - 1), behavior: 'auto' });
+        });
+      });
+    }
+  }
+</script>

@@ -18,9 +18,10 @@ test('sin productos, la portada y la tienda muestran el estado vacío', async ({
 test('sin datos, la portada no muestra secciones vacías ni imagen de campaña', async ({ page }) => {
   await page.goto('/');
   const titles = page.getByRole('main').getByRole('heading', { level: 2 });
-  await expect(titles).toHaveText(['Colección']);
-  await expect(page.locator('.hero img')).toHaveCount(0);
-  await expect(page.locator('.hero figcaption')).toHaveCount(0);
+  await expect(titles).toHaveText(['Colecciones']);
+  await expect(page.locator('.panel')).toHaveCount(0);
+  await expect(page.locator('.manifesto img')).toHaveCount(0);
+  await expect(page.locator('.manifesto figcaption')).toHaveCount(0);
 });
 
 test('el pie de página no inventa categorías ni contacto', async ({ page }) => {
@@ -78,20 +79,22 @@ test('estado vacío accesible', async ({ page }) => {
   await expectNoA11yViolations(page);
 });
 
-test.describe('wordmark dimensional (exploración)', () => {
-  test('la portada dibuja KYRO en 3D sin perder el texto accesible', async ({ page }) => {
+test.describe('mundo 3D de la portada (exploración)', () => {
+  test('dibuja KYRO en 3D sin perder el texto accesible', async ({ page }) => {
     const errors = trackErrors(page);
     await page.goto('/');
     const hasWebGL = await page.evaluate(() => Boolean(document.createElement('canvas').getContext('webgl')));
     test.skip(!hasWebGL, 'este navegador no tiene WebGL');
-    const host = page.locator('.hero [data-wordmark-3d="hero"]');
-    await expect(host).toHaveAttribute('data-3d', 'ready');
-    await expect(host.locator('canvas')).toHaveAttribute('aria-hidden', 'true');
+    const scene = page.locator('[data-escena]');
+    await expect(scene).toHaveAttribute('data-escena3d', 'ready');
+    await expect(scene.locator('canvas')).toHaveAttribute('aria-hidden', 'true');
     await expect(page.getByRole('heading', { level: 1, name: 'KYRO' })).toBeVisible();
+    // El pie también usa el KYRO en volumen.
+    await expect(page.locator('footer [data-wordmark-3d]')).toHaveAttribute('data-3d', 'ready');
     expect(errors).toEqual([]);
   });
 
-  test('sin WebGL se ven las letras planas', async ({ page }) => {
+  test('sin WebGL se ve el KYRO plano y la portada funciona', async ({ page }) => {
     await page.addInitScript(() => {
       const original = HTMLCanvasElement.prototype.getContext;
       // Simula un navegador o una tarjeta gráfica sin WebGL.
@@ -100,19 +103,27 @@ test.describe('wordmark dimensional (exploración)', () => {
       } as typeof original;
     });
     await page.goto('/');
-    const host = page.locator('.hero [data-wordmark-3d]');
-    await expect(host).toHaveAttribute('data-3d', 'failed');
-    await expect(host.locator('canvas')).toHaveCount(0);
-    await expect(host.locator('.masthead__letter').first()).toBeVisible();
+    const scene = page.locator('[data-escena]');
+    await expect(scene).toHaveAttribute('data-escena3d', 'failed');
+    await expect(scene.locator('canvas')).toHaveCount(0);
+    await expect(scene.locator('.masthead__letter').first()).toBeVisible();
+    await expect(page.getByRole('main').getByRole('link', { name: 'Explorar las colecciones' })).toBeVisible();
   });
 
   test('con colores forzados se usan las letras planas del sistema', async ({ page }) => {
     await page.emulateMedia({ forcedColors: 'active' });
     await page.goto('/');
     await expect(page.locator('html')).not.toHaveClass(/\bdim\b/);
-    const host = page.locator('.hero [data-wordmark-3d]');
-    await expect(host.locator('.masthead__letter').first()).toBeVisible();
-    await expect(host.locator('canvas')).toHaveCount(0);
+    const scene = page.locator('[data-escena]');
+    await expect(scene.locator('.masthead__letter').first()).toBeVisible();
+    await expect(scene.locator('canvas')).toHaveCount(0);
+  });
+
+  test('con movimiento reducido la portada mide una pantalla', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    const heights = await page.evaluate(() => [document.querySelector('[data-escena]')!.getBoundingClientRect().height, innerHeight]);
+    expect(Math.abs((heights[0] ?? 0) - (heights[1] ?? 0))).toBeLessThan(2);
   });
 
   test.describe('sin JavaScript', () => {
@@ -120,7 +131,7 @@ test.describe('wordmark dimensional (exploración)', () => {
 
     test('se ven las letras planas', async ({ page }) => {
       await page.goto('/');
-      await expect(page.locator('.hero .masthead__letter').first()).toBeVisible();
+      await expect(page.locator('[data-escena] .masthead__letter').first()).toBeVisible();
     });
   });
 });

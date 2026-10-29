@@ -9,6 +9,7 @@ cualquier lanzamiento.
 | --- | --- | --- | --- |
 | Logotipo | `src/components/brand/Wordmark.astro`, `.wordmark` y `.masthead` en `src/styles/base.css` | Tipográfico y provisional, compuesto con Archivo extendida; también la cabecera "KYRO" a todo el ancho de la portada, el pie y el menú. El sitio ya usa `src/assets/brand/logo.svg` si existe | Logotipo oficial en SVG (requisitos en `MARCA.md`) |
 | Wordmark dimensional (exploración) | `src/scripts/wordmark-3d.ts`, `src/scripts/wordmark-geometry.json` (generado por `scripts/generate-wordmark-geometry.mjs`) | Propuesta visual en 3D del logotipo tipográfico provisional; no aprobada | Decisión de KYRO; si se adopta un logotipo oficial, habría que generar la geometría a partir de él |
+| Portada inmersiva «Cámara oscura» (exploración) | `src/scripts/3d/`, `src/components/brand/Escena.astro`, `src/components/catalog/Colecciones.astro` | Mundo 3D propio (suelo, reflejo, haz y polvo) alrededor del KYRO tipográfico provisional; no aprobado | Decisión de KYRO; prueba en dispositivos reales |
 | Favicon | `public/favicon.svg` | Monograma "K" geométrico | Versión derivada del logotipo oficial |
 | Textos de marca | `src/config/copy.ts` | Borrador basado solo en la descripción de la marca | Revisión y aprobación de KYRO |
 | Imagen de portada | `src/content/campaign/` | No hay; composición CSS de luz y grano | Fotografía de campaña con licencia (ver `IMAGENES.md`) |

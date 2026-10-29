@@ -1,8 +1,8 @@
 ---
+import { Picture } from 'astro:assets';
 import { getCollection } from 'astro:content';
-import Hero from '../components/brand/Hero.astro';
-import CategoryTiles from '../components/catalog/CategoryTiles.astro';
-import EmptyCollection from '../components/catalog/EmptyCollection.astro';
+import Escena from '../components/brand/Escena.astro';
+import Colecciones from '../components/catalog/Colecciones.astro';
 import FeaturedGrid from '../components/catalog/FeaturedGrid.astro';
 import CatalogSection from '../components/catalog/CatalogSection.astro';
 import ProductGrid from '../components/catalog/ProductGrid.astro';
@@ -41,15 +41,9 @@ const jsonLd = [
 <BaseLayout header="overlay">
   <script type="application/ld+json" slot="head" set:html={toJsonLd(jsonLd)} />
 
-  <Hero campaign={campaign} />
-
-  {
-    products.length === 0 && (
-      <CatalogSection id="coleccion" title={copy.home.collectionTitle}>
-        <EmptyCollection headingLevel="h3" divider={false} />
-      </CatalogSection>
-    )
-  }
+  {/* Plano secuencia: KYRO en el mundo 3D y, sin corte, las colecciones en profundidad. */}
+  <Escena collectionsHref="#colecciones" />
+  <Colecciones categories={categories} products={products} />
 
   {
     newArrivals.length > 0 && (
@@ -60,20 +54,42 @@ const jsonLd = [
   }
 
   {/* Corte a blanco: la única franja marfil del sitio separa las escenas oscuras. */}
-  <section class="manifesto" aria-label="La marca">
+  <section class:list={['manifesto', { 'manifesto--foto': campaign }]} aria-label="La marca">
     <div class="manifesto__inner container">
-      <p class="manifesto__text display" data-reveal="title">{copy.home.manifesto}</p>
-      <a class="text-link text-link--dark" href={routes.brand()} data-reveal="rise">Conocer la marca</a>
+      <div class="manifesto__copy">
+        <p class="manifesto__text display" data-reveal="title">{copy.home.manifesto}</p>
+        <a class="text-link text-link--dark" href={routes.brand()} data-reveal="rise">Conocer la marca</a>
+      </div>
+      {
+        campaign && (
+          <figure class="manifesto__foto" data-reveal="aperture">
+            <Picture
+              class:list={['manifesto__imagen', `manifesto__imagen--${campaign.data.focus}`]}
+              src={campaign.data.image}
+              alt={campaign.data.alt}
+              widths={[480, 720, 960, 1280, 1600]}
+              sizes="(min-width: 60rem) 40vw, 100vw"
+              formats={['avif', 'webp']}
+              loading="lazy"
+            />
+            {campaign.data.credit && (
+              <figcaption class="manifesto__credito">
+                {campaign.data.provisional ? 'Imagen provisional · ' : 'Fotografía: '}
+                {campaign.data.credit.url ? (
+                  <a href={campaign.data.credit.url} rel="noopener noreferrer" target="_blank">
+                    {campaign.data.credit.author} / {campaign.data.credit.source}
+                  </a>
+                ) : (
+                  `${campaign.data.credit.author} / ${campaign.data.credit.source}`
+                )}
+                {` (${campaign.data.credit.license})`}
+              </figcaption>
+            )}
+          </figure>
+        )
+      }
     </div>
   </section>
-
-  {
-    categories.length > 0 && (
-      <CatalogSection id="categorias" title={copy.home.categoriesTitle}>
-        <CategoryTiles categories={categories} />
-      </CatalogSection>
-    )
-  }
 
   {
     featured.length > 0 && (
@@ -106,8 +122,51 @@ const jsonLd = [
 
   .manifesto__inner {
     display: grid;
+    gap: var(--space-2xl);
+  }
+
+  .manifesto__copy {
+    display: grid;
     justify-items: start;
     gap: var(--space-xl);
+  }
+
+  .manifesto__foto {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    margin: 0;
+    overflow: hidden;
+    background: var(--color-obsidian);
+  }
+
+  .manifesto__foto :global(picture),
+  .manifesto__foto :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .manifesto__foto :global(.manifesto__imagen--top) {
+    object-position: 50% 15%;
+  }
+
+  .manifesto__foto :global(.manifesto__imagen--bottom) {
+    object-position: 50% 85%;
+  }
+
+  .manifesto__credito {
+    position: absolute;
+    inset: auto var(--space-sm) var(--space-sm) auto;
+    max-width: calc(100% - 2 * var(--space-sm));
+    padding: var(--space-2xs) var(--space-xs);
+    background: rgb(8 9 10 / 0.75);
+    color: var(--color-ivory-muted);
+    font-size: var(--text-xs);
+    text-align: right;
+  }
+
+  .manifesto__credito a {
+    color: var(--color-ivory);
   }
 
   .manifesto__text {
@@ -119,6 +178,12 @@ const jsonLd = [
   @media (min-width: 60rem) {
     .manifesto__inner {
       padding-left: calc(100% / 12 * 3);
+    }
+
+    .manifesto--foto .manifesto__inner {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: center;
+      padding-left: 0;
     }
   }
 </style>

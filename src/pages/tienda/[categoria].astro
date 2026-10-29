@@ -26,5 +26,11 @@ const { category, categories, products } = Astro.props;
 ---
 
 <BaseLayout title={category.name} description={`${category.name} de KYRO.`}>
-  <ShopView title={category.name} products={products} categories={categories} currentCategory={category.slug} />
+  <ShopView
+    title={category.name}
+    products={products}
+    categories={categories}
+    currentCategory={category.slug}
+    cover={category.cover}
+  />
 </BaseLayout>

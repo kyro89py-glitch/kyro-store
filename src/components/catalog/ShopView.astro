@@ -1,4 +1,5 @@
 ---
+import { Picture } from 'astro:assets';
 import type { Category, Product } from '../../lib/catalog';
 import CategoryNav from './CategoryNav.astro';
 import EmptyCollection from './EmptyCollection.astro';
@@ -11,8 +12,10 @@ interface Props {
   products: Product[];
   categories: Category[];
   currentCategory?: string | undefined;
+  /** Portada de la categoría: la foto de su panel en la portada viaja hasta aquí. */
+  cover?: Category['cover'];
 }
-const { title, products, categories, currentCategory } = Astro.props;
+const { title, products, categories, currentCategory, cover } = Astro.props;
 const count = products.length;
 ---
 
@@ -29,6 +32,21 @@ const count = products.length;
     }
     <span class="shop__rule" aria-hidden="true" data-reveal="line"></span>
   </header>
+  {
+    cover && currentCategory && (
+      <div class="shop__cover" data-vt={`c-${currentCategory}`}>
+        <Picture
+          src={cover.src}
+          alt=""
+          widths={[640, 960, 1280, 1600, 2000]}
+          sizes="(min-width: 90rem) 88rem, 100vw"
+          formats={['avif', 'webp']}
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
+    )
+  }
   <CategoryNav categories={categories} current={currentCategory} />
   <div class="shop__results">
     {
@@ -75,6 +93,39 @@ const count = products.length;
     font-family: var(--font-editorial);
     font-size: var(--text-2xl);
     font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  /* Franja de portada: recorte panorámico de la foto de la categoría. */
+  .shop__cover {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    margin-bottom: var(--space-lg);
+    overflow: hidden;
+    border-radius: 3px;
+    background: var(--color-surface);
+    box-shadow: inset 0 0 0 1px rgb(241 236 227 / 0.12);
+  }
+
+  .shop__cover :global(picture),
+  .shop__cover :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .shop__cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgb(8 9 10 / 0.55), transparent 60%);
+  }
+
+  @media (min-width: 48rem) {
+    .shop__cover {
+      aspect-ratio: 16 / 6;
+    }
   }
 
   .shop__rule {
