@@ -192,6 +192,53 @@ p {
   text-transform: uppercase;
 }
 
+/*
+ * Wordmark dimensional (EXPLORACIÓN, src/scripts/wordmark-3d.ts). Mientras se prepara
+ * la versión en 3D, las letras planas ceden su sitio (siguen en el HTML y ocupan su
+ * espacio); si falla, vuelven. El lienzo desborda un poco la caja del título para
+ * dejar sitio a la perspectiva y a la extrusión.
+ */
+.masthead[data-wordmark-3d] {
+  position: relative;
+}
+
+html.dim .masthead[data-wordmark-3d]:not([data-3d='failed']) > .masthead__letter {
+  visibility: hidden;
+}
+
+.masthead__canvas {
+  position: absolute;
+  top: -26%;
+  right: -1.5%;
+  bottom: -14%;
+  left: -1.5%;
+  width: 103%;
+  height: 140%;
+  pointer-events: none;
+  /* Sombra con la forma real de las letras: las separa del fondo. */
+  filter: drop-shadow(0 0.05em 0.06em rgb(0 0 0 / 0.7));
+}
+
+/* Contraluz muy tenue detrás de las letras. */
+.masthead[data-3d='ready']::before {
+  content: '';
+  position: absolute;
+  inset: -10% 4% -20%;
+  background: radial-gradient(closest-side, rgb(200 179 138 / 0.09), transparent);
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  .masthead__canvas,
+  .masthead[data-3d='ready']::before {
+    display: none;
+  }
+
+  html.dim .masthead[data-wordmark-3d] > .masthead__letter {
+    visibility: visible;
+  }
+}
+
 /* Logotipo oficial en SVG (src/assets/brand/logo.svg): toma el tamaño del texto
    que lo rodea y su color, igual que el tipográfico. */
 .logo {

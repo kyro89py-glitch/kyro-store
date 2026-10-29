@@ -12,14 +12,18 @@ import type { SvgComponent } from 'astro/types';
  * variant="masthead"  cabecera de revista a todo el ancho; en la versión tipográfica
  *                     cada letra es un elemento para poder revelarlas por separado.
  * reveal              (masthead) las letras suben una a una al entrar en pantalla.
+ * dimensional         (masthead) EXPLORACIÓN: la versión en 3D real (src/scripts/wordmark-3d.ts)
+ *                     sustituye a las letras planas si hay WebGL; "hero" en la portada,
+ *                     "static" en el pie y el menú. Sin WebGL quedan las letras planas.
  */
 interface Props {
   class?: string;
   variant?: 'mark' | 'masthead';
   reveal?: boolean;
+  dimensional?: 'hero' | 'static' | undefined;
   [key: string]: unknown;
 }
-const { class: className, variant = 'mark', reveal = false, ...rest } = Astro.props;
+const { class: className, variant = 'mark', reveal = false, dimensional, ...rest } = Astro.props;
 
 // Rutas fijas: Vite las resuelve al compilar. Solo el build de las pruebas e2e usa un
 // logotipo de prueba, para verificar este camino sin tocar los archivos reales.
@@ -40,7 +44,7 @@ const letters = [...'KYRO'];
       {...rest}
     />
   ) : variant === 'masthead' ? (
-    <span class:list={['masthead', className]} {...rest}>
+    <span class:list={['masthead', className]} data-wordmark-3d={dimensional} {...rest}>
       <span class="visually-hidden">KYRO</span>
       {letters.map((letter) => (
         <span class="masthead__letter" aria-hidden="true" data-reveal={reveal ? 'title' : undefined}>

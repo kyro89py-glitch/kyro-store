@@ -77,3 +77,50 @@ test('estado vacío accesible', async ({ page }) => {
   await page.goto('/');
   await expectNoA11yViolations(page);
 });
+
+test.describe('wordmark dimensional (exploración)', () => {
+  test('la portada dibuja KYRO en 3D sin perder el texto accesible', async ({ page }) => {
+    const errors = trackErrors(page);
+    await page.goto('/');
+    const hasWebGL = await page.evaluate(() => Boolean(document.createElement('canvas').getContext('webgl')));
+    test.skip(!hasWebGL, 'este navegador no tiene WebGL');
+    const host = page.locator('.hero [data-wordmark-3d="hero"]');
+    await expect(host).toHaveAttribute('data-3d', 'ready');
+    await expect(host.locator('canvas')).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.getByRole('heading', { level: 1, name: 'KYRO' })).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test('sin WebGL se ven las letras planas', async ({ page }) => {
+    await page.addInitScript(() => {
+      const original = HTMLCanvasElement.prototype.getContext;
+      // Simula un navegador o una tarjeta gráfica sin WebGL.
+      HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, options?: unknown) {
+        return type === 'webgl' ? null : original.call(this, type as '2d', options as CanvasRenderingContext2DSettings);
+      } as typeof original;
+    });
+    await page.goto('/');
+    const host = page.locator('.hero [data-wordmark-3d]');
+    await expect(host).toHaveAttribute('data-3d', 'failed');
+    await expect(host.locator('canvas')).toHaveCount(0);
+    await expect(host.locator('.masthead__letter').first()).toBeVisible();
+  });
+
+  test('con colores forzados se usan las letras planas del sistema', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' });
+    await page.goto('/');
+    await expect(page.locator('html')).not.toHaveClass(/\bdim\b/);
+    const host = page.locator('.hero [data-wordmark-3d]');
+    await expect(host.locator('.masthead__letter').first()).toBeVisible();
+    await expect(host.locator('canvas')).toHaveCount(0);
+  });
+
+  test.describe('sin JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+
+    test('se ven las letras planas', async ({ page }) => {
+      await page.goto('/');
+      await expect(page.locator('.hero .masthead__letter').first()).toBeVisible();
+    });
+  });
+});

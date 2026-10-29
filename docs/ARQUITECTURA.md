@@ -60,6 +60,9 @@ navegador: localStorage {sku, cantidad} ──┴──▶ carrito = precios de 
   El único script en línea (el que activa los revelados antes del primer pintado) registra
   su hash con `Astro.csp.insertScriptHash` en `BaseLayout.astro`; los valores dinámicos de
   estilo se escriben con CSSOM (`style.setProperty`), nunca con atributos `style`.
+- **WebGL sin terceros:** el wordmark dimensional (exploración) es un módulo propio que se
+  carga aparte (`import()` dinámico, mismo origen); no usa `eval`, recursos externos ni
+  librerías. Si el navegador no tiene WebGL, se queda el texto plano.
 - **Sin HTML dinámico:** el carrito escribe con `textContent`/`setAttribute`; los datos
   estructurados (JSON-LD) escapan `<`.
 - **Sin secretos** en el repositorio (`.env` ignorado; `.env.example` documenta variables).

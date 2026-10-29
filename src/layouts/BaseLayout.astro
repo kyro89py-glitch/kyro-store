@@ -22,12 +22,16 @@ const fullTitle = title ? `${title} — ${store.name}` : `${store.name} — Moda
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
 const indexable = store.indexable && !__KYRO_FIXTURES__;
 
-// Activa los revelados al desplazarse antes del primer pintado (sin parpadeo). Seguro:
-// si el script de revelado no arranca en 3 s, se retira la clase y todo queda visible.
+// Antes del primer pintado (sin parpadeo):
+// - `motion` activa los revelados al desplazarse;
+// - `dim` reserva el sitio del wordmark en 3D (exploración) si hay WebGL y no hay
+//   colores forzados: las letras planas esperan a la versión 3D.
+// Seguro: si los scripts no arrancan en 3 s, se retiran ambas clases y todo queda visible.
 // Astro no calcula el hash de los scripts inline, así que se registra aquí en la CSP.
 const motionBootstrap =
-  "document.documentElement.classList.add('motion');" +
-  "setTimeout(function(){if(!window.__kyroMotion)document.documentElement.classList.remove('motion')},3000);";
+  'var d=document.documentElement;d.classList.add("motion");' +
+  'try{if(window.WebGLRenderingContext&&!matchMedia("(forced-colors: active)").matches)d.classList.add("dim")}catch(e){}' +
+  'setTimeout(function(){if(!window.__kyroMotion){d.classList.remove("motion");d.classList.remove("dim")}},3000);';
 Astro.csp?.insertScriptHash(`sha256-${createHash('sha256').update(motionBootstrap).digest('base64')}`);
 ---
 
@@ -72,6 +76,16 @@ Astro.csp?.insertScriptHash(`sha256-${createHash('sha256').update(motionBootstra
     {cartDrawer && <CartDrawer />}
     <script>
       import '../scripts/reveal';
+
+      // Wordmark en 3D (exploración): se carga aparte y solo donde hay dónde usarlo.
+      const hosts = [...document.querySelectorAll<HTMLElement>('[data-wordmark-3d]')];
+      if (hosts.length > 0 && document.documentElement.classList.contains('dim')) {
+        import('../scripts/wordmark-3d')
+          .then(({ init }) => init(hosts))
+          .catch(() => {
+            for (const host of hosts) host.dataset['3d'] = 'failed';
+          });
+      }
     </script>
   </body>
 </html>

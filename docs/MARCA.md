@@ -66,6 +66,32 @@ Requisitos del archivo:
   de cartel a todo el ancho de la pantalla.
 - Aparte, un **símbolo cuadrado** para el favicon y los iconos de aplicación.
 
+### Wordmark dimensional (exploración)
+
+> **Exploración visual, no aprobada.** No es un logotipo oficial: es una propuesta de cómo
+> podría presentarse el KYRO tipográfico provisional en volumen. Se puede retirar sin
+> tocar nada más (quitar `dimensional` en los tres usos de `Wordmark`).
+
+- **Qué es:** las mismas letras del logotipo provisional (Archivo, peso 640, anchura 125 %),
+  extruidas en 3D real con WebGL, sin librerías (`src/scripts/wordmark-3d.ts`). La geometría
+  sale de la tipografía con `scripts/generate-wordmark-geometry.mjs`.
+- **Materiales:** cara de obsidiana satinada, bisel fino de metal oscuro pulido (atrapa la
+  luz y dibuja el contorno), laterales de grafito que se pierden en sombra hacia el fondo.
+- **Luz:** principal lateral cálida, contraluz frío desde atrás, reflejo de una caja de luz
+  vertical y sombra con la forma de las letras para separarlas del fondo.
+- **Revelación** (portada, ~3 s; ~2 s en móvil): cada letra llega desde la oscuridad del
+  fondo, primero como silueta; la cámara se acerca y gira hasta su sitio mientras la luz
+  pasa de rasante a lateral y el reflejo cruza las letras. Después, con ratón, la luz y la
+  cámara siguen al cursor con suavidad. En el pie y el menú, la misma revelación más corta
+  al entrar en pantalla.
+- **Dónde:** portada, pie de todas las páginas y menú móvil. En la cabecera se mantiene
+  la versión plana: a 20 px el volumen no se lee y la nitidez importa más.
+- **Ligera y accesible:** el texto "KYRO" sigue en el HTML (el lienzo es decorativo); en
+  móvil, menos resolución y sin seguimiento del cursor; solo se dibuja mientras hay algo
+  que animar y el elemento está en pantalla; ~10 kB comprimidos que se cargan aparte.
+- **Respaldo:** sin WebGL, sin JavaScript, con colores forzados o si algo falla, se ven las
+  letras planas de siempre. Con "reducir movimiento" se dibuja directamente la pose final.
+
 ## Movimiento
 
 Un lenguaje de cámara: el movimiento revela, encuadra y confirma; nunca decora ni hace
