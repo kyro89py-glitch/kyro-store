@@ -1,24 +1,37 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import { render } from 'astro:content';
+import CatalogSection from '../../components/catalog/CatalogSection.astro';
 import Price from '../../components/catalog/Price.astro';
+import ProductGrid from '../../components/catalog/ProductGrid.astro';
 import ProductForm from '../../components/product/ProductForm.astro';
 import ProductGallery from '../../components/product/ProductGallery.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { categorySlug, getActiveProducts, isPurchasable, type Product } from '../../lib/catalog';
 import { toDecimalString } from '../../lib/money';
+import { breadcrumbJsonLd } from '../../lib/seo';
 import { toJsonLd } from '../../lib/text';
 import { routes } from '../../lib/urls';
 
 export const getStaticPaths = (async () => {
   const products = await getActiveProducts();
-  return products.map((product) => ({ params: { slug: product.id }, props: { product } }));
+  return products.map((product) => ({
+    params: { slug: product.id },
+    props: {
+      product,
+      // Otras piezas reales de la misma categoría, en el orden del catálogo.
+      related: products
+        .filter((other) => other.id !== product.id && categorySlug(other) === categorySlug(product))
+        .slice(0, 4),
+    },
+  }));
 }) satisfies GetStaticPaths;
 
 interface Props {
   product: Product;
+  related: Product[];
 }
-const { product } = Astro.props;
+const { product, related } = Astro.props;
 const { data } = product;
 const { Content } = await render(product);
 const hasDescription = Boolean(product.body?.trim());
@@ -39,10 +52,20 @@ const jsonLd = {
     ...(Astro.site ? { url: new URL(routes.product(product.id), Astro.site).href } : {}),
   },
 };
+const breadcrumbs = breadcrumbJsonLd(
+  [
+    { name: 'Tienda', path: routes.shop() },
+    { name: data.category, path: routes.category(categorySlug(product)) },
+    { name: data.name, path: routes.product(product.id) },
+  ],
+  Astro.site,
+);
+const relatedTitle = `Más en ${data.category}`;
 ---
 
 <BaseLayout title={data.name} description={data.summary}>
   <script type="application/ld+json" slot="head" set:html={toJsonLd(jsonLd)} />
+  {breadcrumbs && <script type="application/ld+json" slot="head" set:html={toJsonLd(breadcrumbs)} />}
 
   <article class="product">
     <div class="product__gallery">
@@ -112,6 +135,18 @@ const jsonLd = {
       </div>
     </div>
   </article>
+
+  {
+    related.length > 0 && (
+      <CatalogSection
+        id="relacionados"
+        title={relatedTitle}
+        link={{ label: 'Ver la categoría', href: routes.category(categorySlug(product)) }}
+      >
+        <ProductGrid products={related} label={relatedTitle} eager={false} />
+      </CatalogSection>
+    )
+  }
 </BaseLayout>
 
 <style>

@@ -1,0 +1,95 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getInfoPages, type InfoPage } from '../../lib/pages';
+import { formatDate } from '../../lib/text';
+
+export const getStaticPaths = (async () => {
+  const pages = await getInfoPages();
+  return pages.map((page) => ({ params: { slug: page.id }, props: { page } }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  page: InfoPage;
+}
+const { page } = Astro.props;
+const { Content } = await render(page);
+---
+
+<BaseLayout title={page.data.title} description={page.data.description}>
+  <article class="info container">
+    <header class="info__head">
+      <h1 class="info__title editorial">{page.data.title}</h1>
+      <p class="info__updated muted">
+        Actualizado el <time datetime={page.data.updatedAt.toISOString().slice(0, 10)}>{formatDate(page.data.updatedAt)}</time>
+      </p>
+    </header>
+    <div class="info__body">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .info {
+    max-width: 46rem;
+    padding-top: var(--space-2xl);
+  }
+
+  .info__head {
+    display: grid;
+    gap: var(--space-md);
+    padding-bottom: var(--space-xl);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .info__title {
+    font-size: var(--text-4xl);
+  }
+
+  .info__updated {
+    font-size: var(--text-sm);
+  }
+
+  /* Texto largo: medida cómoda y jerarquía editorial. */
+  .info__body {
+    max-width: var(--measure);
+    padding-top: var(--space-xl);
+    color: var(--color-ivory);
+  }
+
+  .info__body :global(* + *) {
+    margin-top: var(--space-md);
+  }
+
+  .info__body :global(h2) {
+    margin-top: var(--space-2xl);
+    font-family: var(--font-editorial);
+    font-size: var(--text-2xl);
+    font-weight: 420;
+  }
+
+  .info__body :global(h3) {
+    margin-top: var(--space-xl);
+    font-size: var(--text-md);
+    font-weight: 500;
+  }
+
+  .info__body :global(ul),
+  .info__body :global(ol) {
+    padding-left: 1.2em;
+  }
+
+  .info__body :global(li + li) {
+    margin-top: var(--space-xs);
+  }
+
+  .info__body :global(a) {
+    text-decoration-color: var(--color-champagne);
+  }
+
+  .info__body :global(strong) {
+    font-weight: 600;
+  }
+</style>

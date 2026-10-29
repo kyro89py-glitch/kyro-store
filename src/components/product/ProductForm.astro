@@ -135,6 +135,32 @@ const optionId = `option-${product.id}`;
     text-decoration-color: var(--color-ivory-muted);
   }
 
+  /* Alto contraste (Windows): el sistema reemplaza fondos y bordes, y la talla
+     elegida dejaría de distinguirse. Se pintan con colores del sistema. */
+  @media (forced-colors: active) {
+    .variant__label {
+      forced-color-adjust: none;
+      border-color: ButtonText;
+      background: ButtonFace;
+      color: ButtonText;
+    }
+
+    .variant__input:hover:not(:disabled) + .variant__label,
+    .variant__input:checked + .variant__label {
+      border-color: Highlight;
+    }
+
+    .variant__input:checked + .variant__label {
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    .variant__input:disabled + .variant__label {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+
   .product-form__error {
     font-size: var(--text-sm);
     color: var(--color-champagne);

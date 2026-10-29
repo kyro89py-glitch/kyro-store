@@ -4,7 +4,7 @@ import HeroFrame from '../components/brand/HeroFrame.astro';
 import CategoryTiles from '../components/catalog/CategoryTiles.astro';
 import EmptyCollection from '../components/catalog/EmptyCollection.astro';
 import FeaturedGrid from '../components/catalog/FeaturedGrid.astro';
-import HomeSection from '../components/catalog/HomeSection.astro';
+import CatalogSection from '../components/catalog/CatalogSection.astro';
 import ProductGrid from '../components/catalog/ProductGrid.astro';
 import { copy } from '../config/copy';
 import { store } from '../config/store';
@@ -46,41 +46,41 @@ const jsonLd = [
 
   {
     products.length === 0 && (
-      <HomeSection id="coleccion" title={copy.home.collectionTitle}>
+      <CatalogSection id="coleccion" title={copy.home.collectionTitle}>
         <EmptyCollection headingLevel="h3" divider={false} />
-      </HomeSection>
+      </CatalogSection>
     )
   }
 
   {
     newArrivals.length > 0 && (
-      <HomeSection id="novedades" title={copy.home.newArrivalsTitle} link={shopLink}>
+      <CatalogSection id="novedades" title={copy.home.newArrivalsTitle} link={shopLink}>
         <ProductGrid products={newArrivals} label={copy.home.newArrivalsTitle} eager={false} />
-      </HomeSection>
+      </CatalogSection>
     )
   }
 
   {
     categories.length > 0 && (
-      <HomeSection id="categorias" title={copy.home.categoriesTitle}>
+      <CatalogSection id="categorias" title={copy.home.categoriesTitle}>
         <CategoryTiles categories={categories} />
-      </HomeSection>
+      </CatalogSection>
     )
   }
 
   {
     featured.length > 0 && (
-      <HomeSection id="destacados" title={copy.home.featuredTitle}>
+      <CatalogSection id="destacados" title={copy.home.featuredTitle}>
         <FeaturedGrid products={featured} label={copy.home.featuredTitle} />
-      </HomeSection>
+      </CatalogSection>
     )
   }
 
   {
     showCollection && (
-      <HomeSection id="coleccion" title={copy.home.collectionTitle} link={shopLink}>
+      <CatalogSection id="coleccion" title={copy.home.collectionTitle} link={shopLink}>
         <ProductGrid products={products.slice(0, 8)} label={copy.home.collectionTitle} eager={false} />
-      </HomeSection>
+      </CatalogSection>
     )
   }
 

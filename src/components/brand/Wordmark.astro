@@ -1,10 +1,33 @@
 ---
-// Logotipo tipográfico provisional. Cuando KYRO entregue el logotipo oficial (SVG),
-// se reemplaza aquí y cambia en todo el sitio.
+import type { SvgComponent } from 'astro/types';
+
+/*
+ * Logotipo de KYRO en todo el sitio (cabecera, pie y portada).
+ *
+ * Si existe el logotipo oficial en src/assets/brand/logo.svg, se usa ese archivo.
+ * Mientras no exista, se muestra el logotipo tipográfico provisional. El SVG debe
+ * pintar con `currentColor` para tomar el color de cada contexto (ver docs/MARCA.md).
+ */
 interface Props {
   class?: string;
+  [key: string]: unknown;
 }
-const { class: className } = Astro.props;
+const { class: className, ...rest } = Astro.props;
+
+// Rutas fijas: Vite las resuelve al compilar. Con el catálogo de prueba se usa un
+// logotipo de prueba para verificar este camino sin tocar los archivos reales.
+const logos = __KYRO_FIXTURES__
+  ? import.meta.glob<{ default: SvgComponent }>('/tests/fixtures/brand/logo.svg', { eager: true })
+  : import.meta.glob<{ default: SvgComponent }>('/src/assets/brand/logo.svg', { eager: true });
+const Logo = Object.values(logos)[0]?.default;
 ---
 
-<span class:list={['wordmark', className]}>KYRO</span>
+{
+  Logo ? (
+    <Logo class:list={['logo', className]} role="img" aria-label="KYRO" {...rest} />
+  ) : (
+    <span class:list={['wordmark', className]} {...rest}>
+      KYRO
+    </span>
+  )
+}

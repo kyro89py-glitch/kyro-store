@@ -3,7 +3,15 @@ import { cartToggle, expectNoA11yViolations, expectNoHorizontalOverflow, trackEr
 
 // Catálogo de prueba: tests/fixtures/catalog (moneda XTS, productos no reales).
 
-const PAGES = ['/', '/tienda/', '/tienda/categoria-de-prueba-a/', '/producto/prenda-de-prueba-uno/', '/carrito/', '/marca/'];
+const PAGES = [
+  '/',
+  '/tienda/',
+  '/tienda/categoria-de-prueba-a/',
+  '/producto/prenda-de-prueba-uno/',
+  '/carrito/',
+  '/marca/',
+  '/info/pagina-de-prueba/',
+];
 
 test.describe('páginas', () => {
   for (const path of PAGES) {
@@ -225,6 +233,70 @@ test.describe('carrito', () => {
     await page.getByRole('button', { name: 'Añadir al carrito' }).click();
     await expect(page.getByRole('dialog', { name: 'Carrito' })).toBeVisible();
     await expectNoA11yViolations(page);
+  });
+});
+
+test.describe('logotipo', () => {
+  test('con un SVG en la carpeta de marca, la cabecera y la portada lo usan', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('link', { name: 'KYRO, inicio' }).first().locator('svg.logo')).toHaveCount(1);
+    await expect(page.getByRole('heading', { level: 1 }).getByRole('img', { name: 'KYRO' })).toBeVisible();
+    await expect(page.locator('.wordmark')).toHaveCount(0);
+  });
+});
+
+test.describe('páginas informativas', () => {
+  test('el pie las enlaza y muestran título, vigencia y contenido', async ({ page }) => {
+    await page.goto('/');
+    const footer = page.getByRole('contentinfo');
+    await expect(footer.getByRole('heading', { name: 'Información' })).toBeVisible();
+    await footer.getByRole('link', { name: 'Página informativa de prueba' }).click();
+    await expect(page).toHaveURL(/\/info\/pagina-de-prueba\/$/);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Página informativa de prueba');
+    await expect(page.locator('time')).toHaveText('1 de octubre de 2026');
+    await expect(page.locator('time')).toHaveAttribute('datetime', '2026-10-01');
+    await expect(page.getByRole('heading', { level: 2, name: 'Un apartado de prueba' })).toBeVisible();
+  });
+});
+
+test.describe('ficha: más en la categoría', () => {
+  test('muestra otras piezas reales de la misma categoría', async ({ page }) => {
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    const related = page.getByRole('list', { name: 'Más en Categoría de prueba A' });
+    await expect(related.getByRole('heading', { level: 3 })).toHaveText(['Prenda de prueba 3']);
+    await page.getByRole('link', { name: 'Ver la categoría' }).click();
+    await expect(page).toHaveURL(/\/tienda\/categoria-de-prueba-a\/$/);
+  });
+
+  test('sin datos de dominio no se emiten migas de pan estructuradas', async ({ page }) => {
+    await page.goto('/producto/prenda-de-prueba-dos/');
+    await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
+  });
+});
+
+test.describe('alto contraste (forced colors)', () => {
+  test('la talla elegida y las no disponibles se distinguen', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'reduce' });
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    await page.getByRole('radio', { name: 'S', exact: true }).check();
+    const look = (sku: string) =>
+      page.locator(`input[value="${sku}"] + .variant__label`).evaluate((element) => {
+        const style = getComputedStyle(element);
+        return `${style.backgroundColor}|${style.color}|${style.borderTopColor}`;
+      });
+    // expect.poll espera a que terminen las transiciones de color.
+    await expect.poll(async () => (await look('TEST-001-S')) !== (await look('TEST-001-L'))).toBe(true);
+    await expect.poll(async () => (await look('TEST-001-M')) !== (await look('TEST-001-L'))).toBe(true);
+  });
+
+  test('el logotipo de la portada sigue siendo visible', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'reduce' });
+    await page.goto('/');
+    const color = await page.locator('.hero__title').evaluate((element) => {
+      const target = element.querySelector('.hero__wordmark, svg') ?? element;
+      return getComputedStyle(target).color;
+    });
+    expect(color).not.toMatch(/rgba\(\d+, \d+, \d+, 0\)/);
   });
 });
 

@@ -19,5 +19,6 @@ export const routes = {
   product: (slug: string) => href(`producto/${slug}`),
   cart: () => href('carrito'),
   brand: () => href('marca'),
+  info: (slug: string) => href(`info/${slug}`),
   catalogIndex: () => href('catalog.json'),
 };

@@ -31,6 +31,20 @@ test('el pie de página no inventa categorías ni contacto', async ({ page }) =>
   await expect(footer.getByRole('heading', { name: 'Contacto' })).toHaveCount(0);
 });
 
+test('sin logotipo oficial se usa el tipográfico provisional', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('svg.logo')).toHaveCount(0);
+  await expect(page.getByRole('heading', { level: 1, name: 'KYRO' })).toBeVisible();
+  await expect(page.locator('.site-header .wordmark')).toHaveText('KYRO');
+});
+
+test('sin textos de KYRO no hay páginas informativas', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('contentinfo').getByRole('heading', { name: 'Información' })).toHaveCount(0);
+  const testPage = await page.request.get('/info/pagina-de-prueba/');
+  expect(testPage.status()).toBe(404);
+});
+
 test('no hay sitemap mientras la tienda no se lance', async ({ page }) => {
   const sitemap = await page.request.get('/sitemap.xml');
   expect(sitemap.status()).toBe(404);

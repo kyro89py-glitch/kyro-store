@@ -41,11 +41,14 @@ navegador: localStorage {sku, cantidad} ──┴──▶ carrito = precios de 
   Una sección sin datos no se muestra.
 - La imagen editorial de la portada vive en su propia colección (`src/content/campaign/`)
   con procedencia y licencia obligatorias; si es provisional, el sitio muestra el crédito.
+- Las páginas informativas (`src/content/pages/` → `/info/<slug>/`) y el logotipo oficial
+  (`src/assets/brand/logo.svg`) se activan solos cuando existen sus archivos.
 
 ## SEO básico
 
 - Título, descripción, `canonical` y Open Graph por página; datos estructurados de
-  `Organization`/`WebSite` en la portada y de `Product` en cada ficha.
+  `Organization`/`WebSite` en la portada y de `Product` en cada ficha; migas de pan
+  (`BreadcrumbList`) en la ficha cuando haya dominio definido.
 - `robots.txt` y `noindex` bloquean la indexación mientras `store.indexable` sea `false`.
 - `/sitemap.xml` se genera solo cuando la tienda sea indexable y tenga dominio
   (`KYRO_SITE_URL`); hasta entonces no existe.
@@ -66,6 +69,8 @@ navegador: localStorage {sku, cantidad} ──┴──▶ carrito = precios de 
 
 - Pruebas automáticas con axe (WCAG 2.2 AA) en todas las páginas y en el panel del
   carrito, en escritorio, tableta y móvil.
+- Modo de alto contraste de Windows (`forced-colors`): la talla elegida y las no
+  disponibles se distinguen con colores del sistema.
 - Navegación completa por teclado, foco visible en champán, diálogos nativos (`<dialog>`),
   anuncios por `aria-live` al cambiar el carrito.
 - Una sola animación automática (la apertura de la portada). Con `prefers-reduced-motion`
