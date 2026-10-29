@@ -104,4 +104,4 @@ Se configura aparte, en `src/content/campaign/`. Ver [IMAGENES.md](IMAGENES.md).
 
 `npm run dev:fixtures` arranca el sitio con los datos de `tests/fixtures/` (productos
 ficticios, moneda `XTS`, una imagen de portada abstracta y un aviso visible en todas
-las páginas).
+las páginas). No puede correr a la vez que `npm run dev` en la misma carpeta.

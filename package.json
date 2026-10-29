@@ -8,15 +8,17 @@
     "node": ">=22.23.4"
   },
   "scripts": {
-    "dev": "astro dev",
-    "dev:fixtures": "node scripts/with-fixtures.mjs dev",
+    "dev": "node scripts/run-astro.mjs dev",
+    "dev:fixtures": "node scripts/run-astro.mjs --fixtures dev",
     "build": "astro build",
-    "build:fixtures": "node scripts/with-fixtures.mjs build",
+    "build:fixtures": "node scripts/run-astro.mjs --fixtures build",
+    "build:e2e": "node scripts/run-astro.mjs --fixtures --test-logo build",
     "preview": "astro preview",
+    "preview:fixtures": "node scripts/run-astro.mjs --fixtures preview",
     "check": "astro check",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "verify": "npm run check && npm run test && npm run build && npm run build:fixtures && npm run test:e2e"
+    "verify": "npm run check && npm run test && npm run build && npm run build:e2e && npm run test:e2e"
   },
   "dependencies": {
     "astro": "7.4.3"

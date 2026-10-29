@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Las pruebas e2e usan dos builds ya generados (npm run build && npm run build:fixtures):
-// - Catálogo de prueba (.fixtures-dist) para probar tienda, producto y carrito.
+// Las pruebas e2e usan dos builds ya generados (npm run build && npm run build:e2e):
+// - Datos de prueba con logotipo de prueba (.e2e-dist) para probar tienda, producto y carrito.
 // - Producción (dist), con el catálogo real vacío.
 // `--ignore-lock` mantiene `astro preview` en primer plano para que Playwright lo controle.
 const fixturesURL = 'http://127.0.0.1:4322';
@@ -48,7 +48,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'node scripts/with-fixtures.mjs preview --port 4322 --host 127.0.0.1 --ignore-lock',
+      command: 'node scripts/run-astro.mjs --fixtures --test-logo preview --port 4322 --host 127.0.0.1 --ignore-lock',
       url: fixturesURL,
       reuseExistingServer: !process.env['CI'],
     },

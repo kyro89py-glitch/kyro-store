@@ -1,10 +1,13 @@
 // @ts-check
 import { defineConfig, fontProviders } from 'astro/config';
 
-// `KYRO_CATALOG=fixtures` (vía `npm run dev:fixtures` / `build:fixtures`) carga el
-// catálogo de prueba de tests/fixtures. Se compila en otra carpeta para que nunca
-// pueda confundirse con el build de producción en dist/.
+// `KYRO_CATALOG=fixtures` (vía `npm run dev:fixtures` / `build:fixtures`) carga los
+// datos de prueba de tests/fixtures. Se compila en otra carpeta para que nunca pueda
+// confundirse con el build de producción en dist/.
 const useFixtures = process.env.KYRO_CATALOG === 'fixtures';
+// `KYRO_TEST_LOGO=1` (solo `npm run build:e2e`) añade el logotipo de prueba para
+// verificar el uso de un SVG oficial. La demostración muestra el logotipo real.
+const useTestLogo = useFixtures && process.env.KYRO_TEST_LOGO === '1';
 
 export default defineConfig({
   // URL pública definitiva. Se define cuando exista dominio; mientras tanto no hay
@@ -15,7 +18,7 @@ export default defineConfig({
   base: process.env.KYRO_BASE_PATH || '/',
   trailingSlash: 'always',
   output: 'static',
-  outDir: useFixtures ? './.fixtures-dist' : './dist',
+  outDir: useTestLogo ? './.e2e-dist' : useFixtures ? './.fixtures-dist' : './dist',
 
   security: {
     csp: {
@@ -89,6 +92,7 @@ export default defineConfig({
   vite: {
     define: {
       __KYRO_FIXTURES__: JSON.stringify(useFixtures),
+      __KYRO_TEST_LOGO__: JSON.stringify(useTestLogo),
     },
   },
 });
