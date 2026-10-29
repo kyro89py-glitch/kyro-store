@@ -1,0 +1,423 @@
+---
+import { Picture } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import { copy } from '../../config/copy';
+import { routes } from '../../lib/urls';
+import Wordmark from './Wordmark.astro';
+
+/*
+ * Portada: una pantalla de cine y la cabecera de revista "KYRO" a todo el ancho,
+ * montada sobre el borde inferior de la pantalla.
+ *
+ * Secuencia de entrada (solo CSS, sin pantalla de carga):
+ *   la pantalla se abre como un obturador → las letras de KYRO suben una a una →
+ *   aparece el rótulo → aparecen las acciones.
+ * Después: la luz deriva despacio; con ratón, un foco sigue al cursor; al desplazarse,
+ * la pantalla y el nombre se separan (parallax). Con "reducir movimiento", todo quieto.
+ *
+ * Con una imagen de campaña autorizada (src/content/campaign/) la fotografía ocupa la
+ * pantalla con un acercamiento lento; sin ella, una composición de luz y grano.
+ */
+interface Props {
+  campaign?: CollectionEntry<'campaign'> | undefined;
+}
+const { campaign } = Astro.props;
+const media = campaign?.data;
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <figure class="hero__screen" data-has-media={media ? '' : undefined}>
+    <div class="hero__visual">
+    {
+      media ? (
+        <Picture
+          class:list={['hero__image', `hero__image--${media.focus}`]}
+          src={media.image}
+          alt={media.alt}
+          widths={[640, 960, 1280, 1600, 2000, 2560]}
+          sizes="100vw"
+          formats={['avif', 'webp']}
+          loading="eager"
+          fetchpriority="high"
+        />
+      ) : (
+        <div class="hero__light" aria-hidden="true" />
+      )
+    }
+    </div>
+    <div class="hero__veil" aria-hidden="true"></div>
+    <div class="hero__spot" aria-hidden="true"></div>
+    <div class="hero__grain" aria-hidden="true"></div>
+    {
+      media?.credit && (
+        <figcaption class="hero__credit">
+          {media.provisional ? 'Imagen provisional · ' : 'Fotografía: '}
+          {media.credit.url ? (
+            <a href={media.credit.url} rel="noopener noreferrer" target="_blank">
+              {media.credit.author} / {media.credit.source}
+            </a>
+          ) : (
+            `${media.credit.author} / ${media.credit.source}`
+          )}
+          {` (${media.credit.license})`}
+        </figcaption>
+      )
+    }
+  </figure>
+
+  <div class="hero__caption">
+    <p class="hero__line editorial-italic">{copy.hero.line}</p>
+    <div class="hero__actions">
+      <a class="button button--primary" href={routes.shop()}>Explorar la colección</a>
+      <a class="text-link" href={routes.brand()}>Conocer la marca</a>
+    </div>
+  </div>
+
+  <h1 class="hero__title" id="hero-title" data-header-sentinel>
+    <Wordmark variant="masthead" class="hero__wordmark" />
+  </h1>
+</section>
+
+<style>
+  .hero {
+    --frame-inset: var(--gutter);
+
+    position: relative;
+    display: grid;
+    /* minmax(0, 1fr): el nombre nunca ensancha la columna más allá de la pantalla. */
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-height: 88svh;
+    padding: calc(var(--header-height) + var(--space-sm)) 0 var(--space-lg);
+    background: var(--color-obsidian-deep);
+    overflow: clip;
+    container-type: inline-size;
+  }
+
+  @media (min-width: 48rem) {
+    .hero {
+      min-height: calc(100svh - var(--notice-height, 0px));
+      padding-inline: var(--frame-inset);
+    }
+  }
+
+  /* ---------- Pantalla ---------- */
+
+  .hero__screen {
+    grid-area: 1 / 1;
+    position: relative;
+    min-height: 22rem;
+    margin: 0;
+    overflow: hidden;
+    background: var(--color-obsidian);
+    animation: hero-aperture 1300ms var(--ease-shutter) both;
+  }
+
+  .hero__visual {
+    position: absolute;
+    inset: 0;
+  }
+
+  .hero__visual > :global(picture) {
+    position: absolute;
+    inset: 0;
+  }
+
+  .hero__screen :global(.hero__image) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: hero-settle 2800ms var(--ease-out) both;
+  }
+
+  .hero__screen :global(.hero__image--top) {
+    object-position: 50% 15%;
+  }
+
+  .hero__screen :global(.hero__image--bottom) {
+    object-position: 50% 85%;
+  }
+
+  .hero__screen :global(.hero__image--left) {
+    object-position: 20% 50%;
+  }
+
+  .hero__screen :global(.hero__image--right) {
+    object-position: 80% 50%;
+  }
+
+  /* Luz de proyector: un foco cálido, un halo frío y un destello anamórfico. */
+  .hero__light {
+    position: absolute;
+    inset: -25%;
+    background:
+      radial-gradient(ellipse 34% 44% at 30% 38%, rgb(200 179 138 / 0.3), transparent 70%),
+      radial-gradient(ellipse 28% 36% at 74% 62%, rgb(241 236 227 / 0.08), transparent 70%),
+      linear-gradient(90deg, transparent 6%, rgb(200 179 138 / 0.22) 46%, transparent 94%) 50% 52% / 100% 1px
+        no-repeat,
+      linear-gradient(180deg, #13161a, #0a0c0d);
+    animation:
+      hero-light-in 2200ms var(--ease-out) 300ms both,
+      hero-drift 22s var(--ease-in-out) 2500ms infinite alternate;
+  }
+
+  /* Velo: asegura la lectura del texto sobre cualquier fotografía. */
+  .hero__veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgb(8 9 10 / 0.55), transparent 38%),
+      linear-gradient(0deg, rgb(8 9 10 / 0.65), transparent 45%);
+  }
+
+  /* Foco que sigue al cursor (solo con ratón; ver el script). */
+  .hero__spot {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: radial-gradient(
+      circle 22rem at var(--spot-x, 70%) var(--spot-y, 35%),
+      rgb(241 236 227 / 0.1),
+      transparent 70%
+    );
+    transition: opacity 600ms var(--ease-out);
+    pointer-events: none;
+  }
+
+  .hero[data-spotlight] .hero__spot {
+    opacity: 1;
+  }
+
+  .hero__grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .hero__credit {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    z-index: 2;
+    max-width: min(90%, 32rem);
+    padding: var(--space-2xs) var(--space-xs);
+    background: rgb(8 9 10 / 0.7);
+    color: var(--color-ivory-muted);
+    font-size: var(--text-xs);
+    letter-spacing: 0.02em;
+    text-align: right;
+  }
+
+  .hero__credit a {
+    text-decoration-color: var(--color-line-strong);
+  }
+
+  /* ---------- Rótulo y acciones ---------- */
+
+  .hero__caption {
+    grid-area: 1 / 1;
+    z-index: 2;
+    align-self: end;
+    display: grid;
+    justify-items: start;
+    gap: var(--space-lg);
+    max-width: 34rem;
+    padding: var(--space-xl) var(--gutter) calc(var(--space-xl) + 6cqi);
+  }
+
+  @media (min-width: 48rem) {
+    .hero__caption {
+      align-self: start;
+      padding: var(--space-2xl) var(--space-xl);
+    }
+  }
+
+  .hero__line {
+    font-size: clamp(2rem, 1.3rem + 2.6vw, 3.4rem);
+    line-height: 1.04;
+    animation: hero-title-in 1100ms var(--ease-out) 1100ms both;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-md) var(--space-xl);
+    animation: hero-fade-in 900ms var(--ease-out) 1500ms both;
+  }
+
+  /* ---------- Cabecera de revista ---------- */
+
+  .hero__title {
+    grid-area: 2 / 1;
+    z-index: 3;
+    /* El nombre monta sobre el borde inferior de la pantalla. */
+    margin-top: -0.36em;
+    padding-inline: var(--space-xs);
+    /* Calibrado para que las cuatro letras ocupen el ancho sin desbordarlo. */
+    font-size: 23.5cqi;
+    line-height: 0.74;
+  }
+
+  @media (min-width: 48rem) {
+    .hero__title {
+      padding-inline: 0;
+      font-size: 25cqi;
+    }
+  }
+
+  .hero__title :global(.masthead__letter) {
+    display: inline-block;
+    animation: hero-letter-in 1300ms var(--ease-out) both;
+  }
+
+  .hero__title :global(.masthead__letter:nth-child(2)) {
+    animation-delay: 450ms;
+  }
+
+  .hero__title :global(.masthead__letter:nth-child(3)) {
+    animation-delay: 540ms;
+  }
+
+  .hero__title :global(.masthead__letter:nth-child(4)) {
+    animation-delay: 630ms;
+  }
+
+  .hero__title :global(.masthead__letter:nth-child(5)) {
+    animation-delay: 720ms;
+  }
+
+  .hero__title :global(.logo) {
+    width: 100%;
+    height: auto;
+    max-height: 0.74em;
+    animation: hero-letter-in 1300ms var(--ease-out) 450ms both;
+  }
+
+  /* ---------- Desplazamiento: la pantalla y el nombre se separan ---------- */
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .hero__visual {
+        animation: hero-depth linear both;
+        animation-timeline: view();
+        animation-range: exit 0% exit 100%;
+      }
+
+      .hero__title :global(.masthead),
+      .hero__title :global(.logo) {
+        animation: hero-lift linear both;
+        animation-timeline: view();
+        animation-range: exit 0% exit 100%;
+      }
+    }
+  }
+
+  @keyframes hero-aperture {
+    from {
+      clip-path: inset(49.6% 0 49.6% 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes hero-light-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes hero-drift {
+    to {
+      translate: 6% -4%;
+    }
+  }
+
+  @keyframes hero-settle {
+    from {
+      scale: 1.08;
+    }
+  }
+
+  @keyframes hero-letter-in {
+    from {
+      clip-path: inset(0 0 100% 0);
+      translate: 0 0.32em;
+    }
+    to {
+      clip-path: inset(0 0 -10% 0);
+      translate: 0 0;
+    }
+  }
+
+  @keyframes hero-title-in {
+    from {
+      clip-path: inset(0 0 100% 0);
+      translate: 0 0.4em;
+    }
+    to {
+      clip-path: inset(0 0 -20% 0);
+      translate: 0 0;
+    }
+  }
+
+  @keyframes hero-fade-in {
+    from {
+      opacity: 0;
+      translate: 0 0.75rem;
+    }
+  }
+
+  @keyframes hero-depth {
+    to {
+      scale: 1.12;
+      opacity: 0.4;
+    }
+  }
+
+  @keyframes hero-lift {
+    to {
+      translate: 0 -18%;
+      opacity: 0.25;
+    }
+  }
+</style>
+
+<script>
+  // Foco de luz que sigue al cursor sobre la pantalla. Solo con ratón y sin
+  // "reducir movimiento"; el movimiento se suaviza para que no salte.
+  const hero = document.querySelector<HTMLElement>('.hero');
+  const canSpotlight =
+    matchMedia('(hover: hover) and (pointer: fine)').matches &&
+    !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (hero && canSpotlight) {
+    let targetX = 0.7;
+    let targetY = 0.35;
+    let x = targetX;
+    let y = targetY;
+    let frame = 0;
+
+    const step = () => {
+      x += (targetX - x) * 0.12;
+      y += (targetY - y) * 0.12;
+      hero.style.setProperty('--spot-x', `${(x * 100).toFixed(2)}%`);
+      hero.style.setProperty('--spot-y', `${(y * 100).toFixed(2)}%`);
+      frame = Math.abs(targetX - x) + Math.abs(targetY - y) > 0.001 ? requestAnimationFrame(step) : 0;
+    };
+
+    hero.addEventListener('pointermove', (event) => {
+      const rect = hero.getBoundingClientRect();
+      targetX = (event.clientX - rect.left) / rect.width;
+      targetY = (event.clientY - rect.top) / rect.height;
+      hero.toggleAttribute('data-spotlight', true);
+      if (!frame) frame = requestAnimationFrame(step);
+    });
+
+    hero.addEventListener('pointerleave', () => hero.toggleAttribute('data-spotlight', false));
+  }
+</script>

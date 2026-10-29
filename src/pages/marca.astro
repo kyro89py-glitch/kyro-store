@@ -1,73 +1,140 @@
 ---
+import LightScreen from '../components/brand/LightScreen.astro';
+import Wordmark from '../components/brand/Wordmark.astro';
 import { copy } from '../config/copy';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { routes } from '../lib/urls';
 ---
 
 <BaseLayout title={copy.brand.title} description={copy.brand.intro}>
-  <article class="brand container">
-    <header class="brand__head">
-      <h1 class="brand__title editorial">{copy.brand.title}</h1>
-      <p class="brand__intro editorial">{copy.brand.intro}</p>
+  <article class="brand">
+    <header class="brand__head container">
+      <p class="brand__kicker" data-reveal="rise"><Wordmark /></p>
+      <h1 class="brand__title display" data-reveal="title">{copy.brand.title}</h1>
+      <span class="brand__rule" aria-hidden="true" data-reveal="line"></span>
     </header>
 
-    <div class="brand__principles">
+    <div class="brand__screen">
+      <LightScreen focus="right" />
+      <p class="brand__intro editorial" data-reveal="title">{copy.brand.intro}</p>
+    </div>
+
+    <div class="brand__principles container">
       {
-        copy.brand.principles.map((principle) => (
+        copy.brand.principles.map((principle, index) => (
           <section class="principle">
-            <h2 class="principle__title editorial-italic">{principle.title}</h2>
-            <p class="principle__text muted">{principle.text}</p>
+            <span class="principle__rule" aria-hidden="true" data-reveal="line" />
+            <p class="principle__index" aria-hidden="true" data-reveal="rise">
+              {String(index + 1).padStart(2, '0')}
+            </p>
+            <h2 class="principle__title editorial-italic" data-reveal="title">
+              {principle.title}
+            </h2>
+            <p class="principle__text muted" data-reveal="rise">
+              {principle.text}
+            </p>
           </section>
         ))
       }
     </div>
 
-    <a class="button" href={routes.shop()}>Ver la tienda</a>
+    <div class="brand__cta container" data-reveal="rise">
+      <a class="button button--primary" href={routes.shop()}>Explorar la colección</a>
+    </div>
   </article>
 </BaseLayout>
 
 <style>
   .brand {
     display: grid;
-    justify-items: start;
     gap: var(--space-3xl);
     padding-top: var(--space-2xl);
   }
 
   .brand__head {
     display: grid;
-    gap: var(--space-xl);
+    justify-items: start;
+    gap: var(--space-md);
   }
 
-  .brand__title {
-    font-size: var(--text-4xl);
+  .brand__kicker {
+    color: var(--color-champagne);
+    font-size: var(--text-sm);
+  }
+
+  .brand__rule {
+    justify-self: stretch;
+    height: 1px;
+    background: var(--color-line-strong);
+  }
+
+  /* La declaración de marca, en grande, sobre la pantalla de luz. */
+  .brand__screen {
+    display: grid;
+    width: min(100% - 2 * var(--gutter), var(--max-width));
+    margin-inline: auto;
+  }
+
+  .brand__screen > :global(*) {
+    grid-area: 1 / 1;
   }
 
   .brand__intro {
-    max-width: 20em;
-    font-size: var(--text-3xl);
-    line-height: 1.18;
+    z-index: 1;
+    align-self: end;
+    max-width: 18em;
+    padding: var(--space-lg);
+    font-size: clamp(1.6rem, 1rem + 2.6vw, 3.4rem);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
   }
 
   .brand__principles {
     display: grid;
     gap: var(--space-2xl);
-    width: 100%;
   }
 
   .principle {
     display: grid;
-    gap: var(--space-sm);
-    padding-top: var(--space-lg);
-    border-top: 1px solid var(--color-line);
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-sm) var(--space-lg);
+    align-items: baseline;
+  }
+
+  .principle__rule {
+    grid-column: 1 / -1;
+    height: 1px;
+    margin-bottom: var(--space-md);
+    background: var(--color-line);
+  }
+
+  .principle__index {
+    color: var(--color-champagne);
+    font-size: var(--text-xs);
+    font-stretch: 112%;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
   }
 
   .principle__title {
-    font-size: var(--text-2xl);
+    font-size: clamp(1.9rem, 1.4rem + 1.8vw, 3rem);
+    line-height: 1.05;
   }
 
   .principle__text {
+    grid-column: 2;
     max-width: var(--measure);
+  }
+
+  @media (max-width: 47.99rem) {
+    /* En móvil la frase va debajo de la pantalla para no apretarla. */
+    .brand__screen > :global(*) {
+      grid-area: auto;
+    }
+
+    .brand__intro {
+      padding: var(--space-lg) 0 0;
+    }
   }
 
   @media (min-width: 60rem) {
@@ -76,9 +143,12 @@ import { routes } from '../lib/urls';
     }
 
     .principle {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: 4rem minmax(0, 1fr) minmax(0, 1fr);
       gap: var(--space-xl);
-      align-items: baseline;
+    }
+
+    .principle__text {
+      grid-column: 3;
     }
   }
 </style>

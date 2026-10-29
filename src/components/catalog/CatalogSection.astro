@@ -1,6 +1,6 @@
 ---
-// Sección de catálogo (portada, productos relacionados): título editorial, enlace
-// opcional y contenido.
+// Sección de catálogo (portada, productos relacionados): título de cartel que sube
+// desde una máscara, una línea que se dibuja y el contenido.
 interface Props {
   id: string;
   title: string;
@@ -11,14 +11,15 @@ const { id, title, link } = Astro.props;
 
 <section class="catalog-section container" aria-labelledby={id}>
   <header class="catalog-section__head">
-    <h2 class="catalog-section__title editorial" id={id}>{title}</h2>
+    <h2 class="catalog-section__title editorial" id={id} data-reveal="title">{title}</h2>
     {
       link && (
-        <a class="text-link" href={link.href}>
+        <a class="text-link" href={link.href} data-reveal="rise">
           {link.label}
         </a>
       )
     }
+    <span class="catalog-section__rule" aria-hidden="true" data-reveal="line"></span>
   </header>
   <slot />
 </section>
@@ -35,11 +36,18 @@ const { id, title, link } = Astro.props;
     align-items: baseline;
     gap: var(--space-md);
     margin-bottom: var(--space-xl);
-    padding-bottom: var(--space-md);
-    border-bottom: 1px solid var(--color-line);
   }
 
   .catalog-section__title {
-    font-size: var(--text-3xl);
+    font-size: clamp(2.6rem, 1.5rem + 3.8vw, 5.25rem);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+  }
+
+  .catalog-section__rule {
+    flex-basis: 100%;
+    height: 1px;
+    margin-top: var(--space-xs);
+    background: var(--color-line-strong);
   }
 </style>

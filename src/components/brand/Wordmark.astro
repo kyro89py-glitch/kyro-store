@@ -2,17 +2,24 @@
 import type { SvgComponent } from 'astro/types';
 
 /*
- * Logotipo de KYRO en todo el sitio (cabecera, pie y portada).
+ * Logotipo de KYRO en todo el sitio.
  *
  * Si existe el logotipo oficial en src/assets/brand/logo.svg, se usa ese archivo.
- * Mientras no exista, se muestra el logotipo tipográfico provisional. El SVG debe
- * pintar con `currentColor` para tomar el color de cada contexto (ver docs/MARCA.md).
+ * Mientras no exista, se muestra el logotipo tipográfico PROVISIONAL "KYRO" (no es un
+ * logotipo oficial). El SVG debe pintar con `currentColor` (ver docs/MARCA.md).
+ *
+ * variant="mark"      navegación y pie (tamaño de texto).
+ * variant="masthead"  cabecera de revista a todo el ancho; en la versión tipográfica
+ *                     cada letra es un elemento para poder revelarlas por separado.
+ * reveal              (masthead) las letras suben una a una al entrar en pantalla.
  */
 interface Props {
   class?: string;
+  variant?: 'mark' | 'masthead';
+  reveal?: boolean;
   [key: string]: unknown;
 }
-const { class: className, ...rest } = Astro.props;
+const { class: className, variant = 'mark', reveal = false, ...rest } = Astro.props;
 
 // Rutas fijas: Vite las resuelve al compilar. Solo el build de las pruebas e2e usa un
 // logotipo de prueba, para verificar este camino sin tocar los archivos reales.
@@ -20,11 +27,27 @@ const logos = __KYRO_TEST_LOGO__
   ? import.meta.glob<{ default: SvgComponent }>('/tests/fixtures/brand/logo.svg', { eager: true })
   : import.meta.glob<{ default: SvgComponent }>('/src/assets/brand/logo.svg', { eager: true });
 const Logo = Object.values(logos)[0]?.default;
+const letters = [...'KYRO'];
 ---
 
 {
   Logo ? (
-    <Logo class:list={['logo', className]} role="img" aria-label="KYRO" {...rest} />
+    <Logo
+      class:list={['logo', `logo--${variant}`, className]}
+      role="img"
+      aria-label="KYRO"
+      data-reveal={reveal ? 'rise' : undefined}
+      {...rest}
+    />
+  ) : variant === 'masthead' ? (
+    <span class:list={['masthead', className]} {...rest}>
+      <span class="visually-hidden">KYRO</span>
+      {letters.map((letter) => (
+        <span class="masthead__letter" aria-hidden="true" data-reveal={reveal ? 'title' : undefined}>
+          {letter}
+        </span>
+      ))}
+    </span>
   ) : (
     <span class:list={['wordmark', className]} {...rest}>
       KYRO

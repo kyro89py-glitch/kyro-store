@@ -7,10 +7,11 @@ cualquier lanzamiento.
 
 | Recurso | Dónde | Estado | Qué falta |
 | --- | --- | --- | --- |
-| Logotipo | `src/components/brand/Wordmark.astro`, `.wordmark` en `src/styles/base.css` | Tipográfico, compuesto con Archivo extendida. El sitio ya usa `src/assets/brand/logo.svg` si existe | Logotipo oficial en SVG (requisitos en `MARCA.md`) |
+| Logotipo | `src/components/brand/Wordmark.astro`, `.wordmark` y `.masthead` en `src/styles/base.css` | Tipográfico y provisional, compuesto con Archivo extendida; también la cabecera "KYRO" a todo el ancho de la portada, el pie y el menú. El sitio ya usa `src/assets/brand/logo.svg` si existe | Logotipo oficial en SVG (requisitos en `MARCA.md`) |
 | Favicon | `public/favicon.svg` | Monograma "K" geométrico | Versión derivada del logotipo oficial |
 | Textos de marca | `src/config/copy.ts` | Borrador basado solo en la descripción de la marca | Revisión y aprobación de KYRO |
 | Imagen de portada | `src/content/campaign/` | No hay; composición CSS de luz y grano | Fotografía de campaña con licencia (ver `IMAGENES.md`) |
+| Pantallas de luz (estados vacíos, la marca, 404) | `src/components/brand/LightScreen.astro` | Composición CSS decorativa (degradados y grano), no es una imagen | Puede sustituirse por fotografía de campaña con licencia |
 | Fotografía de producto | `src/content/products/` | No hay productos | Sesión de producto real (brief en `MARCA.md`) |
 | Páginas informativas (términos, privacidad, envíos, devoluciones) | `src/content/pages/` | No hay ninguna; el pie no muestra la sección | Textos redactados y aprobados por KYRO |
 

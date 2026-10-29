@@ -22,6 +22,11 @@ test.describe('páginas', () => {
       await expect(page.locator('meta[http-equiv="content-security-policy"]')).toHaveCount(1);
       await expect(page.locator('h1')).toHaveCount(1);
       await expectNoHorizontalOverflow(page);
+      // Un nombre de transición repetido anularía la transición entre páginas.
+      const names = await page.locator('[data-vt]').evaluateAll((elements) =>
+        elements.map((element) => element.getAttribute('data-vt')),
+      );
+      expect(new Set(names).size).toBe(names.length);
       expect(errors).toEqual([]);
     });
 
@@ -49,7 +54,7 @@ test.describe('portada', () => {
   test('la cartela muestra la marca y lleva a la tienda', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1, name: 'KYRO' })).toBeVisible();
-    await page.getByRole('link', { name: 'Ver la tienda' }).first().click();
+    await page.getByRole('main').getByRole('link', { name: 'Explorar la colección' }).click();
     await expect(page).toHaveURL(/\/tienda\/$/);
   });
 
@@ -146,6 +151,7 @@ test.describe('carrito', () => {
     await expect(page.getByRole('radio', { name: /M/ })).toBeDisabled();
     await page.getByRole('button', { name: 'Añadir al carrito' }).click();
     await expect(page.getByText('Selecciona una opción de talla para continuar.')).toBeVisible();
+    await expect(page.locator('fieldset.variants')).toHaveAttribute('data-invalid', '');
     await expect(page.getByRole('dialog')).toBeHidden();
   });
 
@@ -334,5 +340,75 @@ test.describe('menú móvil', () => {
     const menu = page.getByRole('dialog', { name: 'Menú' });
     await menu.getByRole('link', { name: 'Categoría de prueba A' }).click();
     await expect(page).toHaveURL(/\/tienda\/categoria-de-prueba-a\/$/);
+  });
+});
+
+test.describe('movimiento', () => {
+  test('los bloques se revelan al entrar en pantalla y no quedan recortados', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveClass(/\bmotion\b/);
+    const title = page.getByRole('heading', { level: 2, name: 'Destacados' });
+    await expect(title).not.toHaveClass(/is-revealed/);
+    await title.scrollIntoViewIfNeeded();
+    await expect(title).toHaveClass(/is-revealed/);
+    // Al terminar la animación no queda ningún recorte (cortaría el foco o el hover).
+    await expect.poll(() => title.evaluate((element) => getComputedStyle(element).clipPath)).toBe('none');
+  });
+
+  test('la cabecera de la portada se vuelve sólida cuando el nombre llega a ella', async ({ page }) => {
+    await page.goto('/');
+    const header = page.locator('kyro-header');
+    await expect(header).not.toHaveAttribute('data-scrolled');
+    await page.getByRole('heading', { level: 2, name: 'Destacados' }).scrollIntoViewIfNeeded();
+    await expect(header).toHaveAttribute('data-scrolled', '');
+  });
+
+  test('al añadir, el contador late y la línea nueva se ilumina', async ({ page }) => {
+    await page.goto('/producto/prenda-de-prueba-dos/');
+    await page.getByRole('button', { name: 'Añadir al carrito' }).click();
+    await expect(page.locator('[data-cart-count]')).toHaveAttribute('data-bump', '');
+    await expect(page.getByRole('dialog', { name: 'Carrito' }).locator('.cart-line')).toHaveAttribute(
+      'data-changed',
+      '',
+    );
+  });
+
+  test('la foto de la tarjeta y la primera de la ficha comparten nombre de transición', async ({ page }) => {
+    await page.goto('/tienda/');
+    await expect(page.locator('a[href$="/producto/prenda-de-prueba-uno/"] [data-vt]')).toHaveAttribute(
+      'data-vt',
+      'p-prenda-de-prueba-uno',
+    );
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    await expect(page.locator('.gallery__slide').first()).toHaveAttribute('data-vt', 'p-prenda-de-prueba-uno');
+  });
+
+  test('el filtro marca la categoría actual con su indicador', async ({ page }) => {
+    await page.goto('/tienda/categoria-de-prueba-a/');
+    const nav = page.getByRole('navigation', { name: 'Categorías' });
+    await expect(nav.getByRole('link', { name: 'Categoría de prueba A' })).toHaveAttribute('aria-current', 'page');
+    await expect(nav.locator('.category-nav__indicator')).toHaveCount(1);
+  });
+
+  test('el menú móvil marca la página actual', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) >= 768, 'solo en pantallas estrechas');
+    await page.goto('/tienda/');
+    await page.getByRole('button', { name: 'Menú' }).click();
+    const menu = page.getByRole('dialog', { name: 'Menú' });
+    await expect(menu.getByRole('link', { name: 'Tienda' })).toHaveAttribute('aria-current', 'page');
+  });
+});
+
+test.describe('sin JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test('no se oculta nada a la espera de animaciones', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('html')).not.toHaveClass(/\bmotion\b/);
+    const title = page.getByRole('heading', { level: 2, name: 'Destacados' });
+    await title.scrollIntoViewIfNeeded();
+    expect(await title.evaluate((element) => getComputedStyle(element).clipPath)).toBe('none');
+    const card = page.locator('.product-card__media').first();
+    expect(await card.evaluate((element) => getComputedStyle(element).clipPath)).toBe('none');
   });
 });

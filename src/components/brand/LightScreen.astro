@@ -1,0 +1,70 @@
+---
+/*
+ * Pantalla de luz de KYRO: un encuadre panorámico (2.39:1) a oscuras con un foco cálido
+ * y un destello anamórfico. Es decorativa y ocupa el lugar de la fotografía mientras
+ * no haya imágenes autorizadas (estados vacíos, la marca, la 404).
+ * Al entrar en pantalla se abre como un obturador; la luz deriva muy despacio.
+ */
+interface Props {
+  class?: string;
+  /** Posición horizontal del foco, en %. */
+  focus?: 'left' | 'center' | 'right';
+  [key: string]: unknown;
+}
+// `rest` lleva el atributo de estilos con ámbito del componente padre (p. ej. el carrito).
+const { class: className, focus = 'left', ...rest } = Astro.props;
+---
+
+<div class:list={['light-screen', `light-screen--${focus}`, className]} aria-hidden="true" data-reveal="aperture" {...rest}>
+  <span class="light-screen__light"></span>
+  <span class="light-screen__grain"></span>
+</div>
+
+<style>
+  .light-screen {
+    position: relative;
+    aspect-ratio: 2.39;
+    overflow: hidden;
+    background: linear-gradient(180deg, #13161a, #0a0c0d);
+  }
+
+  .light-screen__light {
+    --focus-x: 34%;
+
+    position: absolute;
+    inset: -30%;
+    background:
+      radial-gradient(ellipse 30% 46% at var(--focus-x) 44%, rgb(200 179 138 / 0.26), transparent 70%),
+      radial-gradient(ellipse 22% 30% at calc(100% - var(--focus-x)) 60%, rgb(241 236 227 / 0.06), transparent 70%),
+      linear-gradient(90deg, transparent 8%, rgb(200 179 138 / 0.2) 48%, transparent 92%) 50% 50% / 100% 1px
+        no-repeat;
+  }
+
+  .light-screen--center .light-screen__light {
+    --focus-x: 50%;
+  }
+
+  .light-screen--right .light-screen__light {
+    --focus-x: 66%;
+  }
+
+  .light-screen__grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .light-screen__light {
+      animation: light-drift 18s var(--ease-in-out) infinite alternate;
+    }
+  }
+
+  @keyframes light-drift {
+    to {
+      translate: 8% -3%;
+    }
+  }
+</style>

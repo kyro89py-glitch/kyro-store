@@ -8,7 +8,7 @@ import { routes } from '../../lib/urls';
 -->
 <kyro-cart-toggle>
   <a class="cart-toggle" href={routes.cart()} data-cart-link>
-    <span data-cart-label>Carrito</span>
+    <span class="cart-toggle__label" data-cart-label>Carrito</span>
     <span class="cart-toggle__count" data-cart-count hidden></span>
   </a>
 </kyro-cart-toggle>
@@ -25,15 +25,44 @@ import { routes } from '../../lib/urls';
     text-decoration: none;
   }
 
-  .cart-toggle:hover [data-cart-label] {
-    text-decoration: underline;
-    text-decoration-color: var(--color-champagne);
+  .cart-toggle:active {
+    color: var(--color-champagne);
+  }
+
+  /* Subrayado champán que crece, como el resto de la navegación. */
+  .cart-toggle__label {
+    padding-bottom: 0.18em;
+    background: linear-gradient(var(--color-champagne), var(--color-champagne)) 0 100% / 0% 1px no-repeat;
+    transition: background-size var(--duration-base) var(--ease-out);
+  }
+
+  .cart-toggle:focus-visible .cart-toggle__label {
+    background-size: 100% 1px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .cart-toggle:hover .cart-toggle__label {
+      background-size: 100% 1px;
+    }
   }
 
   .cart-toggle__count {
+    display: inline-block;
     min-width: 1.5em;
     color: var(--color-champagne);
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Al sumar una pieza, el número late una vez. */
+  .cart-toggle__count[data-bump] {
+    animation: count-bump 620ms var(--ease-out);
+  }
+
+  @keyframes count-bump {
+    30% {
+      scale: 1.45;
+      translate: 0 -0.15em;
+    }
   }
 </style>
 
@@ -49,10 +78,17 @@ import { routes } from '../../lib/urls';
       const count = this.querySelector<HTMLElement>('[data-cart-count]');
       if (!link || !count) return;
 
+      let previous = itemCount(getCart());
       const render = () => {
         const total = itemCount(getCart());
         count.hidden = total === 0;
         count.textContent = String(total);
+        if (total > previous) {
+          count.removeAttribute('data-bump');
+          void count.offsetWidth;
+          count.setAttribute('data-bump', '');
+        }
+        previous = total;
         link.setAttribute(
           'aria-label',
           total === 0 ? 'Carrito, vacío' : `Carrito, ${total} ${total === 1 ? 'artículo' : 'artículos'}`,

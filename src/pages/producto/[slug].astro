@@ -69,22 +69,23 @@ const relatedTitle = `Más en ${data.category}`;
 
   <article class="product">
     <div class="product__gallery">
-      <ProductGallery images={data.images} />
+      <ProductGallery images={data.images} vt={`p-${product.id}`} />
     </div>
 
     <div class="product__info">
       <div class="product__sticky">
-        <nav class="product__breadcrumb" aria-label="Ruta">
+        <nav class="product__breadcrumb" aria-label="Ruta" data-reveal="rise">
           <a href={routes.shop()}>Tienda</a>
-          <span aria-hidden="true">/</span>
+          <span class="product__breadcrumb-rule" aria-hidden="true"></span>
           <a href={routes.category(categorySlug(product))}>{data.category}</a>
         </nav>
 
-        <h1 class="product__name editorial">{data.name}</h1>
-        <p class="product__price">
+        <h1 class="product__name editorial" data-reveal="title">{data.name}</h1>
+        <p class="product__price" data-reveal="rise">
           <Price amount={data.price.amount} currency={data.price.currency} />
         </p>
-        <p class="product__summary muted">{data.summary}</p>
+        <span class="product__rule" aria-hidden="true" data-reveal="line"></span>
+        <p class="product__summary muted" data-reveal="rise">{data.summary}</p>
 
         <ProductForm product={product} />
 
@@ -143,7 +144,7 @@ const relatedTitle = `Más en ${data.category}`;
         title={relatedTitle}
         link={{ label: 'Ver la categoría', href: routes.category(categorySlug(product)) }}
       >
-        <ProductGrid products={related} label={relatedTitle} eager={false} />
+        <ProductGrid products={related} label={relatedTitle} eager={false} morph />
       </CatalogSection>
     )
   }
@@ -166,28 +167,47 @@ const relatedTitle = `Más en ${data.category}`;
 
   .product__breadcrumb {
     display: flex;
-    gap: var(--space-xs);
+    align-items: center;
+    gap: var(--space-sm);
     color: var(--color-ivory-muted);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     font-stretch: 112%;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.06em;
   }
 
   .product__breadcrumb a {
+    display: inline-block;
+    padding-block: var(--space-xs);
     text-decoration: none;
+    transition: color var(--duration-base) var(--ease-out);
   }
 
-  .product__breadcrumb a:hover {
+  .product__breadcrumb a:hover,
+  .product__breadcrumb a:focus-visible {
     color: var(--color-ivory);
-    text-decoration: underline;
+  }
+
+  .product__breadcrumb-rule {
+    width: 1.5rem;
+    height: 1px;
+    background: var(--color-line-strong);
   }
 
   .product__name {
-    font-size: var(--text-3xl);
+    font-size: clamp(2.5rem, 1.6rem + 3.2vw, 4.4rem);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
   }
 
   .product__price {
     font-size: var(--text-lg);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .product__rule {
+    display: block;
+    height: 1px;
+    background: var(--color-line);
   }
 
   .product__summary {
@@ -229,6 +249,38 @@ const relatedTitle = `Más en ${data.category}`;
 
   .product__details details[open] summary::after {
     rotate: 45deg;
+  }
+
+  /* El acordeón se despliega con altura animada donde el navegador lo admite. */
+  @supports selector(::details-content) {
+    .product__details {
+      interpolate-size: allow-keywords;
+    }
+
+    .product__details details::details-content {
+      block-size: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition:
+        block-size var(--duration-slow) var(--ease-out),
+        opacity var(--duration-slow) var(--ease-out),
+        content-visibility var(--duration-slow) allow-discrete;
+    }
+
+    .product__details details[open]::details-content {
+      block-size: auto;
+      opacity: 1;
+    }
+  }
+
+  .product__details summary {
+    transition: color var(--duration-base) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .product__details summary:hover {
+      color: var(--color-champagne);
+    }
   }
 
   .product__details details > :not(summary) {

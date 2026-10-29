@@ -14,7 +14,7 @@ const { categories } = Astro.props;
 <ul class="categories" role="list" aria-label="Categorías">
   {
     categories.map((category) => (
-      <li class="categories__item">
+      <li class="categories__item" data-reveal="aperture">
         <a class="category" href={routes.category(category.slug)}>
           <div class="category__media">
             {category.cover && (
@@ -72,6 +72,11 @@ const { categories } = Astro.props;
     background: var(--color-surface);
     text-decoration: none;
     isolation: isolate;
+    transition: scale var(--duration-fast) var(--ease-out);
+  }
+
+  .category:active {
+    scale: 0.985;
   }
 
   .category__media {
@@ -88,7 +93,7 @@ const { categories } = Astro.props;
   }
 
   .category__media :global(img) {
-    transition: scale 1200ms var(--ease-out);
+    transition: scale 1400ms var(--ease-out);
   }
 
   /* Velo inferior para que el nombre se lea sobre cualquier fotografía. */
@@ -100,8 +105,9 @@ const { categories } = Astro.props;
   }
 
   .category__name {
-    font-size: var(--text-2xl);
-    line-height: var(--leading-tight);
+    font-size: clamp(1.9rem, 1.4rem + 1.6vw, 2.8rem);
+    line-height: 1;
+    letter-spacing: -0.015em;
   }
 
   .category__count {
@@ -114,7 +120,7 @@ const { categories } = Astro.props;
 
   @media (hover: hover) {
     .category:hover .category__media :global(img) {
-      scale: 1.04;
+      scale: 1.06;
     }
 
     .category:hover .category__name {

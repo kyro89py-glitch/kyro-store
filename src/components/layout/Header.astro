@@ -60,8 +60,10 @@ const categories = getCategories(await getActiveProducts()).map((category) => ({
     border-bottom: 1px solid var(--color-line);
     backdrop-filter: blur(14px) saturate(1.1);
     transition:
-      background-color var(--duration-base) var(--ease-out),
-      border-color var(--duration-base) var(--ease-out);
+      background-color var(--duration-slow) var(--ease-out),
+      border-color var(--duration-slow) var(--ease-out);
+    /* Queda quieta mientras la página cambia por debajo (transición entre páginas). */
+    view-transition-name: site-header;
   }
 
   /* La portada se dibuja por debajo de la cabecera. */
@@ -93,9 +95,32 @@ const categories = getCategories(await getActiveProducts()).map((category) => ({
     font-size: var(--text-sm);
   }
 
+  /* KYRO, centrado y con presencia: es lo primero que se lee en cada página. */
   .site-header__brand {
-    font-size: var(--text-md);
+    display: block;
+    padding-block: var(--space-xs);
+    font-size: 1.2rem;
     text-decoration: none;
+  }
+
+  .site-header__brand :global(.wordmark) {
+    transition:
+      letter-spacing 700ms var(--ease-out),
+      margin-inline-end 700ms var(--ease-out),
+      color var(--duration-base) var(--ease-out);
+  }
+
+  /* Cursor: el nombre "respira" (se abre el espaciado) y vira a champán. */
+  @media (hover: hover) and (pointer: fine) {
+    .site-header__brand:hover :global(.wordmark) {
+      --tracking: 0.34em;
+
+      color: var(--color-champagne);
+    }
+  }
+
+  .site-header__brand:active {
+    scale: 0.97;
   }
 
   .site-header__actions {
@@ -109,23 +134,31 @@ const categories = getCategories(await getActiveProducts()).map((category) => ({
     }
 
     .site-header__brand {
-      font-size: var(--text-lg);
+      font-size: 1.55rem;
     }
   }
 </style>
 
 <script>
-  // En la portada la cabecera es transparente sobre la apertura y se vuelve sólida
-  // en cuanto la cartela deja de verse.
+  // En la portada la cabecera es transparente sobre la apertura y se vuelve sólida en
+  // cuanto el nombre KYRO de la portada (el centinela) llega a tocarla: así nunca se
+  // superponen sus letras con los enlaces.
   class KyroHeader extends HTMLElement {
     #observer: IntersectionObserver | undefined;
 
     connectedCallback() {
       const sentinel = document.querySelector('[data-header-sentinel]');
       if (!this.classList.contains('site-header--overlay') || !sentinel) return;
-      this.#observer = new IntersectionObserver(([entry]) => {
-        this.toggleAttribute('data-scrolled', !entry?.isIntersecting);
-      });
+      const height = Math.round(this.getBoundingClientRect().height);
+      this.#observer = new IntersectionObserver(
+        ([entry]) => {
+          // Transparente solo mientras el centinela queda entero por debajo de la cabecera.
+          this.toggleAttribute('data-scrolled', !entry || entry.intersectionRatio < 0.99);
+        },
+        // El área observada empieza bajo la cabecera y se alarga hacia abajo, para que
+        // lo que aún no ha entrado en pantalla cuente como "por debajo".
+        { rootMargin: `-${height}px 0px 100% 0px`, threshold: [0.99] },
+      );
       this.#observer.observe(sentinel);
     }
 

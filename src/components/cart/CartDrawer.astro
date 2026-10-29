@@ -80,7 +80,8 @@ import CartView from './CartView.astro';
   }
 
   .drawer__title {
-    font-size: var(--text-xl);
+    font-size: var(--text-2xl);
+    letter-spacing: -0.01em;
   }
 
   .drawer__close {
@@ -95,8 +96,13 @@ import CartView from './CartView.astro';
     text-underline-offset: 0.28em;
   }
 
-  .drawer__close:hover {
+  .drawer__close:hover,
+  .drawer__close:focus-visible {
     text-decoration-color: var(--color-champagne);
+  }
+
+  .drawer__close:active {
+    color: var(--color-champagne);
   }
 
   .drawer__body {

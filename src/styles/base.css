@@ -23,6 +23,7 @@ html {
   scrollbar-gutter: stable;
   /* El foco y los anclajes nunca quedan tapados por la cabecera fija. */
   scroll-padding-top: calc(var(--header-height) + var(--space-md));
+  -webkit-tap-highlight-color: transparent;
 }
 
 html:has(dialog[open]) {
@@ -138,6 +139,15 @@ p {
   font-weight: 400;
 }
 
+/* Títulos de cartel: Bodoni a gran escala, interlineado apretado. */
+.display {
+  font-family: var(--font-editorial);
+  font-size: var(--text-display);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+}
+
 .muted {
   color: var(--color-ivory-muted);
 }
@@ -153,17 +163,32 @@ p {
 /* ---------- Logotipo provisional ---------- */
 
 /*
- * Logotipo tipográfico provisional: Archivo extendido al máximo. Se sustituye por
- * el logotipo oficial en src/components/brand/Wordmark.astro cuando exista.
+ * Logotipo tipográfico PROVISIONAL (no es un logotipo oficial): "KYRO" en Archivo
+ * extendida al máximo. Se sustituye por el oficial en src/assets/brand/logo.svg.
+ * - .wordmark: navegación y pie, con espaciado amplio.
+ * - .masthead: cabecera de revista a todo el ancho (portada y pie).
  */
 .wordmark {
+  --tracking: 0.22em;
+
   font-family: var(--font-grotesk);
   font-stretch: 125%;
-  font-weight: 560;
-  letter-spacing: 0.3em;
+  font-weight: 620;
+  letter-spacing: var(--tracking);
   /* Compensa el espacio que deja el tracking tras la última letra. */
-  margin-inline-end: -0.3em;
+  margin-inline-end: calc(-1 * var(--tracking));
   line-height: 1;
+  text-transform: uppercase;
+}
+
+.masthead {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-grotesk);
+  font-stretch: 125%;
+  font-weight: 640;
+  line-height: 0.74;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -178,11 +203,21 @@ p {
 
 /* ---------- Botones ---------- */
 
+/*
+ * Principal: marfil; al pasar el cursor, un barrido de luz lo recorre y vira a champán.
+ * Secundario: contorno; al pasar el cursor, el marfil lo llena desde abajo.
+ * En pantallas táctiles no hay estado hover: la respuesta es la presión.
+ */
 .button {
   --button-bg: transparent;
   --button-fg: var(--color-ivory);
   --button-border: var(--color-line-strong);
+  --button-fill: var(--color-ivory);
+  --button-fill-fg: var(--color-obsidian);
 
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -191,7 +226,9 @@ p {
   padding: 0 var(--space-xl);
   border: 1px solid var(--button-border);
   border-radius: 2px;
-  background: var(--button-bg);
+  background:
+    linear-gradient(var(--button-fill), var(--button-fill)) 0 100% / 100% 0% no-repeat,
+    var(--button-bg);
   color: var(--button-fg);
   font-size: var(--text-sm);
   font-stretch: 112%;
@@ -199,29 +236,56 @@ p {
   letter-spacing: 0.04em;
   text-decoration: none;
   transition:
-    background-color var(--duration-fast) var(--ease-out),
+    background-size var(--duration-base) var(--ease-out),
+    background-color var(--duration-base) var(--ease-out),
     border-color var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out),
-    translate var(--duration-fast) var(--ease-out);
+    color var(--duration-base) var(--ease-out),
+    scale var(--duration-fast) var(--ease-out);
 }
 
-.button:hover {
-  --button-border: var(--color-ivory);
+/* Barrido de luz: una franja clara cruza el botón una vez. */
+.button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.45) 50%, transparent 65%);
+  translate: -110% 0;
+  pointer-events: none;
 }
 
 .button:active:not(:disabled) {
-  translate: 0 1px;
+  scale: 0.97;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .button:hover:not(:disabled) {
+    --button-border: var(--color-ivory);
+
+    background-size:
+      100% 100%,
+      auto;
+    color: var(--button-fill-fg);
+  }
+
+  .button--primary:hover:not(:disabled)::after {
+    translate: 110% 0;
+    transition: translate 700ms var(--ease-out);
+  }
 }
 
 .button--primary {
   --button-bg: var(--color-ivory);
   --button-fg: var(--color-obsidian);
   --button-border: var(--color-ivory);
+  --button-fill: var(--color-champagne);
+  --button-fill-fg: var(--color-obsidian);
 }
 
-.button--primary:hover {
-  --button-bg: var(--color-champagne);
-  --button-border: var(--color-champagne);
+@media (hover: hover) and (pointer: fine) {
+  .button--primary:hover:not(:disabled) {
+    --button-border: var(--color-champagne);
+  }
 }
 
 .button--block {
@@ -233,6 +297,7 @@ p {
   --button-bg: transparent;
   --button-fg: var(--color-ivory-muted);
   --button-border: var(--color-line);
+  --button-fill: transparent;
   cursor: not-allowed;
 }
 
@@ -244,10 +309,11 @@ p {
 .text-link,
 .nav-link {
   --underline-base: transparent;
+  --underline-hover: var(--color-champagne);
 
   padding-bottom: 0.18em;
   background:
-    linear-gradient(var(--color-champagne), var(--color-champagne)) 0 100% / 0% 1px no-repeat,
+    linear-gradient(var(--underline-hover), var(--underline-hover)) 0 100% / 0% 1px no-repeat,
     linear-gradient(var(--underline-base), var(--underline-base)) 0 100% / 100% 1px no-repeat;
   text-decoration: none;
   transition: background-size var(--duration-base) var(--ease-out);
@@ -265,6 +331,14 @@ p {
 .nav-link {
   font-stretch: 112%;
   letter-spacing: 0.03em;
+}
+
+/* Sobre la franja marfil. */
+.text-link--dark {
+  --underline-base: rgb(14 16 18 / 0.3);
+  --underline-hover: var(--color-obsidian);
+
+  color: var(--color-obsidian);
 }
 
 .text-link:hover,
@@ -293,16 +367,142 @@ dialog::backdrop {
   backdrop-filter: blur(2px);
 }
 
+/* ---------- Revelado al desplazarse ---------- */
+
+/*
+ * Vocabulario de movimiento (src/scripts/reveal.ts añade .is-revealed al entrar en
+ * pantalla; las piezas que entran juntas se escalonan con --reveal-order):
+ *   data-reveal="aperture"  la pieza se abre como un obturador, desde el centro.
+ *   data-reveal="title"     el texto sube desde una máscara, como un rótulo.
+ *   data-reveal="rise"      el bloque aparece y sube un poco.
+ *   data-reveal="line"      una línea se dibuja de izquierda a derecha.
+ * Solo se oculta nada si el script está activo (html.motion) y no se pidió reducir
+ * movimiento: sin JavaScript, o si falla, todo se ve desde el principio.
+ *
+ * Son animaciones (no transiciones) porque `clip-path` no se interpola hacia `none`;
+ * con `backwards`, al terminar no queda ningún recorte que corte el foco o el hover.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html.motion [data-reveal='aperture']:not(.is-revealed) {
+    clip-path: inset(50% 0 50% 0);
+  }
+
+  html.motion [data-reveal='title']:not(.is-revealed) {
+    clip-path: inset(0 0 100% 0);
+  }
+
+  html.motion [data-reveal='rise']:not(.is-revealed) {
+    opacity: 0;
+  }
+
+  html.motion [data-reveal='line']:not(.is-revealed) {
+    scale: 0 1;
+  }
+
+  html.motion [data-reveal].is-revealed {
+    animation-duration: var(--duration-reveal);
+    animation-timing-function: var(--ease-out);
+    animation-delay: calc(var(--reveal-order, 0) * var(--stagger));
+    animation-fill-mode: backwards;
+  }
+
+  html.motion [data-reveal='aperture'].is-revealed {
+    animation-name: reveal-aperture;
+    animation-timing-function: var(--ease-shutter);
+  }
+
+  html.motion [data-reveal='title'].is-revealed {
+    animation-name: reveal-title;
+  }
+
+  html.motion [data-reveal='rise'].is-revealed {
+    animation-name: reveal-rise;
+  }
+
+  html.motion [data-reveal='line'] {
+    transform-origin: 0 50%;
+  }
+
+  html.motion [data-reveal='line'].is-revealed {
+    animation-name: reveal-line;
+  }
+}
+
+@keyframes reveal-aperture {
+  from {
+    clip-path: inset(50% 0 50% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes reveal-title {
+  from {
+    clip-path: inset(0 0 100% 0);
+    translate: 0 0.4em;
+  }
+  to {
+    /* Margen inferior para los trazos que bajan de la línea (g, j, p). */
+    clip-path: inset(0 0 -0.3em 0);
+    translate: 0 0;
+  }
+}
+
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    translate: 0 1.75rem;
+  }
+}
+
+@keyframes reveal-line {
+  from {
+    scale: 0 1;
+  }
+}
+
 /* ---------- Transiciones entre páginas (mejora progresiva) ---------- */
 
+/*
+ * Corte entre páginas: la página saliente se funde y la entrante sube levemente.
+ * La cabecera se mantiene fija durante el corte. Donde el navegador admite
+ * `attr()` tipado, la foto de una tarjeta viaja hasta la ficha del producto.
+ */
 @view-transition {
   navigation: auto;
 }
 
-::view-transition-old(root),
+::view-transition-old(root) {
+  animation: 240ms var(--ease-in-out) both page-out;
+}
+
 ::view-transition-new(root) {
-  animation-duration: 280ms;
+  animation: 560ms var(--ease-out) both page-in;
+}
+
+::view-transition-group(*) {
+  animation-duration: 620ms;
   animation-timing-function: var(--ease-out);
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    translate: 0 1rem;
+  }
+}
+
+@supports (view-transition-name: attr(data-vt type(<custom-ident>))) {
+  [data-vt] {
+    view-transition-name: attr(data-vt type(<custom-ident>));
+  }
 }
 
 /* ---------- Movimiento reducido ---------- */

@@ -85,8 +85,10 @@ const optionId = `option-${product.id}`;
     position: relative;
   }
 
+  /* Encima de la etiqueta siempre, también mientras esta escala (pulsación, "latido"). */
   .variant__input {
     position: absolute;
+    z-index: 1;
     inset: 0;
     opacity: 0;
     margin: 0;
@@ -97,6 +99,10 @@ const optionId = `option-${product.id}`;
     cursor: not-allowed;
   }
 
+  /*
+   * Talla: al elegirla, el marfil la llena de abajo arriba y la pieza "late" una vez.
+   * Al presionarla (táctil) cede un poco; con cursor, el borde se aclara.
+   */
   .variant__label {
     display: grid;
     place-items: center;
@@ -105,22 +111,37 @@ const optionId = `option-${product.id}`;
     padding: 0 var(--space-md);
     border: 1px solid var(--color-line-strong);
     border-radius: 2px;
+    background: linear-gradient(var(--color-ivory), var(--color-ivory)) 0 100% / 100% 0% no-repeat;
     font-size: var(--text-sm);
     font-variant-numeric: tabular-nums;
     transition:
       border-color var(--duration-fast) var(--ease-out),
-      background-color var(--duration-fast) var(--ease-out),
-      color var(--duration-fast) var(--ease-out);
+      background-size var(--duration-base) var(--ease-out),
+      color var(--duration-base) var(--ease-out),
+      scale var(--duration-fast) var(--ease-out);
   }
 
-  .variant__input:hover:not(:disabled) + .variant__label {
-    border-color: var(--color-ivory);
+  @media (hover: hover) and (pointer: fine) {
+    .variant__input:hover:not(:disabled) + .variant__label {
+      border-color: var(--color-ivory);
+    }
+  }
+
+  .variant__input:active:not(:disabled) + .variant__label {
+    scale: 0.94;
   }
 
   .variant__input:checked + .variant__label {
     border-color: var(--color-ivory);
-    background: var(--color-ivory);
+    background-size: 100% 100%;
     color: var(--color-obsidian);
+    animation: variant-pop 420ms var(--ease-out);
+  }
+
+  @keyframes variant-pop {
+    40% {
+      scale: 1.06;
+    }
   }
 
   .variant__input:focus-visible + .variant__label {
@@ -164,6 +185,44 @@ const optionId = `option-${product.id}`;
   .product-form__error {
     font-size: var(--text-sm);
     color: var(--color-champagne);
+    animation: error-in var(--duration-slow) var(--ease-out);
+  }
+
+  /* Sin talla elegida: las opciones hacen un leve gesto de "aquí". */
+  .variants[data-invalid] .variants__options {
+    animation: nudge 460ms var(--ease-out);
+  }
+
+  /* Añadido: un barrido de luz recorre el botón como confirmación. */
+  .product-form [data-added]::after {
+    animation: added-sweep 900ms var(--ease-out);
+  }
+
+  @keyframes error-in {
+    from {
+      opacity: 0;
+      translate: 0 -0.35rem;
+    }
+  }
+
+  @keyframes nudge {
+    20%,
+    60% {
+      translate: -4px 0;
+    }
+    40%,
+    80% {
+      translate: 4px 0;
+    }
+  }
+
+  @keyframes added-sweep {
+    from {
+      translate: -110% 0;
+    }
+    to {
+      translate: 110% 0;
+    }
   }
 
   .product-form__status {
@@ -187,8 +246,20 @@ const optionId = `option-${product.id}`;
       const status = this.querySelector<HTMLElement>('[data-form-status]');
       if (!form || !error || !status) return;
 
+      const fieldset = form.querySelector('fieldset');
+      const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+      // Reinicia una animación CSS ligada a un atributo (gesto de error, confirmación).
+      const replay = (element: Element | null, attribute: string) => {
+        if (!element) return;
+        element.removeAttribute(attribute);
+        void (element as HTMLElement).offsetWidth;
+        element.setAttribute(attribute, '');
+      };
+
       form.addEventListener('change', () => {
         error.hidden = true;
+        fieldset?.removeAttribute('data-invalid');
       });
 
       form.addEventListener('submit', (event) => {
@@ -196,6 +267,7 @@ const optionId = `option-${product.id}`;
         const sku = new FormData(form).get('sku');
         if (typeof sku !== 'string') {
           error.hidden = false;
+          replay(fieldset, 'data-invalid');
           form.querySelector<HTMLInputElement>('input[name="sku"]:not(:disabled)')?.focus();
           return;
         }
@@ -207,6 +279,7 @@ const optionId = `option-${product.id}`;
 
         updateCart((state) => addItem(state, sku, 1, max));
         status.textContent = 'Añadido al carrito.';
+        replay(submit, 'data-added');
         openCart();
       });
     }

@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import HeroFrame from '../components/brand/HeroFrame.astro';
+import Hero from '../components/brand/Hero.astro';
 import CategoryTiles from '../components/catalog/CategoryTiles.astro';
 import EmptyCollection from '../components/catalog/EmptyCollection.astro';
 import FeaturedGrid from '../components/catalog/FeaturedGrid.astro';
@@ -38,11 +38,10 @@ const jsonLd = [
     : []),
 ];
 ---
-
 <BaseLayout header="overlay">
   <script type="application/ld+json" slot="head" set:html={toJsonLd(jsonLd)} />
 
-  <HeroFrame campaign={campaign} />
+  <Hero campaign={campaign} />
 
   {
     products.length === 0 && (
@@ -59,6 +58,14 @@ const jsonLd = [
       </CatalogSection>
     )
   }
+
+  {/* Corte a blanco: la única franja marfil del sitio separa las escenas oscuras. */}
+  <section class="manifesto" aria-label="La marca">
+    <div class="manifesto__inner container">
+      <p class="manifesto__text display" data-reveal="title">{copy.home.manifesto}</p>
+      <a class="text-link text-link--dark" href={routes.brand()} data-reveal="rise">Conocer la marca</a>
+    </div>
+  </section>
 
   {
     categories.length > 0 && (
@@ -83,30 +90,35 @@ const jsonLd = [
       </CatalogSection>
     )
   }
-
-  <section class="manifesto container" aria-label="La marca">
-    <p class="manifesto__text editorial">{copy.home.manifesto}</p>
-    <a class="text-link" href={routes.brand()}>Conocer la marca</a>
-  </section>
 </BaseLayout>
 
 <style>
   .manifesto {
+    margin-top: var(--space-3xl);
+    padding-block: var(--space-3xl);
+    background: var(--color-ivory);
+    color: var(--color-obsidian);
+  }
+
+  .manifesto :focus-visible {
+    outline-color: var(--color-obsidian);
+  }
+
+  .manifesto__inner {
     display: grid;
     justify-items: start;
     gap: var(--space-xl);
-    padding-top: var(--space-3xl);
   }
 
   .manifesto__text {
-    max-width: 22em;
-    font-size: var(--text-3xl);
-    line-height: 1.18;
+    max-width: 15em;
+    font-size: clamp(2.4rem, 1.2rem + 4.6vw, 6rem);
+    line-height: 1;
   }
 
   @media (min-width: 60rem) {
-    .manifesto {
-      padding-left: calc(100% / 12 * 4);
+    .manifesto__inner {
+      padding-left: calc(100% / 12 * 3);
     }
   }
 </style>

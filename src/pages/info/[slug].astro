@@ -20,12 +20,12 @@ const { Content } = await render(page);
 <BaseLayout title={page.data.title} description={page.data.description}>
   <article class="info container">
     <header class="info__head">
-      <h1 class="info__title editorial">{page.data.title}</h1>
-      <p class="info__updated muted">
+      <h1 class="info__title display" data-reveal="title">{page.data.title}</h1>
+      <p class="info__updated muted" data-reveal="rise">
         Actualizado el <time datetime={page.data.updatedAt.toISOString().slice(0, 10)}>{formatDate(page.data.updatedAt)}</time>
       </p>
     </header>
-    <div class="info__body">
+    <div class="info__body" data-reveal="rise">
       <Content />
     </div>
   </article>
@@ -45,11 +45,24 @@ const { Content } = await render(page);
   }
 
   .info__title {
-    font-size: var(--text-4xl);
+    font-size: clamp(2.8rem, 1.6rem + 4.6vw, 6rem);
   }
 
   .info__updated {
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
+    font-stretch: 112%;
+    letter-spacing: 0.06em;
+  }
+
+  /* Capitular: el primer párrafo abre con una inicial de Bodoni en champán. */
+  .info__body > :global(p:first-child::first-letter) {
+    float: left;
+    margin: 0.06em 0.12em 0 0;
+    color: var(--color-champagne);
+    font-family: var(--font-editorial);
+    font-size: 4.1em;
+    font-weight: 400;
+    line-height: 0.8;
   }
 
   /* Texto largo: medida cómoda y jerarquía editorial. */

@@ -29,8 +29,8 @@ más de un elemento por vista.
 
 | Familia | Rol | Reglas |
 | --- | --- | --- |
-| Bodoni Moda (Didone editorial) | Titulares, nombres de producto en la ficha, manifiesto | Solo a partir de ~24 px; peso 420; cursiva para frases de la marca |
-| Archivo (grotesca variable) | Interfaz, textos, precios, logotipo provisional | Navegación y botones con anchura 112 %; logotipo a 125 % |
+| Bodoni Moda (Didone editorial) | Títulos de cartel (`.display`, hasta 9,5 rem), titulares, nombres de producto, manifiesto, menú móvil | Solo a partir de ~24 px; peso 400–420; cursiva para frases de la marca y para la página actual en el menú |
+| Archivo (grotesca variable) | Interfaz, textos, precios, logotipo provisional y cabecera "KYRO" a todo el ancho | Navegación y botones con anchura 112 %; logotipo a 125 % |
 
 - La tensión entre la Didone (alta costura) y la grotesca extendida (calle) es la
   identidad tipográfica.
@@ -40,10 +40,20 @@ más de un elemento por vista.
 
 ## Logotipo
 
-**Hoy:** logotipo tipográfico provisional ("KYRO" en Archivo extendida, con espaciado amplio).
+**Hoy:** logotipo tipográfico **provisional**, compuesto con Archivo extendida. No es un
+logotipo oficial ni está aprobado por KYRO. Se usa en dos tamaños
+(`src/components/brand/Wordmark.astro`):
+
+- **Marca** (`.wordmark`): "KYRO" con espaciado amplio, centrado en la cabecera de todas
+  las páginas. Con cursor, el espaciado se abre y vira a champán.
+- **Cabecera de revista** (`.masthead`): "KYRO" a todo el ancho, letra a letra. Abre la
+  portada (montada sobre el borde inferior de la pantalla), cierra cada página en el pie
+  y firma, en contorno, el menú móvil. Así el nombre se lee antes que cualquier otra cosa
+  y la marca se reconoce aunque aún no haya fotografía.
 
 **Cuando exista el oficial**, se coloca como `src/assets/brand/logo.svg` y el sitio lo usa
-automáticamente en la cabecera, el pie y la portada. Requisitos del archivo:
+automáticamente en la cabecera, el pie, el menú y la portada (también a todo el ancho).
+Requisitos del archivo:
 
 - **SVG vectorial**, con los textos convertidos a trazos: sin fuentes incrustadas ni
   imágenes rasterizadas dentro.
@@ -52,19 +62,62 @@ automáticamente en la cabecera, el pie y la portada. Requisitos del archivo:
 - **Sin atributos `style` ni `<style>`**: la política de seguridad del sitio (CSP) los
   bloquea. Usar atributos de presentación (`fill`, `stroke`).
 - `viewBox` ajustado al dibujo, sin márgenes vacíos.
-- Versión horizontal legible a 16 px de alto (cabecera móvil).
+- Versión horizontal legible a 16 px de alto (cabecera móvil) y que aguante el tamaño
+  de cartel a todo el ancho de la pantalla.
 - Aparte, un **símbolo cuadrado** para el favicon y los iconos de aplicación.
 
 ## Movimiento
 
-- **Un solo momento automático:** la apertura de la portada. El encuadre se abre como
-  una cartela de cine y el logotipo aparece con un barrido de luz; dura unos 3,3 s y
-  la frase y los botones aparecen a los 1,5 s.
-- Todo lo demás responde a una acción: subrayados que crecen al pasar el cursor,
-  segunda foto en las tarjetas, apertura del carrito y del menú.
-- Duraciones: 160 ms (interfaz), 320 ms (enlaces), 560 ms (paneles). Curva de salida
-  suave (`--ease-out`).
-- Con "reducir movimiento" activado, todo aparece al instante.
+Un lenguaje de cámara: el movimiento revela, encuadra y confirma; nunca decora ni hace
+esperar. **No hay pantalla de carga**: el contenido está en la página desde el primer
+pintado y el movimiento solo lo descubre.
+
+**Apertura de la portada** (solo CSS, ~2 s): la pantalla se abre como un obturador desde
+el centro → las letras de KYRO suben una a una desde una máscara → aparece la frase →
+aparecen las acciones. Después la luz deriva despacio; con ratón, un foco sigue al cursor;
+al desplazarse, la pantalla y el nombre se separan (paralaje con `animation-timeline`).
+
+**Vocabulario al desplazarse** (`data-reveal`, `src/scripts/reveal.ts` + `base.css`). Cada
+pieza se revela una sola vez al entrar en pantalla; las que entran juntas se escalonan
+90 ms en orden de lectura:
+
+| Gesto | Uso | Efecto |
+| --- | --- | --- |
+| `aperture` | Fotos de tarjetas, categorías, pantallas de luz, galería | Se abre como un obturador desde el centro |
+| `title` | Títulos de sección y de página, letras del KYRO del pie | El texto sube desde una máscara, como un rótulo |
+| `rise` | Textos, enlaces, precios | Aparece y sube un poco |
+| `line` | Líneas divisorias | Se dibuja de izquierda a derecha |
+
+**Transiciones entre páginas** (View Transitions entre documentos, mejora progresiva): la
+página saliente se funde (240 ms) y la entrante sube levemente (560 ms); la cabecera queda
+quieta; la foto de una tarjeta viaja hasta la ficha del producto; la línea del filtro de
+categorías se desliza de una categoría a otra.
+
+**Respuesta a acciones:**
+
+- Cursor (solo con ratón): subrayados champán que crecen, segunda foto y acercamiento
+  lento en las tarjetas, barrido de luz en el botón principal, KYRO que "respira".
+- Toque: no hay estados hover en pantallas táctiles; botones, tarjetas, tallas y
+  cantidades ceden al presionarlos.
+- Menú móvil: cortina de arriba abajo, enlaces numerados en escalera, KYRO en contorno.
+- Talla: el marfil la llena de abajo arriba y la pieza late una vez. Sin talla elegida,
+  las opciones hacen un leve gesto y aparece el aviso.
+- Añadir al carrito: barrido de luz en el botón, el número del carrito late, el panel
+  entra con las líneas en escalera y la línea añadida se ilumina un instante.
+- Acordeones de la ficha: se despliegan con altura animada donde el navegador lo admite.
+
+**Tokens:** `--ease-out` (salida suave), `--ease-shutter` (obturador: arranque firme y
+frenado largo), 160 ms (interfaz), 320 ms (enlaces), 560 ms (paneles), 1100 ms (revelados),
+90 ms de escalonado. Solo se animan `opacity`, `translate`, `scale` y `clip-path`, que no
+recalculan el diseño de la página.
+
+**Accesibilidad y seguridad:**
+
+- Con "reducir movimiento", todo aparece al instante y no hay transiciones entre páginas.
+- Sin JavaScript nada se oculta: los revelados solo se activan si el script arranca
+  (`html.motion`), y un seguro los retira si no lo hace en 3 s.
+- Nada de lo que se revela queda fuera del alcance del teclado ni de los lectores de
+  pantalla, y al terminar no queda ningún recorte que corte el foco.
 
 ## Fotografía: brief para la sesión
 
@@ -81,11 +134,12 @@ automáticamente en la cabecera, el pie y la portada. Requisitos del archivo:
 ### Campaña (portada)
 
 - **Horizontal**, al menos **2560 px de ancho**.
-- La misma foto se recorta a 2.39:1 en escritorio, 1.85:1 en tableta horizontal y
-  1.37:1 en vertical. **Zona segura:** el motivo debe quedar dentro del **57 % central del
-  ancho** para sobrevivir al recorte vertical.
-- El logotipo se superpone en el centro sobre un velo oscuro: dejar aire en el centro o
-  aceptar que la figura quede por debajo del logotipo.
+- La foto llena la pantalla de la portada: unos 2:1 en escritorio y unos 2:3 en vertical
+  en móvil. **Zona segura:** el motivo debe quedar dentro del **tercio central del ancho**
+  para sobrevivir al recorte vertical.
+- KYRO se monta sobre el **borde inferior** de la foto y la frase va arriba a la izquierda
+  en escritorio (abajo en móvil), sobre un velo oscuro: dejar el tercio inferior más
+  limpio y oscuro.
 - Tonos oscuros y contrastados, con luz motivada (farolas, ventanas, neón tenue).
   Grano fino bienvenido; nada de filtros de color que salgan de la paleta.
 
@@ -100,7 +154,7 @@ automáticamente en la cabecera, el pie y la portada. Requisitos del archivo:
 - Frases cortas, verbos simples, sin superlativos ("el mejor", "único").
 - Nada que no se pueda comprobar: materiales, origen, plazos, stock o premios solo si
   KYRO los confirma.
-- Botones que dicen lo que hacen: "Añadir al carrito", "Ver la tienda".
+- Botones que dicen lo que hacen: "Añadir al carrito", "Explorar la colección", "Ver la tienda".
 - Los textos actuales están en borrador en `src/config/copy.ts`.
 
 ## Qué no hacer
@@ -108,5 +162,7 @@ automáticamente en la cabecera, el pie y la portada. Requisitos del archivo:
 - Imágenes de bancos presentadas como fotografía propia (las provisionales llevan crédito
   visible).
 - Colores, sombras o degradados decorativos fuera de la paleta.
-- Animaciones automáticas en cada sección.
+- Movimiento que retrase la compra: pantallas de carga, animaciones que haya que esperar
+  para poder pulsar, efectos en bucle llamativos.
+- Animaciones que ignoren "reducir movimiento" o que oculten contenido si falla el script.
 - Tarjetas con bordes redondeados o sombras genéricas.

@@ -5,7 +5,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout title="Carrito" description="Tu selección de piezas KYRO." cartDrawer={false}>
   <div class="cart-page container">
-    <h1 class="cart-page__title editorial">Carrito</h1>
+    <h1 class="cart-page__title display" data-reveal="title">Carrito</h1>
+    <span class="cart-page__rule" aria-hidden="true" data-reveal="line"></span>
     <CartView variant="page" />
   </div>
 </BaseLayout>
@@ -17,7 +18,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
 
   .cart-page__title {
-    margin-bottom: var(--space-xl);
-    font-size: var(--text-4xl);
+    font-size: clamp(3rem, 1.6rem + 6vw, 7rem);
+  }
+
+  .cart-page__rule {
+    display: block;
+    height: 1px;
+    margin-block: var(--space-md) var(--space-xl);
+    background: var(--color-line-strong);
   }
 </style>

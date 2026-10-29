@@ -1,6 +1,7 @@
 ---
 import { store } from '../../config/store';
 import { routes } from '../../lib/urls';
+import LightScreen from '../brand/LightScreen.astro';
 
 interface Props {
   /** "drawer" en el panel lateral, "page" en /carrito/. */
@@ -20,7 +21,9 @@ const noteId = `cart-note-${variant}`;
   </p>
 
   <div class="cart__empty" data-cart-empty hidden>
+    <LightScreen class="cart__empty-screen" focus="center" />
     <p class="cart__empty-title editorial">Tu carrito está vacío.</p>
+    <p class="cart__empty-text muted">Las piezas que elijas aparecerán aquí.</p>
     <a class="button" href={routes.shop()}>Ver la tienda</a>
   </div>
 
@@ -88,15 +91,35 @@ const noteId = `cart-note-${variant}`;
     font-size: var(--text-sm);
   }
 
+  /* Vacío: la pantalla de luz de la marca, a oscuras, esperando la primera pieza. */
   .cart__empty {
     display: grid;
     justify-items: start;
-    gap: var(--space-lg);
-    padding-block: var(--space-xl);
+    gap: var(--space-md);
+    padding-block: var(--space-md) var(--space-xl);
+    animation: cart-fade-in var(--duration-slow) var(--ease-out);
+  }
+
+  .cart__empty-screen {
+    width: 100%;
+    margin-bottom: var(--space-sm);
   }
 
   .cart__empty-title {
     font-size: var(--text-2xl);
+    line-height: 1.1;
+  }
+
+  .cart__empty-text {
+    margin-bottom: var(--space-sm);
+    font-size: var(--text-sm);
+  }
+
+  @keyframes cart-fade-in {
+    from {
+      opacity: 0;
+      translate: 0 0.75rem;
+    }
   }
 
   .cart__lines {
@@ -113,6 +136,47 @@ const noteId = `cart-note-${variant}`;
 
   .cart-line:last-child {
     border-bottom: 1px solid var(--color-line);
+  }
+
+  /* Al abrir el carrito, las líneas entran en escalera. */
+  .cart-line[data-entering] {
+    animation: cart-line-in 700ms var(--ease-out) backwards;
+    animation-delay: calc(var(--line-order, 0) * 70ms + 120ms);
+  }
+
+  /* La línea que acaba de cambiar (pieza añadida, cantidad) se ilumina un instante. */
+  .cart-line[data-changed] {
+    animation: cart-line-glow 1400ms var(--ease-out);
+  }
+
+  .cart-line[data-entering][data-changed] {
+    animation:
+      cart-line-in 700ms var(--ease-out) 120ms backwards,
+      cart-line-glow 1400ms var(--ease-out) 120ms;
+  }
+
+  .cart-line[data-changed] .quantity__value {
+    animation: count-change 520ms var(--ease-out);
+  }
+
+  @keyframes cart-line-in {
+    from {
+      opacity: 0;
+      translate: 1.5rem 0;
+    }
+  }
+
+  @keyframes cart-line-glow {
+    from {
+      background-color: rgb(200 179 138 / 0.14);
+    }
+  }
+
+  @keyframes count-change {
+    35% {
+      scale: 1.35;
+      color: var(--color-champagne);
+    }
   }
 
   .cart-line__media {
@@ -184,8 +248,21 @@ const noteId = `cart-note-${variant}`;
     transition: color var(--duration-fast) var(--ease-out);
   }
 
-  .quantity__step:hover:not(:disabled) {
+  @media (hover: hover) and (pointer: fine) {
+    .quantity__step:hover:not(:disabled) {
+      color: var(--color-champagne);
+    }
+  }
+
+  .quantity__step:active:not(:disabled) {
+    scale: 0.88;
     color: var(--color-champagne);
+  }
+
+  .quantity__step {
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      scale var(--duration-fast) var(--ease-out);
   }
 
   .quantity__step:disabled {
@@ -194,6 +271,7 @@ const noteId = `cart-note-${variant}`;
   }
 
   .quantity__value {
+    display: inline-block;
     min-width: 2ch;
     text-align: center;
     font-variant-numeric: tabular-nums;
@@ -273,9 +351,23 @@ const noteId = `cart-note-${variant}`;
     #catalog: CatalogIndex | undefined;
     #status: 'idle' | 'loading' | 'error' = 'idle';
     #unsubscribe: (() => void) | undefined;
+    /** Líneas cuya cantidad cambió hace un momento (sku → instante), para iluminarlas. */
+    #changed = new Map<string, number>();
+    /** El próximo pintado con líneas entra en escalera (al abrir el carrito). */
+    #entering = false;
 
     connectedCallback() {
-      this.#unsubscribe = onCartChange(() => this.render());
+      let previous = getCart();
+      this.#unsubscribe = onCartChange((state) => {
+        // Solo las acciones de quien compra (o de otra pestaña) cuentan como cambio.
+        const now = performance.now();
+        for (const line of state.lines) {
+          const before = previous.lines.find((other) => other.sku === line.sku)?.quantity;
+          if (line.quantity !== before) this.#changed.set(line.sku, now);
+        }
+        previous = state;
+        this.render();
+      });
       this.addEventListener('click', (event) => this.#handleClick(event));
       this.refresh();
     }
@@ -286,6 +378,7 @@ const noteId = `cart-note-${variant}`;
 
     /** Vuelve a cargar el catálogo si hace falta y pinta el carrito. */
     async refresh() {
+      this.#entering = true;
       if (getCart().lines.length === 0) {
         this.render();
         return;
@@ -321,9 +414,22 @@ const noteId = `cart-note-${variant}`;
       const currency = summary.currency;
       if (!currency) return;
 
+      const now = performance.now();
+      const entering = this.#entering;
+      this.#entering = false;
+
       const focusedSku = (document.activeElement?.closest('[data-sku]') as HTMLElement | null)?.dataset['sku'];
       const focusedAction = (document.activeElement as HTMLElement | null)?.dataset;
-      list.replaceChildren(...summary.lines.map((line) => this.#renderLine(line, currency)));
+      list.replaceChildren(
+        ...summary.lines.map((line, index) => {
+          const item = this.#renderLine(line, currency);
+          // CSSOM (no atributo style): compatible con la CSP.
+          item.style.setProperty('--line-order', String(Math.min(index, 6)));
+          if (entering) item.dataset['entering'] = '';
+          if (now - (this.#changed.get(line.sku) ?? -Infinity) < 1500) item.dataset['changed'] = '';
+          return item;
+        }),
+      );
       list.hidden = false;
       summaryBox.hidden = false;
       this.#part('[data-cart-subtotal]').textContent = formatPrice(summary.subtotal, currency);

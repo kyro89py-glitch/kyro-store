@@ -69,6 +69,7 @@ src/
   layouts/             Plantilla base (cabecera, pie, carrito, CSP)
   lib/                 Lógica sin interfaz: catálogo, precios, rutas, carrito
   pages/               Rutas del sitio
+  scripts/             Revelados al desplazarse (vocabulario de movimiento en docs/MARCA.md)
   styles/              Tokens de diseño y estilos base
 tests/
   unit/                Vitest

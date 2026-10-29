@@ -57,6 +57,9 @@ navegador: localStorage {sku, cantidad} ──┴──▶ carrito = precios de 
 
 - **CSP** en todas las páginas: `default-src 'self'`, scripts y estilos solo propios o con
   hash, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`. Sin scripts de terceros.
+  El único script en línea (el que activa los revelados antes del primer pintado) registra
+  su hash con `Astro.csp.insertScriptHash` en `BaseLayout.astro`; los valores dinámicos de
+  estilo se escriben con CSSOM (`style.setProperty`), nunca con atributos `style`.
 - **Sin HTML dinámico:** el carrito escribe con `textContent`/`setAttribute`; los datos
   estructurados (JSON-LD) escapan `<`.
 - **Sin secretos** en el repositorio (`.env` ignorado; `.env.example` documenta variables).

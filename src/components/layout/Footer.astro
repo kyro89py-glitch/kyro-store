@@ -14,12 +14,7 @@ const hasContact = Boolean(store.contact.email) || store.social.length > 0;
 
 <footer class="site-footer">
   <div class="container site-footer__inner">
-    <div class="site-footer__brand">
-      <a class="site-footer__wordmark" href={routes.home()} aria-label="KYRO, inicio">
-        <Wordmark />
-      </a>
-      <p class="site-footer__statement">{copy.footer.statement}</p>
-    </div>
+    <p class="site-footer__statement editorial-italic" data-reveal="title">{copy.footer.statement}</p>
 
     <nav class="site-footer__nav" aria-label="Pie de página">
       <div class="site-footer__group">
@@ -88,14 +83,22 @@ const hasContact = Boolean(store.contact.email) || store.social.length > 0;
       }
     </nav>
 
+    <a class="site-footer__masthead" href={routes.home()} aria-label="KYRO, inicio">
+      <Wordmark variant="masthead" reveal />
+    </a>
+
     <p class="site-footer__legal">© {year} {store.name}</p>
   </div>
 </footer>
 
 <style>
+  /*
+   * Pie como títulos de crédito: una frase de marca, el índice del sitio y, al cierre,
+   * KYRO a todo el ancho (eco de la portada). Las letras suben al entrar en pantalla.
+   */
   .site-footer {
     margin-top: var(--space-3xl);
-    padding-block: var(--space-2xl) var(--space-xl);
+    padding-block: var(--space-2xl) var(--space-lg);
     border-top: 1px solid var(--color-line);
     background: var(--color-obsidian-deep);
   }
@@ -105,21 +108,10 @@ const hasContact = Boolean(store.contact.email) || store.social.length > 0;
     gap: var(--space-2xl);
   }
 
-  .site-footer__brand {
-    display: grid;
-    justify-items: start;
-    gap: var(--space-md);
-  }
-
-  .site-footer__wordmark {
-    font-size: var(--text-2xl);
-    text-decoration: none;
-  }
-
   .site-footer__statement {
-    max-width: 24em;
-    color: var(--color-ivory-muted);
-    font-size: var(--text-sm);
+    max-width: 16em;
+    font-size: clamp(1.75rem, 1.3rem + 1.9vw, 2.9rem);
+    line-height: 1.08;
   }
 
   .site-footer__nav {
@@ -151,9 +143,31 @@ const hasContact = Boolean(store.contact.email) || store.social.length > 0;
     font-size: var(--text-sm);
   }
 
-  .site-footer__legal {
+  .site-footer__masthead {
+    display: block;
     padding-top: var(--space-lg);
     border-top: 1px solid var(--color-line);
+    text-decoration: none;
+    container-type: inline-size;
+    transition: color var(--duration-slow) var(--ease-out);
+  }
+
+  .site-footer__masthead :global(.masthead) {
+    font-size: 25cqi;
+  }
+
+  .site-footer__masthead :global(.logo) {
+    width: 100%;
+    height: auto;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .site-footer__masthead:hover {
+      color: var(--color-champagne);
+    }
+  }
+
+  .site-footer__legal {
     color: var(--color-ivory-muted);
     font-size: var(--text-xs);
     letter-spacing: 0.03em;
@@ -165,6 +179,7 @@ const hasContact = Boolean(store.contact.email) || store.social.length > 0;
       column-gap: var(--space-2xl);
     }
 
+    .site-footer__masthead,
     .site-footer__legal {
       grid-column: 1 / -1;
     }
