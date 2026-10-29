@@ -86,6 +86,7 @@ docs/                  Arquitectura, catálogo, imágenes, recursos provisionale
 - [Imágenes: procedencia, licencia y portada](docs/IMAGENES.md)
 - [Recursos provisionales y de terceros](docs/RECURSOS-PROVISIONALES.md)
 - [Fase 2: pagos y pedidos](docs/FASE-2-PAGOS.md)
+- [Rendimiento: cómo medir, línea base y limitaciones](docs/RENDIMIENTO.md)
 - [Seguridad](SECURITY.md)
 
 ## Pendiente de KYRO
