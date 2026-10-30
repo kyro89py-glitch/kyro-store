@@ -45,6 +45,9 @@ const categories = getCategories(await getActiveProducts()).map((category) => ({
     </a>
 
     <div class="site-header__actions">
+      <a class="nav-link site-header__search" href={routes.search()} aria-current={isCurrent(routes.search()) ? 'page' : undefined}>
+        Buscar
+      </a>
       <CartToggle />
     </div>
   </div>
@@ -125,11 +128,20 @@ const categories = getCategories(await getActiveProducts()).map((category) => ({
 
   .site-header__actions {
     display: flex;
+    align-items: center;
     justify-content: flex-end;
+    gap: var(--space-xl);
+  }
+
+  /* En móvil, "Buscar" está en el menú: la cabecera solo deja sitio al carrito. */
+  .site-header__search {
+    display: none;
+    font-size: var(--text-sm);
   }
 
   @media (min-width: 48rem) {
-    .site-header__links {
+    .site-header__links,
+    .site-header__search {
       display: flex;
     }
 

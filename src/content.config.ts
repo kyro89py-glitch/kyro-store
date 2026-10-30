@@ -42,6 +42,11 @@ const products = defineCollection({
           amount: z.number().int().positive(),
           /** Código ISO 4217, p. ej. "PYG", "USD". */
           currency: z.string().regex(/^[A-Z]{3}$/, 'Usa un código ISO 4217 en mayúsculas'),
+          /**
+           * Opcional: precio anterior real (misma unidad que `amount`), solo si la pieza
+           * está rebajada. Se muestra tachado; debe ser mayor que el precio actual.
+           */
+          compareAt: z.number().int().positive().optional(),
         }),
         images: z
           .array(
@@ -70,6 +75,14 @@ const products = defineCollection({
         details: z.array(z.string().trim().min(1)).max(20).default([]),
         composition: z.string().trim().min(1).optional(),
         care: z.array(z.string().trim().min(1)).max(20).default([]),
+        /**
+         * Opcional: slug de la página informativa con la guía de tallas
+         * (src/content/pages/<slug>.md). La ficha la enlaza; si la página no existe, el build falla.
+         */
+        sizeGuide: z
+          .string()
+          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug de una página informativa')
+          .optional(),
         featured: z.boolean().default(false),
         /** Fecha real de lanzamiento (AAAA-MM-DD). Solo los productos con fecha aparecen en "Novedades". */
         releasedAt: z.coerce.date().optional(),
@@ -77,6 +90,13 @@ const products = defineCollection({
         position: z.number().int().default(0),
       })
       .superRefine((product, ctx) => {
+        if (product.price.compareAt !== undefined && product.price.compareAt <= product.price.amount) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['price', 'compareAt'],
+            message: 'El precio anterior debe ser mayor que el precio actual.',
+          });
+        }
         const seen = new Set<string>();
         for (const [index, variant] of product.variants.entries()) {
           if (seen.has(variant.sku)) {
@@ -150,6 +170,11 @@ const pages = defineCollection({
     updatedAt: z.coerce.date(),
     /** Orden en el pie de página (menor primero). */
     order: z.number().int().default(0),
+    /**
+     * true: la ficha de cada producto enlaza esta página (p. ej. envíos o devoluciones),
+     * junto al botón de compra.
+     */
+    productLink: z.boolean().default(false),
   }),
 });
 

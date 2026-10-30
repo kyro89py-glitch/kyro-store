@@ -76,7 +76,9 @@ export function getHelpTopics({ infoPages }: HelpContext): HelpTopic[] {
     {
       id: 'cantidad',
       question: '¿Cuántas unidades puedo añadir?',
-      answer: [`Hasta ${max} unidades de cada talla. Las cantidades se cambian desde el carrito.`],
+      answer: [
+        `Hasta ${max} unidades de cada talla. Eliges la cantidad en la ficha de la pieza y puedes cambiarla después en el carrito.`,
+      ],
       links: [{ label: 'Ver el carrito', href: routes.cart() }],
     },
     {

@@ -15,6 +15,8 @@ export interface CartState {
  */
 export interface CatalogVariant {
   sku: string;
+  /** Producto al que pertenece: agrupa sus tallas para cambiar de una a otra en el carrito. */
+  productId: string;
   productName: string;
   optionName: string;
   label: string;

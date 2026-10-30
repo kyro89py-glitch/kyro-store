@@ -11,6 +11,7 @@ const PAGES = [
   '/carrito/',
   '/marca/',
   '/ayuda/',
+  '/buscar/',
   '/info/pagina-de-prueba/',
 ];
 
@@ -193,7 +194,8 @@ test.describe('carrito', () => {
     const drawer = page.getByRole('dialog', { name: 'Carrito' });
     await expect(drawer).toBeVisible();
     await expect(drawer.getByRole('link', { name: 'Prenda de prueba 1' })).toBeVisible();
-    await expect(drawer.getByText('Talla: S')).toBeVisible();
+    // Con varias tallas, la línea ofrece cambiarla; la elegida es la S.
+    await expect(drawer.getByRole('combobox', { name: 'Talla de Prenda de prueba 1' })).toHaveValue('TEST-001-S');
     await expect(drawer.getByText('Tu carrito está vacío.')).toBeHidden();
     await expect(drawer.locator('[data-cart-subtotal]')).toHaveText(/125,00\sXTS/);
 
@@ -271,6 +273,156 @@ test.describe('carrito', () => {
   });
 });
 
+test.describe('carrito: cantidad y cambio de talla', () => {
+  test('la ficha añade varias unidades de una vez y respeta el límite por talla', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('kyro.cart.v1', JSON.stringify({ lines: [{ sku: 'TEST-001-L', quantity: 8 }] }));
+    });
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    const quantity = page.getByRole('group', { name: 'Cantidad' });
+    await expect(quantity.getByRole('button', { name: 'Restar una unidad' })).toBeDisabled();
+    await quantity.getByRole('button', { name: 'Sumar una unidad' }).click();
+    await quantity.getByRole('button', { name: 'Sumar una unidad' }).click();
+    await expect(quantity.locator('output')).toHaveText('3');
+
+    // Con 8 de la L ya en el carrito, solo caben 2 más: la cantidad se ajusta sola.
+    await page.getByRole('radio', { name: 'L', exact: true }).check();
+    await expect(quantity.locator('output')).toHaveText('2');
+    await expect(quantity.getByRole('button', { name: 'Sumar una unidad' })).toBeDisabled();
+    await expect(page.getByText('Ya tienes 8 en el carrito. Puedes añadir 2 más.')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Añadir al carrito' }).click();
+    await expect(page.getByText('Añadidas 2 unidades al carrito.')).toBeAttached();
+    await expect(cartToggle(page)).toHaveAccessibleName('Carrito, 10 artículos');
+    await page.keyboard.press('Escape');
+    await expect(page.getByText('Ya tienes el máximo de 10 unidades de esta talla en el carrito.').first()).toBeVisible();
+  });
+
+  test('cambia de talla en el carrito sin perder la línea, y junta tallas repetidas', async ({ page }) => {
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('sembrado')) return;
+      sessionStorage.setItem('sembrado', '1');
+      window.localStorage.setItem(
+        'kyro.cart.v1',
+        JSON.stringify({
+          lines: [
+            { sku: 'TEST-001-S', quantity: 2 },
+            { sku: 'TEST-002-U', quantity: 1 },
+          ],
+        }),
+      );
+    });
+    await page.goto('/carrito/');
+    const select = page.getByRole('combobox', { name: 'Talla de Prenda de prueba 1' });
+    // Las tallas agotadas aparecen, pero no se pueden elegir.
+    await expect(select.locator('option[value="TEST-001-M"]')).toHaveJSProperty('disabled', true);
+    // Una pieza con una sola talla no ofrece desplegable.
+    await expect(page.getByRole('combobox', { name: /Prenda de prueba 2/ })).toHaveCount(0);
+
+    await select.selectOption('TEST-001-L');
+    await expect(page.getByRole('combobox', { name: 'Talla de Prenda de prueba 1' })).toHaveValue('TEST-001-L');
+    await expect(page.getByRole('combobox', { name: 'Talla de Prenda de prueba 1' })).toBeFocused();
+    await expect(page.locator('[data-cart-announcer]')).toHaveText('Cambiado a talla L.');
+    // La línea sigue primera y con la misma cantidad.
+    await expect(page.locator('.cart-line').first()).toHaveAttribute('data-sku', 'TEST-001-L');
+    await expect(page.locator('.cart-line').first().locator('[data-line-quantity]')).toHaveText('2');
+    const stored = await page.evaluate(() => JSON.parse(window.localStorage.getItem('kyro.cart.v1') ?? '{}'));
+    expect(stored.lines).toEqual([
+      { sku: 'TEST-001-L', quantity: 2 },
+      { sku: 'TEST-002-U', quantity: 1 },
+    ]);
+  });
+});
+
+test.describe('búsqueda', () => {
+  const results = (page: import('@playwright/test').Page) =>
+    page.getByRole('list', { name: 'Resultados' }).getByRole('listitem');
+
+  test('busca sin distinguir tildes ni mayúsculas y guarda la búsqueda en la URL', async ({ page }) => {
+    await page.goto('/buscar/');
+    await expect(results(page)).toHaveCount(4);
+    await page.getByRole('searchbox', { name: 'Buscar en la tienda' }).fill('PRENDA DE PRUEBA 3');
+    await expect(results(page)).toHaveCount(1);
+    await expect(results(page).first()).toContainText('Prenda de prueba 3');
+    await expect(page).toHaveURL(/\/buscar\/\?q=PRENDA\+DE\+PRUEBA\+3$/);
+
+    // La URL se puede compartir: al abrirla, la búsqueda se repite.
+    await page.goto('/buscar/?q=categoria%20de%20prueba%20b');
+    await expect(page.getByRole('searchbox', { name: 'Buscar en la tienda' })).toHaveValue('categoria de prueba b');
+    await expect(results(page)).toHaveCount(2);
+  });
+
+  test('filtra por categoría, talla y disponibilidad y ordena por precio', async ({ page }) => {
+    await page.goto('/buscar/');
+    await page.getByRole('combobox', { name: 'Categoría' }).selectOption({ label: 'Categoría de prueba A' });
+    await expect(results(page)).toHaveCount(2);
+    await page.getByRole('checkbox', { name: 'Solo disponibles' }).check();
+    await expect(results(page)).toHaveCount(1);
+    await page.getByRole('button', { name: 'Quitar filtros' }).click();
+    await expect(results(page)).toHaveCount(4);
+
+    await page.getByRole('combobox', { name: 'Talla' }).selectOption('L');
+    await expect(results(page).getByRole('heading')).toHaveText(['Prenda de prueba 1', 'Prenda de prueba 4']);
+    await page.getByRole('combobox', { name: 'Talla' }).selectOption('');
+
+    await page.getByRole('combobox', { name: 'Ordenar' }).selectOption('precio-asc');
+    await expect(results(page).getByRole('heading')).toHaveText([
+      'Prenda de prueba 3',
+      'Prenda de prueba 2',
+      'Prenda de prueba 1',
+      'Prenda de prueba 4',
+    ]);
+    await expect(page).toHaveURL(/orden=precio-asc/);
+  });
+
+  test('sin resultados lo dice y ofrece salidas reales', async ({ page }) => {
+    await page.goto('/buscar/?q=zzzz');
+    await expect(results(page)).toHaveCount(0);
+    await expect(page.getByText('Ninguna pieza coincide.', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Ver toda la tienda' })).toHaveAttribute('href', '/tienda/');
+    await page.getByRole('main').getByRole('button', { name: 'Quitar filtros' }).last().click();
+    await expect(results(page)).toHaveCount(4);
+  });
+
+  test('ignora parámetros que no existen en el catálogo', async ({ page }) => {
+    const errors = trackErrors(page);
+    await page.goto('/buscar/?categoria=inventada&talla=XXL&orden=nada&q=%3Cimg%20src%3Dx%3E');
+    await expect(page.getByRole('combobox', { name: 'Categoría' })).toHaveValue('');
+    await expect(page.getByRole('combobox', { name: 'Ordenar' })).toHaveValue('relevancia');
+    await expect(results(page)).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('la tienda lleva a la búsqueda con su categoría', async ({ page }) => {
+    await page.goto('/tienda/categoria-de-prueba-b/');
+    await page.getByRole('link', { name: 'Buscar y filtrar' }).click();
+    await expect(page.getByRole('combobox', { name: 'Categoría' })).toHaveValue('categoria-de-prueba-b');
+    await expect(results(page)).toHaveCount(2);
+  });
+});
+
+test.describe('ficha: precio anterior e información de compra', () => {
+  test('muestra el precio anterior tachado solo cuando existe', async ({ page }) => {
+    await page.goto('/producto/prenda-de-prueba-cuatro/');
+    const price = page.locator('.product__price');
+    await expect(price.locator('s')).toContainText('260,00');
+    await expect(price).toContainText('Precio anterior:');
+    await expect(price).toContainText('210,00');
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    await expect(page.locator('.product__price s')).toHaveCount(0);
+  });
+
+  test('enlaza la guía de tallas y la información marcada por KYRO', async ({ page }) => {
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    const links = page.locator('.product__links');
+    await expect(links.getByRole('link', { name: 'Guía de tallas' })).toHaveAttribute('href', '/info/pagina-de-prueba/');
+    await expect(links.getByRole('link', { name: 'Página informativa de prueba' })).toBeVisible();
+    // Sin guía de tallas en su ficha, el producto 2 solo enlaza la información general.
+    await page.goto('/producto/prenda-de-prueba-dos/');
+    await expect(page.locator('.product__links').getByRole('link', { name: 'Guía de tallas' })).toHaveCount(0);
+  });
+});
+
 test.describe('logotipo', () => {
   test('con un SVG en la carpeta de marca, la cabecera y la portada lo usan', async ({ page }) => {
     await page.goto('/');
@@ -343,6 +495,7 @@ test.describe('pie de página', () => {
       'Toda la tienda',
       'Categoría de prueba A',
       'Categoría de prueba B',
+      'Buscar',
       'Carrito',
       'Ayuda y contacto',
       'Preguntas frecuentes',
@@ -460,6 +613,14 @@ test.describe('menú móvil', () => {
     await expect(page).toHaveURL(/\/tienda\/$/);
   });
 
+  test('lleva a la búsqueda', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) >= 768, 'solo en pantallas estrechas');
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Menú' }).click();
+    await page.getByRole('dialog', { name: 'Menú' }).getByRole('link', { name: 'Buscar' }).click();
+    await expect(page).toHaveURL(/\/buscar\/$/);
+  });
+
   test('lleva a ayuda y contacto', async ({ page }) => {
     test.skip((page.viewportSize()?.width ?? 0) >= 768, 'solo en pantallas estrechas');
     await page.goto('/');
@@ -536,6 +697,19 @@ test.describe('movimiento', () => {
 
 test.describe('sin JavaScript', () => {
   test.use({ javaScriptEnabled: false });
+
+  test('no muestra controles que no funcionarían', async ({ page }) => {
+    await page.goto('/buscar/');
+    await expect(page.getByRole('search')).toBeHidden();
+    // getByText no mira dentro de <noscript>: se busca el párrafo por su clase.
+    await expect(page.locator('.search__noscript')).toBeVisible();
+    await expect(page.locator('.search__noscript')).toContainText('La búsqueda necesita JavaScript.');
+    await expect(page.getByRole('list', { name: 'Resultados' }).getByRole('listitem')).toHaveCount(4);
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    await expect(page.getByRole('group', { name: 'Cantidad' })).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Añadir al carrito' })).toBeHidden();
+    await expect(page.locator('.product-form noscript p')).toContainText('Para añadir piezas al carrito, activa JavaScript');
+  });
 
   test('no se oculta nada a la espera de animaciones', async ({ page }) => {
     await page.goto('/');

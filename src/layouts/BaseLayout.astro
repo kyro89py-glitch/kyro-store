@@ -23,13 +23,14 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
 const indexable = store.indexable && !__KYRO_FIXTURES__;
 
 // Antes del primer pintado (sin parpadeo):
+// - `js` muestra los controles que solo funcionan con JavaScript (p. ej. la búsqueda);
 // - `motion` activa los revelados al desplazarse;
 // - `dim` reserva el sitio del wordmark en 3D (exploración) si hay WebGL y no hay
 //   colores forzados: las letras planas esperan a la versión 3D.
 // Seguro: si los scripts no arrancan en 3 s, se retiran ambas clases y todo queda visible.
 // Astro no calcula el hash de los scripts inline, así que se registra aquí en la CSP.
 const motionBootstrap =
-  'var d=document.documentElement;d.classList.add("motion");' +
+  'var d=document.documentElement;d.classList.add("js","motion");' +
   'try{if(window.WebGLRenderingContext&&!matchMedia("(forced-colors: active)").matches)d.classList.add("dim")}catch(e){}' +
   'setTimeout(function(){if(!window.__kyroMotion){d.classList.remove("motion");d.classList.remove("dim")}},3000);';
 Astro.csp?.insertScriptHash(`sha256-${createHash('sha256').update(motionBootstrap).digest('base64')}`);

@@ -1,0 +1,538 @@
+---
+import EmptyCollection from '../components/catalog/EmptyCollection.astro';
+import ProductGrid from '../components/catalog/ProductGrid.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getActiveProducts, getCategories, isPurchasable } from '../lib/catalog';
+import { PARAMS, sortSizes } from '../lib/search';
+import { routes } from '../lib/urls';
+
+/*
+ * Búsqueda del catálogo. El sitio es estático: la página trae todas las piezas activas
+ * con sus datos de búsqueda y el navegador filtra y reordena (src/lib/search.ts). El
+ * estado vive en la URL (/buscar/?q=…&categoria=…), así que se puede compartir y volver.
+ *
+ * Cada filtro aparece solo si los datos reales lo justifican: categorías con al menos
+ * dos, tallas con al menos dos, "solo disponibles" si alguna pieza está agotada y el
+ * orden por precio si hay precios distintos. Sin JavaScript se ve el catálogo completo
+ * y un aviso, sin controles que no harían nada.
+ */
+const products = await getActiveProducts();
+const categories = getCategories(products);
+const sizes = sortSizes(
+  products.flatMap((product) => product.data.variants.filter((variant) => variant.available).map((variant) => variant.label)),
+);
+const showAvailability = products.some((product) => !isPurchasable(product));
+const showPriceSort = new Set(products.map((product) => product.data.price.amount)).size > 1;
+const count = products.length;
+---
+
+<BaseLayout title="Buscar" description="Busca piezas de KYRO por nombre o categoría, filtra por talla y disponibilidad.">
+  <kyro-search class="search container">
+    <header class="search__head">
+      <h1 class="search__title display" data-reveal="title">Buscar</h1>
+      {
+        count > 0 && (
+          <p class="search__count" data-reveal="rise">
+            <span class="search__count-number" data-search-count>
+              {String(count).padStart(2, '0')}
+            </span>
+            <span data-search-count-label>{count === 1 ? 'pieza' : 'piezas'}</span>
+          </p>
+        )
+      }
+      <span class="search__rule" aria-hidden="true" data-reveal="line"></span>
+    </header>
+
+    {
+      count === 0 ? (
+        <EmptyCollection divider={false} />
+      ) : (
+        <>
+          <form class="search-form" role="search" action={routes.search()} method="get" data-search-form>
+            <div class="search-form__query">
+              <label class="search-form__label" for="buscar-q">
+                Buscar en la tienda
+              </label>
+              <div class="search-form__field">
+                <input
+                  class="search-form__input editorial"
+                  id="buscar-q"
+                  name={PARAMS.query}
+                  type="search"
+                  maxlength="80"
+                  autocomplete="off"
+                  spellcheck="false"
+                  enterkeyhint="search"
+                  placeholder="Nombre o categoría"
+                />
+                <button class="search-form__submit" type="submit">
+                  Buscar
+                </button>
+              </div>
+            </div>
+
+            <div class="search-form__filters">
+              {categories.length > 1 && (
+                <label class="filter">
+                  <span class="filter__label">Categoría</span>
+                  <select class="filter__control" name={PARAMS.category}>
+                    <option value="">Todas</option>
+                    {categories.map((category) => (
+                      <option value={category.slug}>{category.name}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {sizes.length > 1 && (
+                <label class="filter">
+                  <span class="filter__label">Talla</span>
+                  <select class="filter__control" name={PARAMS.size}>
+                    <option value="">Todas</option>
+                    {sizes.map((size) => (
+                      <option value={size}>{size}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <label class="filter">
+                <span class="filter__label">Ordenar</span>
+                <select class="filter__control" name={PARAMS.sort}>
+                  <option value="relevancia" data-sort-default>
+                    Orden de la tienda
+                  </option>
+                  {showPriceSort && <option value="precio-asc">Precio: de menor a mayor</option>}
+                  {showPriceSort && <option value="precio-desc">Precio: de mayor a menor</option>}
+                </select>
+              </label>
+              {showAvailability && (
+                <label class="filter filter--check">
+                  <input class="filter__check" type="checkbox" name={PARAMS.available} value="1" />
+                  <span>Solo disponibles</span>
+                </label>
+              )}
+              <button class="search-form__reset" type="button" data-search-reset hidden>
+                Quitar filtros
+              </button>
+            </div>
+          </form>
+
+          <noscript>
+            <p class="search__noscript muted">
+              La búsqueda necesita JavaScript. Aquí tienes todas las piezas, en el orden de la tienda.
+            </p>
+          </noscript>
+
+          <p class="visually-hidden" role="status" data-search-status />
+
+          <div class="search__results">
+            <ProductGrid products={products} label="Resultados" headingLevel="h2" morph searchable />
+          </div>
+
+          <div class="search__none" data-search-none hidden>
+            <p class="search__none-title editorial">Ninguna pieza coincide.</p>
+            <p class="muted">Prueba con otras palabras o quita algún filtro.</p>
+            <div class="search__none-actions">
+              <button class="button" type="button" data-search-reset>
+                Quitar filtros
+              </button>
+              <a class="text-link" href={routes.shop()}>
+                Ver toda la tienda
+              </a>
+            </div>
+          </div>
+        </>
+      )
+    }
+  </kyro-search>
+</BaseLayout>
+
+<style>
+  /* Un elemento propio es "inline" por defecto: sin esto, .container no le da ancho. */
+  .search {
+    display: block;
+    padding-top: var(--space-2xl);
+  }
+
+  .search__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--space-sm) var(--space-md);
+    margin-bottom: var(--space-md);
+  }
+
+  /* Recuento como el de la tienda: cifra editorial que cambia con los resultados. */
+  .search__count {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-xs);
+    padding-bottom: 0.6em;
+    color: var(--color-ivory-muted);
+    font-size: var(--text-sm);
+    letter-spacing: 0.03em;
+  }
+
+  .search__count-number {
+    color: var(--color-ivory);
+    font-family: var(--font-editorial);
+    font-size: var(--text-2xl);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .search__rule {
+    flex-basis: 100%;
+    height: 1px;
+    background: var(--color-line-strong);
+  }
+
+  /* ---------- Formulario ---------- */
+
+  /* Los controles solo existen con JavaScript: sin él no harían nada. */
+  :global(html:not(.js)) .search-form {
+    display: none;
+  }
+
+  .search-form {
+    display: grid;
+    /* El campo de texto tiene un ancho propio que no debe ensanchar la página. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-lg);
+    margin-bottom: var(--space-2xl);
+  }
+
+  .search-form__query {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-xs);
+  }
+
+  .search-form__label,
+  .filter__label {
+    color: var(--color-ivory-muted);
+    font-size: var(--text-xs);
+    font-stretch: 112%;
+    letter-spacing: 0.06em;
+  }
+
+  /* Una sola línea bajo el texto, como un rótulo de claqueta. */
+  .search-form__field {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    border-bottom: 1px solid var(--color-line-strong);
+    transition: border-color var(--duration-base) var(--ease-out);
+  }
+
+  .search-form__field:focus-within {
+    border-color: var(--color-champagne);
+  }
+
+  .search-form__input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-xs) 0 var(--space-sm);
+    border: 0;
+    background: none;
+    font-size: clamp(1.75rem, 1.2rem + 2.4vw, 3.2rem);
+    line-height: 1.1;
+    caret-color: var(--color-champagne);
+  }
+
+  .search-form__input:focus-visible {
+    outline: none;
+  }
+
+  .search-form__input::placeholder {
+    color: var(--color-ivory-muted);
+    opacity: 0.7;
+  }
+
+  .search-form__input::-webkit-search-cancel-button {
+    filter: grayscale(1) brightness(1.6);
+    cursor: pointer;
+  }
+
+  .search-form__submit {
+    min-height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: var(--text-sm);
+    font-stretch: 112%;
+    letter-spacing: 0.03em;
+  }
+
+  .search-form__submit:active {
+    color: var(--color-champagne);
+  }
+
+  .search-form__filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-md) var(--space-lg);
+  }
+
+  .filter {
+    display: grid;
+    gap: var(--space-2xs);
+  }
+
+  .filter__control {
+    min-height: 2.75rem;
+    padding: 0 2rem 0 0;
+    border: 0;
+    border-bottom: 1px solid var(--color-line-strong);
+    border-radius: 0;
+    appearance: none;
+    background:
+      linear-gradient(45deg, transparent 50%, currentcolor 50%) calc(100% - 0.85rem) 55% / 0.35rem 0.35rem no-repeat,
+      linear-gradient(-45deg, transparent 50%, currentcolor 50%) calc(100% - 0.5rem) 55% / 0.35rem 0.35rem no-repeat;
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+
+  .filter__control:focus-visible {
+    border-color: var(--color-champagne);
+  }
+
+  .filter__control option {
+    background: var(--color-surface);
+    color: var(--color-ivory);
+  }
+
+  .filter--check {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    min-height: 2.75rem;
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+
+  .filter__check {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    accent-color: var(--color-champagne);
+    cursor: pointer;
+  }
+
+  .search-form__reset {
+    min-height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-champagne);
+    font-size: var(--text-sm);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.28em;
+  }
+
+  @media (forced-colors: active) {
+    .filter__control {
+      appearance: auto;
+      background: Field;
+    }
+  }
+
+  /* ---------- Resultados ---------- */
+
+  .search__noscript {
+    margin-bottom: var(--space-xl);
+    font-size: var(--text-sm);
+  }
+
+  /* Las piezas que vuelven a los resultados entran con un fundido breve. */
+  @media (prefers-reduced-motion: no-preference) {
+    .search__results :global([data-search][data-enter]) {
+      animation: search-in 420ms var(--ease-out);
+    }
+  }
+
+  @keyframes search-in {
+    from {
+      opacity: 0;
+      translate: 0 0.5rem;
+    }
+  }
+
+  .search__none {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-sm);
+    padding-block: var(--space-xl);
+    border-top: 1px solid var(--color-line);
+  }
+
+  .search__none-title {
+    font-size: var(--text-2xl);
+    line-height: 1.1;
+  }
+
+  .search__none-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-md) var(--space-xl);
+    margin-top: var(--space-sm);
+  }
+
+  @media (min-width: 60rem) {
+    .search-form {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: end;
+      column-gap: var(--space-2xl);
+    }
+
+    .search-form__filters {
+      justify-content: flex-end;
+    }
+  }
+</style>
+
+<script>
+  import {
+    criteriaToParams,
+    isFiltered,
+    parseCriteria,
+    PARAMS,
+    search,
+    type Criteria,
+    type SearchItem,
+  } from '../lib/search';
+
+  class KyroSearch extends HTMLElement {
+    #form: HTMLFormElement | null = null;
+    #entries: { element: HTMLElement; item: SearchItem }[] = [];
+    #timer: number | undefined;
+    #lastStatus = '';
+
+    connectedCallback() {
+      const form = this.querySelector<HTMLFormElement>('[data-search-form]');
+      const grid = this.querySelector<HTMLElement>('[data-product-grid]');
+      if (!form || !grid) return;
+      this.#form = form;
+      this.#entries = [...grid.querySelectorAll<HTMLElement>(':scope > [data-search]')].flatMap((element) => {
+        try {
+          return [{ element, item: JSON.parse(element.dataset['search'] ?? '') as SearchItem }];
+        } catch {
+          return [];
+        }
+      });
+
+      this.#fill(this.#read(new URLSearchParams(location.search)));
+      this.#render(false);
+
+      form.addEventListener('input', (event) => {
+        window.clearTimeout(this.#timer);
+        // Al escribir se espera un instante; los menús y la casilla responden al momento.
+        const delay = (event.target as HTMLElement).matches('input[type="search"]') ? 220 : 0;
+        this.#timer = window.setTimeout(() => this.#render(true), delay);
+      });
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        window.clearTimeout(this.#timer);
+        this.#render(true);
+        // En móvil, cierra el teclado para dejar ver los resultados.
+        if (matchMedia('(pointer: coarse)').matches) (document.activeElement as HTMLElement | null)?.blur();
+      });
+      for (const reset of this.querySelectorAll<HTMLButtonElement>('[data-search-reset]')) {
+        reset.addEventListener('click', () => {
+          const sort = this.#criteria().sort;
+          this.#fill({ query: '', category: null, size: null, available: false, sort });
+          this.#render(true);
+          form.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
+        });
+      }
+    }
+
+    #read(params: URLSearchParams): Criteria {
+      const options = (name: string) =>
+        [...(this.#form?.querySelectorAll<HTMLOptionElement>(`select[name="${name}"] option`) ?? [])]
+          .map((option) => option.value)
+          .filter(Boolean);
+      return parseCriteria(params, { categories: options(PARAMS.category), sizes: options(PARAMS.size) });
+    }
+
+    #criteria(): Criteria {
+      const data = new FormData(this.#form ?? undefined);
+      const params = new URLSearchParams();
+      for (const [key, value] of data) if (typeof value === 'string' && value !== '') params.set(key, value);
+      return this.#read(params);
+    }
+
+    #fill(criteria: Criteria) {
+      const form = this.#form;
+      if (!form) return;
+      const set = (name: string, value: string) => {
+        const field = form.elements.namedItem(name);
+        if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) field.value = value;
+      };
+      set(PARAMS.query, criteria.query);
+      set(PARAMS.category, criteria.category ?? '');
+      set(PARAMS.size, criteria.size ?? '');
+      set(PARAMS.sort, criteria.sort);
+      const available = form.elements.namedItem(PARAMS.available);
+      if (available instanceof HTMLInputElement) available.checked = criteria.available;
+    }
+
+    #render(updateUrl: boolean) {
+      const criteria = this.#criteria();
+      const results = search(
+        this.#entries.map((entry) => entry.item),
+        criteria,
+      );
+      const ids = results.map((item) => item.id);
+      const visible = new Set(ids);
+      const grid = this.querySelector<HTMLElement>('[data-product-grid]');
+      const byId = new Map(this.#entries.map((entry) => [entry.item.id, entry.element]));
+
+      for (const { element, item } of this.#entries) {
+        const show = visible.has(item.id);
+        element.toggleAttribute('data-enter', show && element.hidden === true);
+        element.hidden = !show;
+      }
+      // Orden real del DOM (no solo visual), para que teclado y lectores sigan los
+      // resultados. Solo se mueve si cambia: mover una tarjeta repite su animación.
+      const idOf = new Map(this.#entries.map((entry) => [entry.element as Element, entry.item.id]));
+      const current = [...(grid?.children ?? [])]
+        .filter((element) => !(element as HTMLElement).hidden)
+        .map((element) => idOf.get(element));
+      if (current.join() !== ids.join()) {
+        for (const id of ids) {
+          const element = byId.get(id);
+          if (element) grid?.append(element);
+        }
+      }
+
+      const count = results.length;
+      const number = this.querySelector('[data-search-count]');
+      const label = this.querySelector('[data-search-count-label]');
+      if (number) number.textContent = String(count).padStart(2, '0');
+      if (label) label.textContent = count === 1 ? 'pieza' : 'piezas';
+      const none = this.querySelector<HTMLElement>('[data-search-none]');
+      if (none) none.hidden = count > 0;
+      for (const reset of this.querySelectorAll<HTMLElement>('.search-form__reset')) reset.hidden = !isFiltered(criteria);
+      // Sin texto que buscar, "relevancia" es el orden de la tienda.
+      const sortDefault = this.querySelector('[data-sort-default]');
+      if (sortDefault) sortDefault.textContent = criteria.query ? 'Relevancia' : 'Orden de la tienda';
+
+      const status = count === 0 ? 'Ninguna pieza coincide.' : `${count} ${count === 1 ? 'pieza' : 'piezas'}.`;
+      const region = this.querySelector('[data-search-status]');
+      if (region && updateUrl && status !== this.#lastStatus) region.textContent = status;
+      this.#lastStatus = status;
+
+      if (updateUrl) {
+        const query = criteriaToParams(criteria).toString();
+        history.replaceState(history.state, '', query ? `?${query}` : location.pathname);
+      }
+    }
+  }
+
+  if (!customElements.get('kyro-search')) {
+    customElements.define('kyro-search', KyroSearch);
+  }
+</script>

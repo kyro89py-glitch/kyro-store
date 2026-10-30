@@ -12,9 +12,11 @@ const available = variants.filter((variant) => variant.available);
 // Con una sola opción disponible no hay nada que elegir: queda seleccionada.
 const preselected = available.length === 1 ? available[0]?.sku : undefined;
 const optionId = `option-${product.id}`;
+// "esta talla" en el caso habitual; con otro tipo de opción, un genérico correcto.
+const optionNoun = optionName.toLowerCase() === 'talla' ? 'esta talla' : 'esta opción';
 ---
 
-<kyro-product-form>
+<kyro-product-form data-option-noun={optionNoun}>
   <form class="product-form" novalidate>
     <fieldset class="variants" aria-describedby={`${optionId}-error`}>
       <legend class="variants__legend">{optionName}</legend>
@@ -42,6 +44,28 @@ const optionId = `option-${product.id}`;
         Selecciona una opción de {optionName.toLowerCase()} para continuar.
       </p>
     </fieldset>
+
+    {
+      purchasable && (
+        <div class="product-form__quantity">
+          <p class="variants__legend" id={`${optionId}-quantity`}>
+            Cantidad
+          </p>
+          <div class="quantity" role="group" aria-labelledby={`${optionId}-quantity`} aria-describedby={`${optionId}-quantity-note`}>
+            <button class="quantity__step" type="button" aria-label="Restar una unidad" data-quantity-decrease disabled>
+              <span aria-hidden="true">−</span>
+            </button>
+            <output class="quantity__value" aria-live="polite" data-quantity-value>
+              1
+            </output>
+            <button class="quantity__step" type="button" aria-label="Sumar una unidad" data-quantity-increase>
+              <span aria-hidden="true">+</span>
+            </button>
+          </div>
+          <p class="product-form__note" id={`${optionId}-quantity-note`} data-quantity-note />
+        </div>
+      )
+    }
 
     <button class="button button--primary button--block" type="submit" disabled={!purchasable}>
       {purchasable ? 'Añadir al carrito' : 'No disponible'}
@@ -225,6 +249,29 @@ const optionId = `option-${product.id}`;
     }
   }
 
+  /* Sin JavaScript no se puede añadir al carrito: no se muestran controles inertes. */
+  :global(html:not(.js)) .product-form__quantity,
+  :global(html:not(.js)) .product-form button[type='submit'] {
+    display: none;
+  }
+
+  .product-form__quantity {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-xs);
+  }
+
+  .product-form__quantity .variants__legend {
+    margin-bottom: 0;
+  }
+
+  .product-form__note {
+    min-height: 1.5em;
+    color: var(--color-ivory-muted);
+    font-size: var(--text-xs);
+    letter-spacing: 0.02em;
+  }
+
   .product-form__status {
     min-height: 1.5em;
     font-size: var(--text-sm);
@@ -234,7 +281,7 @@ const optionId = `option-${product.id}`;
 
 <script>
   import { store } from '../../config/store';
-  import { getCart, openCart, updateCart } from '../../lib/cart/client';
+  import { getCart, onCartChange, openCart, updateCart } from '../../lib/cart/client';
   import { addItem, quantityOf } from '../../lib/cart/state';
 
   const max = store.cart.maxQuantityPerLine;
@@ -248,6 +295,41 @@ const optionId = `option-${product.id}`;
 
       const fieldset = form.querySelector('fieldset');
       const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      const decrease = form.querySelector<HTMLButtonElement>('[data-quantity-decrease]');
+      const increase = form.querySelector<HTMLButtonElement>('[data-quantity-increase]');
+      const value = form.querySelector<HTMLOutputElement>('[data-quantity-value]');
+      const note = form.querySelector<HTMLElement>('[data-quantity-note]');
+      const noun = this.dataset['optionNoun'] ?? 'esta opción';
+      let quantity = 1;
+
+      const selectedSku = () => {
+        const sku = new FormData(form).get('sku');
+        return typeof sku === 'string' ? sku : null;
+      };
+
+      // Lo que aún cabe en el carrito para la talla elegida (el límite es por talla).
+      const room = () => {
+        const sku = selectedSku();
+        return sku ? max - quantityOf(getCart(), sku) : max;
+      };
+
+      const renderQuantity = () => {
+        const sku = selectedSku();
+        const inCart = sku ? quantityOf(getCart(), sku) : 0;
+        const limit = Math.max(room(), 1);
+        quantity = Math.min(Math.max(quantity, 1), limit);
+        if (value) value.textContent = String(quantity);
+        if (decrease) decrease.disabled = quantity <= 1;
+        if (increase) increase.disabled = quantity >= limit;
+        if (note) {
+          note.textContent =
+            inCart >= max
+              ? `Ya tienes el máximo de ${max} unidades de ${noun} en el carrito.`
+              : inCart > 0
+                ? `Ya tienes ${inCart} en el carrito. Puedes añadir ${max - inCart} más.`
+                : '';
+        }
+      };
 
       // Reinicia una animación CSS ligada a un atributo (gesto de error, confirmación).
       const replay = (element: Element | null, attribute: string) => {
@@ -257,28 +339,43 @@ const optionId = `option-${product.id}`;
         element.setAttribute(attribute, '');
       };
 
+      decrease?.addEventListener('click', () => {
+        quantity -= 1;
+        renderQuantity();
+      });
+      increase?.addEventListener('click', () => {
+        quantity += 1;
+        renderQuantity();
+      });
+      onCartChange(renderQuantity);
+      renderQuantity();
+
       form.addEventListener('change', () => {
         error.hidden = true;
         fieldset?.removeAttribute('data-invalid');
+        renderQuantity();
       });
 
       form.addEventListener('submit', (event) => {
         event.preventDefault();
-        const sku = new FormData(form).get('sku');
-        if (typeof sku !== 'string') {
+        const sku = selectedSku();
+        if (!sku) {
           error.hidden = false;
           replay(fieldset, 'data-invalid');
           form.querySelector<HTMLInputElement>('input[name="sku"]:not(:disabled)')?.focus();
           return;
         }
 
-        if (quantityOf(getCart(), sku) >= max) {
-          status.textContent = `Ya tienes el máximo de ${max} unidades de esta opción en el carrito.`;
+        if (room() <= 0) {
+          status.textContent = `Ya tienes el máximo de ${max} unidades de ${noun} en el carrito.`;
           return;
         }
 
-        updateCart((state) => addItem(state, sku, 1, max));
-        status.textContent = 'Añadido al carrito.';
+        const added = Math.min(quantity, room());
+        updateCart((state) => addItem(state, sku, added, max));
+        status.textContent = added === 1 ? 'Añadido al carrito.' : `Añadidas ${added} unidades al carrito.`;
+        quantity = 1;
+        renderQuantity();
         replay(submit, 'data-added');
         openCart();
       });

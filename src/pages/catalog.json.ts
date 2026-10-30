@@ -22,6 +22,7 @@ export const GET: APIRoute = async () => {
     for (const variant of product.data.variants) {
       index.variants[variant.sku] = {
         sku: variant.sku,
+        productId: product.id,
         productName: product.data.name,
         optionName: product.data.optionName,
         label: variant.label,

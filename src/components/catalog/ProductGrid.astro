@@ -1,5 +1,6 @@
 ---
 import type { Product } from '../../lib/catalog';
+import { toSearchItem } from '../../lib/search-data';
 import ProductCard from './ProductCard.astro';
 
 interface Props {
@@ -10,14 +11,16 @@ interface Props {
   eager?: boolean;
   /** Las fotos viajan hasta la ficha al navegar (solo si cada pieza aparece una vez). */
   morph?: boolean;
+  /** Cada pieza lleva sus datos de búsqueda (/buscar/ filtra y reordena en el navegador). */
+  searchable?: boolean;
 }
-const { products, label, headingLevel, eager = true, morph = false } = Astro.props;
+const { products, label, headingLevel, eager = true, morph = false, searchable = false } = Astro.props;
 ---
 
-<ul class="product-grid" role="list" aria-label={label}>
+<ul class="product-grid" role="list" aria-label={label} data-product-grid>
   {
     products.map((product, index) => (
-      <li>
+      <li data-search={searchable ? JSON.stringify(toSearchItem(product, index)) : undefined}>
         <ProductCard product={product} priority={eager && index < 2} headingLevel={headingLevel} morph={morph} />
       </li>
     ))

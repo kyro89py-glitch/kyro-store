@@ -33,6 +33,16 @@ test('el pie de página no inventa categorías ni redes; solo el correo oficial'
   await expect(footer.locator('a[href^="http"]')).toHaveCount(0);
 });
 
+test('sin productos, la búsqueda muestra el estado vacío y ningún filtro', async ({ page }) => {
+  await page.goto('/buscar/');
+  await expect(page.getByText('La primera colección está en preparación.')).toBeVisible();
+  await expect(page.getByRole('search')).toHaveCount(0);
+  await expect(page.getByRole('combobox')).toHaveCount(0);
+  // Sin catálogo, el pie no enlaza a una búsqueda vacía.
+  await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Buscar' })).toHaveCount(0);
+  await expectNoA11yViolations(page);
+});
+
 test('sin páginas informativas, la ayuda dice que las condiciones no están publicadas', async ({ page }) => {
   await page.goto('/ayuda/');
   await expect(

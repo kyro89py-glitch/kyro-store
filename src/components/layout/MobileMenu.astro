@@ -13,7 +13,12 @@ interface Props {
   categories?: Link[];
 }
 const { links, categories = [] } = Astro.props;
-const items = [{ label: 'Inicio', href: routes.home() }, ...links, { label: 'Carrito', href: routes.cart() }];
+const items = [
+  { label: 'Inicio', href: routes.home() },
+  ...links,
+  { label: 'Buscar', href: routes.search() },
+  { label: 'Carrito', href: routes.cart() },
+];
 const path = Astro.url.pathname;
 const isCurrent = (href: string) => path === href || (href !== routes.home() && path.startsWith(href));
 

@@ -63,7 +63,11 @@ const widths = [320, 480, 640, 800, 1000];
     <div class="product-card__info">
       <Heading class="product-card__name">{product.data.name}</Heading>
       <p class="product-card__price">
-        <Price amount={product.data.price.amount} currency={product.data.price.currency} />
+        <Price
+          amount={product.data.price.amount}
+          currency={product.data.price.currency}
+          compareAt={product.data.price.compareAt}
+        />
       </p>
       <p class="product-card__availability" data-available={purchasable ? 'true' : 'false'}>
         {purchasable ? 'Disponible' : 'No disponible'}

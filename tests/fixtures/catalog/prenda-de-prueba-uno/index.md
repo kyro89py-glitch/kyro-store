@@ -29,6 +29,7 @@ details:
 composition: Composición de prueba
 care:
   - Cuidado de prueba
+sizeGuide: pagina-de-prueba
 featured: true
 releasedAt: 2026-10-01
 position: 1

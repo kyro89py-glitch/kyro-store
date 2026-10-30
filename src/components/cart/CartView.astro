@@ -61,6 +61,10 @@ const noteId = `cart-note-${variant}`;
       <div class="cart-line__body">
         <p class="cart-line__name"><a data-line-link data-line-name></a></p>
         <p class="cart-line__variant muted" data-line-variant></p>
+        <label class="cart-line__option" data-line-option hidden>
+          <span class="cart-line__option-name muted" data-line-option-name></span>
+          <select class="cart-line__select" data-line-select></select>
+        </label>
         <p class="cart-line__unavailable" data-line-unavailable hidden>Ya no está disponible.</p>
         <div class="cart-line__controls">
           <div class="quantity" role="group" data-line-quantity-group>
@@ -222,59 +226,49 @@ const noteId = `cart-note-${variant}`;
     color: var(--color-champagne);
   }
 
+  /* Cambiar de talla sin salir del carrito: un desplegable discreto, subrayado. */
+  .cart-line__option {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--text-sm);
+  }
+
+  .cart-line__select {
+    min-height: 2.5rem;
+    padding: 0 1.6rem 0 0;
+    border: 0;
+    border-bottom: 1px solid var(--color-line-strong);
+    border-radius: 0;
+    appearance: none;
+    background:
+      linear-gradient(45deg, transparent 50%, currentcolor 50%) calc(100% - 0.75rem) 55% / 0.3rem 0.3rem no-repeat,
+      linear-gradient(-45deg, transparent 50%, currentcolor 50%) calc(100% - 0.45rem) 55% / 0.3rem 0.3rem no-repeat;
+    cursor: pointer;
+  }
+
+  .cart-line__select:focus-visible {
+    border-color: var(--color-champagne);
+  }
+
+  .cart-line__select option {
+    background: var(--color-surface);
+    color: var(--color-ivory);
+  }
+
+  @media (forced-colors: active) {
+    .cart-line__select {
+      appearance: auto;
+      background: Field;
+    }
+  }
+
   .cart-line__controls {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-md);
     margin-top: var(--space-xs);
-  }
-
-  .quantity {
-    display: inline-flex;
-    align-items: center;
-    border: 1px solid var(--color-line-strong);
-    border-radius: 2px;
-  }
-
-  .quantity__step {
-    display: grid;
-    place-items: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border: 0;
-    background: transparent;
-    font-size: var(--text-md);
-    transition: color var(--duration-fast) var(--ease-out);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .quantity__step:hover:not(:disabled) {
-      color: var(--color-champagne);
-    }
-  }
-
-  .quantity__step:active:not(:disabled) {
-    scale: 0.88;
-    color: var(--color-champagne);
-  }
-
-  .quantity__step {
-    transition:
-      color var(--duration-fast) var(--ease-out),
-      scale var(--duration-fast) var(--ease-out);
-  }
-
-  .quantity__step:disabled {
-    color: var(--color-line-strong);
-    cursor: not-allowed;
-  }
-
-  .quantity__value {
-    display: inline-block;
-    min-width: 2ch;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
   }
 
   .cart-line__remove {
@@ -339,7 +333,14 @@ const noteId = `cart-note-${variant}`;
 <script>
   import { store } from '../../config/store';
   import { getCart, loadCatalog, onCartChange, updateCart } from '../../lib/cart/client';
-  import { removeItem, setQuantity, summarize, type CartSummaryLine } from '../../lib/cart/state';
+  import {
+    changeVariant,
+    removeItem,
+    setQuantity,
+    siblingVariants,
+    summarize,
+    type CartSummaryLine,
+  } from '../../lib/cart/state';
   import type { CatalogIndex } from '../../lib/cart/types';
   import { formatPrice } from '../../lib/money';
 
@@ -369,6 +370,7 @@ const noteId = `cart-note-${variant}`;
         this.render();
       });
       this.addEventListener('click', (event) => this.#handleClick(event));
+      this.addEventListener('change', (event) => this.#handleChange(event));
       this.refresh();
     }
 
@@ -437,7 +439,12 @@ const noteId = `cart-note-${variant}`;
 
       // Mantiene el foco del teclado en la misma línea tras volver a pintar.
       if (focusedSku && focusedAction) {
-        const selector = 'lineIncrease' in focusedAction ? '[data-line-increase]' : '[data-line-decrease]';
+        const selector =
+          'lineIncrease' in focusedAction
+            ? '[data-line-increase]'
+            : 'lineSelect' in focusedAction
+              ? '[data-line-select]'
+              : '[data-line-decrease]';
         const target =
           list.querySelector<HTMLElement>(`[data-sku="${CSS.escape(focusedSku)}"] ${selector}:not(:disabled)`) ??
           list.querySelector<HTMLElement>(`[data-sku="${CSS.escape(focusedSku)}"] [data-line-remove]`);
@@ -466,6 +473,27 @@ const noteId = `cart-note-${variant}`;
 
       this.#set(item, '[data-line-name]', line.productName);
       this.#set(item, '[data-line-variant]', `${line.optionName}: ${line.label}`);
+      // Con más de una talla, se puede cambiar aquí mismo (las agotadas no se pueden elegir).
+      const siblings = this.#catalog ? siblingVariants(this.#catalog, line.sku) : [];
+      const select = item.querySelector<HTMLSelectElement>('[data-line-select]');
+      if (siblings.length > 1 && select) {
+        (item.querySelector('[data-line-variant]') as HTMLElement).hidden = true;
+        (item.querySelector('[data-line-option]') as HTMLElement).hidden = false;
+        this.#set(item, '[data-line-option-name]', line.optionName);
+        select.setAttribute('aria-label', `${line.optionName} de ${line.productName}`);
+        select.replaceChildren(
+          ...siblings.map((sibling) => {
+            const option = new Option(
+              sibling.available ? sibling.label : `${sibling.label} (no disponible)`,
+              sibling.sku,
+              false,
+              sibling.sku === line.sku,
+            );
+            option.disabled = !sibling.available && sibling.sku !== line.sku;
+            return option;
+          }),
+        );
+      }
       this.#set(item, '[data-line-quantity]', String(line.quantity));
       this.#set(item, '[data-line-total]', formatPrice(line.lineTotal, currency));
       (item.querySelector('[data-line-unavailable]') as HTMLElement).hidden = line.available;
@@ -503,6 +531,22 @@ const noteId = `cart-note-${variant}`;
         const next = remaining[Math.min(index, remaining.length - 1)];
         (next ?? this.querySelector<HTMLElement>('[data-cart-empty] a'))?.focus();
       }
+    }
+
+    #handleChange(event: Event) {
+      const select = (event.target as Element).closest<HTMLSelectElement>('[data-line-select]');
+      const from = select?.closest<HTMLElement>('[data-sku]')?.dataset['sku'];
+      if (!select || !from || !this.#catalog) return;
+      const to = select.value;
+      const target = this.#catalog.variants[to];
+      if (!target?.available) return;
+      const merged = getCart().lines.some((line) => line.sku === to);
+      updateCart((state) => changeVariant(state, from, to, max));
+      const choice = `${target.optionName.toLowerCase()} ${target.label}`;
+      this.#announce(
+        merged ? `Cambiado a ${choice}; se ha sumado a la que ya tenías.` : `Cambiado a ${choice}.`,
+      );
+      this.querySelector<HTMLElement>(`[data-sku="${CSS.escape(to)}"] [data-line-select]`)?.focus();
     }
 
     #announce(message: string) {

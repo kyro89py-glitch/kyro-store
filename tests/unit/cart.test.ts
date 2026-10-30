@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   addItem,
+  changeVariant,
   EMPTY_CART,
   itemCount,
   parseCart,
@@ -8,18 +9,20 @@ import {
   quantityOf,
   removeItem,
   setQuantity,
+  siblingVariants,
   summarize,
 } from '../../src/lib/cart/state';
 import type { CatalogIndex, CatalogVariant } from '../../src/lib/cart/types';
 
 const MAX = 10;
 
-function variant(sku: string, price: number, available = true): CatalogVariant {
+function variant(sku: string, price: number, available = true, label = 'M'): CatalogVariant {
   return {
     sku,
+    productId: sku.split('-')[0]!.toLowerCase(),
     productName: `Producto ${sku}`,
     optionName: 'Talla',
-    label: 'M',
+    label,
     price,
     url: `/producto/${sku.toLowerCase()}/`,
     image: null,
@@ -34,6 +37,8 @@ const catalog: CatalogIndex = {
     'A-1': variant('A-1', 1250),
     'B-1': variant('B-1', 800),
     'C-1': variant('C-1', 500, false),
+    'A-2': variant('A-2', 1250, true, 'L'),
+    'A-3': variant('A-3', 1250, false, 'XL'),
   },
 };
 
@@ -130,5 +135,39 @@ describe('summarize', () => {
   it('pruneMissing devuelve el mismo objeto si no hay nada que quitar', () => {
     const cart = addItem(EMPTY_CART, 'A-1', 1, MAX);
     expect(pruneMissing(cart, catalog)).toBe(cart);
+  });
+});
+
+describe('changeVariant (cambiar de talla en el carrito)', () => {
+  it('cambia la talla sin mover la línea de sitio', () => {
+    const cart = { lines: [{ sku: 'B-1', quantity: 1 }, { sku: 'A-1', quantity: 2 }, { sku: 'C-1', quantity: 1 }] };
+    expect(changeVariant(cart, 'A-1', 'A-2', MAX).lines).toEqual([
+      { sku: 'B-1', quantity: 1 },
+      { sku: 'A-2', quantity: 2 },
+      { sku: 'C-1', quantity: 1 },
+    ]);
+  });
+
+  it('si la nueva talla ya estaba, junta las dos líneas con el límite', () => {
+    const cart = { lines: [{ sku: 'A-1', quantity: 7 }, { sku: 'B-1', quantity: 1 }, { sku: 'A-2', quantity: 6 }] };
+    expect(changeVariant(cart, 'A-1', 'A-2', MAX).lines).toEqual([
+      { sku: 'A-2', quantity: 10 },
+      { sku: 'B-1', quantity: 1 },
+    ]);
+  });
+
+  it('no hace nada con la misma talla, una línea inexistente o un SKU inválido', () => {
+    const cart = { lines: [{ sku: 'A-1', quantity: 1 }] };
+    expect(changeVariant(cart, 'A-1', 'A-1', MAX)).toBe(cart);
+    expect(changeVariant(cart, 'Z-9', 'A-2', MAX)).toBe(cart);
+    expect(changeVariant(cart, 'A-1', '<b>', MAX)).toBe(cart);
+  });
+});
+
+describe('siblingVariants', () => {
+  it('devuelve las tallas del mismo producto en el orden del catálogo', () => {
+    expect(siblingVariants(catalog, 'A-2').map((item) => item.sku)).toEqual(['A-1', 'A-2', 'A-3']);
+    expect(siblingVariants(catalog, 'B-1').map((item) => item.sku)).toEqual(['B-1']);
+    expect(siblingVariants(catalog, 'NO-1')).toEqual([]);
   });
 });

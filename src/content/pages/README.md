@@ -16,6 +16,7 @@ title: Título de la página
 description: Una frase que resuma el contenido.
 updatedAt: 2026-01-31   # fecha de vigencia del texto
 order: 1                # orden en el pie (opcional)
+productLink: false      # true: se enlaza en todas las fichas de producto (envíos, devoluciones…)
 ---
 
 Texto en Markdown.

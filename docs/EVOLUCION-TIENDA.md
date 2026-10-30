@@ -27,3 +27,23 @@ Nada de esta rama está publicado ni fusionado; `main` no se ha tocado.
 | `/ayuda/` y las páginas informativas en el sitemap (que solo se genera al lanzar la tienda) | Confirmado |
 | Redes sociales, teléfono, dirección, horario | Pendiente: no se publican hasta que KYRO los facilite |
 | Formulario de contacto | Pendiente (decisión D5 de la auditoría): necesita un servicio que entregue el mensaje |
+
+## Fase 4: búsqueda, cantidad, cambio de talla y campos opcionales
+
+| Cambio | Estado |
+| --- | --- |
+| `/buscar/`: busca en nombre, categoría, resumen, detalles y composición, sin distinguir tildes ni mayúsculas; las palabras de 1–2 letras solo cuentan al principio de una palabra | Probado (18 pruebas unitarias en `tests/unit/search.test.ts` y e2e) |
+| Filtros que salen de los datos: categoría (si hay ≥ 2), talla disponible (si hay ≥ 2), «solo disponibles» (si alguna pieza está agotada), orden por precio (si hay precios distintos) | Probado |
+| Estado en la URL (`?q=…&categoria=…&talla=…&disponible=1&orden=…`); los valores que no existen en el catálogo se ignoran | Probado |
+| Sin resultados: mensaje, «Quitar filtros» y «Ver toda la tienda». Catálogo vacío: estado «La primera colección está en preparación», sin filtros | Probado (demostración y producción) |
+| Sin JavaScript: se ve el catálogo completo y un aviso; no se muestran controles que no funcionarían (búsqueda, cantidad, «Añadir al carrito») | Probado |
+| «Buscar» en la cabecera (escritorio), el menú móvil y el pie (solo si hay productos); «Buscar y filtrar» en la tienda y en cada categoría | Probado |
+| Selector de cantidad en la ficha: respeta el límite por talla descontando lo que ya está en el carrito y lo explica | Probado |
+| Cambiar de talla dentro del carrito (las agotadas aparecen, pero no se pueden elegir); si la talla ya estaba, se juntan con el límite | Probado (pruebas unitarias de `changeVariant` y e2e) |
+| `catalog.json` incluye `productId` para agrupar las tallas de cada producto | Confirmado |
+| Campos opcionales del catálogo: `price.compareAt` (precio anterior real, debe ser mayor; se muestra tachado), `sizeGuide` (página de guía de tallas; el build falla si no existe) y `productLink` en páginas informativas (se enlazan en todas las fichas) | Probado con datos de prueba; ningún producto real los usa |
+| Variantes de dos ejes (talla + color) | Pendiente: depende de la decisión D1 y de productos reales |
+
+Verificación completa de esta fase: `astro check` 0 errores; 70 pruebas unitarias; build de
+producción y de pruebas; 232 pruebas e2e superadas y 10 omitidas a propósito (pruebas del
+menú móvil en los perfiles de escritorio y tableta, donde ese menú no existe).

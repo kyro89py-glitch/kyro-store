@@ -50,6 +50,29 @@ export function setQuantity(state: CartState, sku: string, quantity: number, max
   };
 }
 
+/**
+ * Cambia la variante (talla) de una línea sin moverla de sitio. Si la nueva ya estaba
+ * en el carrito, las dos líneas se juntan en una, con el límite de unidades.
+ */
+export function changeVariant(state: CartState, fromSku: string, toSku: string, max: number): CartState {
+  const from = state.lines.find((line) => line.sku === fromSku);
+  if (!from || fromSku === toSku || !SKU_PATTERN.test(toSku)) return state;
+  const existing = state.lines.find((line) => line.sku === toSku);
+  const quantity = clampQuantity(from.quantity + (existing?.quantity ?? 0), max);
+  return {
+    lines: state.lines
+      .filter((line) => line.sku !== toSku)
+      .map((line) => (line.sku === fromSku ? { sku: toSku, quantity } : line)),
+  };
+}
+
+/** Otras variantes del mismo producto (para elegir talla en el carrito), en el orden del catálogo. */
+export function siblingVariants(catalog: CatalogIndex, sku: string): CatalogVariant[] {
+  const productId = catalog.variants[sku]?.productId;
+  if (!productId) return [];
+  return Object.values(catalog.variants).filter((variant) => variant.productId === productId);
+}
+
 export function removeItem(state: CartState, sku: string): CartState {
   return { lines: state.lines.filter((line) => line.sku !== sku) };
 }

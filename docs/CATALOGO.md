@@ -28,6 +28,7 @@ summary: Una frase breve que describa la pieza.
 price:
   amount: 000000         # en la unidad mínima de la moneda (ver abajo)
   currency: XXX          # código ISO 4217 de la moneda real (PYG, USD…)
+  compareAt: 000000      # opcional; precio ANTERIOR real, solo si la pieza está rebajada
 images:
   - src: ./frente.jpg
     alt: Descripción de lo que se ve en la foto
@@ -46,6 +47,7 @@ details:                 # opcional
 composition: Texto de composición   # opcional
 care:                    # opcional
   - Instrucción de cuidado
+sizeGuide: guia-de-tallas  # opcional; slug de una página de src/content/pages/
 featured: false          # opcional; la muestra en "Destacados" de la portada
 releasedAt: 2026-01-31   # opcional; fecha REAL de lanzamiento, la muestra en "Novedades"
 position: 0              # opcional; orden en los listados (menor primero)
@@ -67,6 +69,20 @@ Descripción larga opcional, en Markdown.
 | `sku` | Mayúsculas, números y guiones; único en todo el catálogo. |
 | `category` | Genera la URL de la categoría; dos categorías no pueden escribirse distinto y producir la misma URL. |
 | `releasedAt` | Opcional, formato `AAAA-MM-DD`. Usa solo fechas reales de lanzamiento. |
+| `price.compareAt` | Opcional. Precio anterior real, en la misma unidad que `amount` y **mayor** que él. La tienda lo muestra tachado junto al precio actual. No lo uses para simular descuentos. |
+| `sizeGuide` | Opcional. Slug de una página informativa (`src/content/pages/<slug>.md`) con la guía de tallas; la ficha la enlaza. Si la página no existe, el build falla. |
+
+Las páginas informativas con `productLink: true` (p. ej. envíos o devoluciones) se enlazan
+en todas las fichas, bajo el botón de compra.
+
+## Búsqueda
+
+`/buscar/` busca en el nombre, la categoría, el resumen, los detalles y la composición,
+sin distinguir tildes ni mayúsculas. Sus filtros salen solo de datos reales: categoría (si
+hay al menos dos), talla (tallas con `available: true`, si hay al menos dos), "solo
+disponibles" (si alguna pieza está agotada) y orden por precio (si hay precios distintos).
+La página trae todas las piezas activas y filtra en el navegador; con un catálogo de
+varios cientos de piezas convendrá pasar a un índice aparte.
 
 ## Cómo se llena la portada
 

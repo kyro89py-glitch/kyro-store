@@ -6,6 +6,7 @@ summary: Ficha de prueba destacada, sin fecha de lanzamiento.
 price:
   amount: 21000
   currency: XTS
+  compareAt: 26000
 images:
   - src: ./imagen-1.jpg
     alt: Imagen abstracta de prueba, tono humo

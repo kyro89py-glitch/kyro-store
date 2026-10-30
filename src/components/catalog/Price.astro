@@ -4,16 +4,52 @@ import { formatPrice } from '../../lib/money';
 interface Props {
   amount: number;
   currency: string;
+  /** Precio anterior real (solo piezas rebajadas). Se muestra tachado, antes del actual. */
+  compareAt?: number | undefined;
   class?: string;
 }
-const { amount, currency, class: className } = Astro.props;
+const { amount, currency, compareAt, class: className } = Astro.props;
+// El esquema ya lo exige, pero un precio anterior que no sea mayor nunca se muestra.
+const reduced = compareAt !== undefined && compareAt > amount;
 ---
 
-<span class:list={['price', className]}>{formatPrice(amount, currency)}</span>
+<span class:list={['price', reduced && 'price--reduced', className]}>
+  {
+    reduced && (
+      <s class="price__before">
+        <span class="visually-hidden">Precio anterior:</span>{' '}
+        {formatPrice(compareAt, currency)}
+      </s>
+    )
+  }
+  {reduced && ' '}
+  <span class="price__now">
+    {reduced && <span class="visually-hidden">Precio actual:</span>}
+    {reduced && ' '}
+    {formatPrice(amount, currency)}
+  </span>
+</span>
 
 <style>
   .price {
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.01em;
+  }
+
+  /* Rebajada: el precio anterior tachado y el actual en champán; en columnas estrechas,
+     uno sobre otro. */
+  .price--reduced {
+    display: inline-flex;
+    flex-wrap: wrap;
+    column-gap: 0.5em;
+  }
+
+  .price--reduced .price__now {
+    color: var(--color-champagne);
+  }
+
+  .price__before {
+    color: var(--color-ivory-muted);
+    text-decoration-thickness: 1px;
   }
 </style>
