@@ -91,6 +91,7 @@ docs/                  Arquitectura, catálogo, imágenes, recursos provisionale
 - [Experiencia inmersiva «Cámara oscura»: referencia, propuesta y límites](docs/EXPERIENCIA-INMERSIVA.md)
 - [Auditoría técnica de la tienda y decisiones pendientes](docs/AUDITORIA.md)
 - [Evolución de la tienda: avance por fases](docs/EVOLUCION-TIENDA.md)
+- [Moda con modelos de IA: auditoría, dirección artística y plan](docs/MODA-IA.md)
 - [Seguridad](SECURITY.md)
 
 ## Pendiente de KYRO
