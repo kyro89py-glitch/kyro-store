@@ -1,4 +1,5 @@
 ---
+import { helpTitle } from '../../config/help';
 import { routes } from '../../lib/urls';
 import Wordmark from '../brand/Wordmark.astro';
 
@@ -44,24 +45,33 @@ const isCurrent = (href: string) => path === href || (href !== routes.home() && 
           ))
         }
       </ul>
-      {
-        categories.length > 0 && (
-          <div class="menu__categories">
-            <p class="menu__heading" id="menu-categorias">
-              Categorías
-            </p>
-            <ul role="list" aria-labelledby="menu-categorias">
-              {categories.map((category) => (
-                <li>
-                  <a class="nav-link" href={category.href}>
-                    {category.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )
-      }
+      <div class="menu__extra">
+        {
+          categories.length > 0 && (
+            <div class="menu__group">
+              <p class="menu__heading" id="menu-categorias">
+                Categorías
+              </p>
+              <ul role="list" aria-labelledby="menu-categorias">
+                {categories.map((category) => (
+                  <li>
+                    <a class="nav-link" href={category.href}>
+                      {category.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+        <ul class="menu__utility" role="list">
+          <li>
+            <a class="nav-link" href={routes.help()} aria-current={isCurrent(routes.help()) ? 'page' : undefined}>
+              {helpTitle}
+            </a>
+          </li>
+        </ul>
+      </div>
       <div class="menu__masthead" aria-hidden="true">
         <Wordmark variant="masthead" dimensional="static" />
       </div>
@@ -206,23 +216,28 @@ const isCurrent = (href: string) => path === href || (href !== routes.home() && 
   .menu__item:nth-child(4) .menu__link { transition-delay: 360ms, 0ms; }
   .menu__item:nth-child(5) .menu__link { transition-delay: 420ms, 0ms; }
 
-  .menu__categories {
+  .menu__extra {
     display: grid;
-    gap: var(--space-sm);
+    gap: var(--space-lg);
     padding-block: var(--space-lg);
     border-top: 1px solid var(--color-line);
     opacity: 0;
     transition: opacity var(--duration-slow) var(--ease-out) 420ms;
   }
 
-  .menu__dialog[open] .menu__categories {
+  .menu__dialog[open] .menu__extra {
     opacity: 1;
   }
 
   @starting-style {
-    .menu__dialog[open] .menu__categories {
+    .menu__dialog[open] .menu__extra {
       opacity: 0;
     }
+  }
+
+  .menu__group {
+    display: grid;
+    gap: var(--space-sm);
   }
 
   .menu__heading {
@@ -232,15 +247,18 @@ const isCurrent = (href: string) => path === href || (href !== routes.home() && 
     letter-spacing: 0.06em;
   }
 
-  .menu__categories ul {
+  .menu__group ul,
+  .menu__utility {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-xs) var(--space-lg);
+    gap: 0 var(--space-lg);
   }
 
-  .menu__categories a {
-    display: inline-block;
-    padding-block: var(--space-2xs);
+  /* Objetivos táctiles de 44 px aunque el texto sea pequeño. */
+  .menu__extra a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
   }
 
   /* KYRO en contorno, a todo el ancho, como firma al pie de la cortina. */

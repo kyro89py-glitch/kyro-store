@@ -24,12 +24,22 @@ test('sin datos, la portada no muestra secciones vacías ni imagen de campaña',
   await expect(page.locator('.manifesto figcaption')).toHaveCount(0);
 });
 
-test('el pie de página no inventa categorías ni contacto', async ({ page }) => {
+test('el pie de página no inventa categorías ni redes; solo el correo oficial', async ({ page }) => {
   await page.goto('/');
   const footer = page.getByRole('contentinfo');
   await expect(footer.getByRole('link', { name: 'Toda la tienda' })).toBeVisible();
   await expect(footer.getByRole('link', { name: /Categoría/ })).toHaveCount(0);
-  await expect(footer.getByRole('heading', { name: 'Contacto' })).toHaveCount(0);
+  await expect(footer.locator('a[href^="mailto:"]')).toHaveAttribute('href', 'mailto:kyro89py@gmail.com');
+  await expect(footer.locator('a[href^="http"]')).toHaveCount(0);
+});
+
+test('sin páginas informativas, la ayuda dice que las condiciones no están publicadas', async ({ page }) => {
+  await page.goto('/ayuda/');
+  await expect(
+    page.getByText('Las condiciones de envío, cambios y devoluciones todavía no están publicadas en este sitio.'),
+  ).toBeAttached();
+  await expect(page.locator('details#condiciones a')).toHaveCount(0);
+  await expectNoA11yViolations(page);
 });
 
 test('sin logotipo oficial se usa el tipográfico provisional', async ({ page }) => {

@@ -20,5 +20,7 @@ export const routes = {
   cart: () => href('carrito'),
   brand: () => href('marca'),
   info: (slug: string) => href(`info/${slug}`),
+  help: () => href('ayuda'),
+  search: (query?: string) => href(query ? `buscar?q=${encodeURIComponent(query)}` : 'buscar'),
   catalogIndex: () => href('catalog.json'),
 };

@@ -42,7 +42,8 @@ export const store: StoreConfig = {
   description: 'KYRO: moda urbana con identidad premium, minimalista y cinematográfica.',
   indexable: false,
   contact: {
-    email: null,
+    // Correo oficial facilitado por KYRO para atención al cliente.
+    email: 'kyro89py@gmail.com',
   },
   social: [],
   cart: {

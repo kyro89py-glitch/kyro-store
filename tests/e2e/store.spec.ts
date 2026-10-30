@@ -10,6 +10,7 @@ const PAGES = [
   '/producto/prenda-de-prueba-uno/',
   '/carrito/',
   '/marca/',
+  '/ayuda/',
   '/info/pagina-de-prueba/',
 ];
 
@@ -335,15 +336,113 @@ test.describe('alto contraste (forced colors)', () => {
 });
 
 test.describe('pie de página', () => {
-  test('enlaza tienda, categorías, marca y carrito; sin contacto inventado', async ({ page }) => {
+  test('enlaza tienda, categorías, ayuda, marca y el correo oficial; sin redes inventadas', async ({ page }) => {
     await page.goto('/');
     const footer = page.getByRole('contentinfo');
-    for (const name of ['Toda la tienda', 'Categoría de prueba A', 'Categoría de prueba B', 'La marca', 'Carrito']) {
+    for (const name of [
+      'Toda la tienda',
+      'Categoría de prueba A',
+      'Categoría de prueba B',
+      'Carrito',
+      'Ayuda y contacto',
+      'Preguntas frecuentes',
+      'La marca',
+    ]) {
       await expect(footer.getByRole('link', { name, exact: true })).toBeVisible();
     }
-    // store.contact y store.social están vacíos: no debe aparecer ningún bloque de contacto.
-    await expect(footer.getByRole('heading', { name: 'Contacto' })).toHaveCount(0);
-    await expect(footer.locator('a[href^="mailto:"]')).toHaveCount(0);
+    // El único contacto es el correo que facilitó KYRO (store.contact.email).
+    await expect(footer.locator('a[href^="mailto:"]')).toHaveAttribute('href', 'mailto:kyro89py@gmail.com');
+    // store.social está vacío: ningún enlace sale del sitio salvo el correo.
+    const external = await footer
+      .locator('a[href]')
+      .evaluateAll((links) =>
+        links.map((link) => link.getAttribute('href') ?? '').filter((href) => /^(https?:)?\/\//.test(href)),
+      );
+    expect(external).toEqual([]);
+  });
+
+  test('ningún enlace del pie apunta a una página que no existe', async ({ page }) => {
+    await page.goto('/');
+    const hrefs = await page
+      .getByRole('contentinfo')
+      .locator('a[href^="/"]')
+      .evaluateAll((links) => [...new Set(links.map((link) => link.getAttribute('href') ?? ''))]);
+    for (const href of hrefs) {
+      const response = await page.request.get(href.split('#')[0] ?? href);
+      expect(response.status(), href).toBe(200);
+    }
+  });
+});
+
+test.describe('ayuda y contacto', () => {
+  test('ofrece el correo oficial sin prometer que el mensaje se envía desde el sitio', async ({ page }) => {
+    await page.goto('/ayuda/');
+    const contact = page.getByRole('region', { name: 'Escríbenos' });
+    await expect(contact.getByText('kyro89py@gmail.com', { exact: true })).toBeVisible();
+    const write = contact.getByRole('link', { name: 'Escribir un correo' });
+    await expect(write).toHaveAttribute('href', /^mailto:kyro89py@gmail\.com\?subject=/);
+    await expect(contact.getByText('abre tu aplicación de correo')).toBeVisible();
+    // No hay formulario: nada puede decir "mensaje enviado".
+    await expect(page.getByRole('main').locator('form')).toHaveCount(0);
+    await expect(page.getByText(/mensaje enviado/i)).toHaveCount(0);
+  });
+
+  test('copiar la dirección avisa solo cuando de verdad se copió', async ({ page, context, browserName }) => {
+    test.skip(browserName !== 'chromium', 'los permisos del portapapeles solo se conceden en Chromium');
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.goto('/ayuda/');
+    await page.getByRole('button', { name: 'Copiar la dirección' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Dirección copiada.' })).toBeVisible();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('kyro89py@gmail.com');
+  });
+
+  test('si el navegador no deja copiar, lo dice y no finge éxito', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: () => Promise.reject(new Error('denegado')) },
+      });
+    });
+    await page.goto('/ayuda/');
+    await page.getByRole('button', { name: 'Copiar la dirección' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'No se pudo copiar.' })).toBeVisible();
+    await expect(page.getByText('Dirección copiada.')).toHaveCount(0);
+  });
+
+  test('las preguntas se abren con el teclado y desde su enlace', async ({ page }) => {
+    await page.goto('/ayuda/#carrito');
+    await expect(page.locator('details#carrito')).toHaveAttribute('open', '');
+    await page.locator('details#cuenta summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('details#cuenta')).toHaveAttribute('open', '');
+    await expect(page.getByText('el sitio no tiene cuentas de cliente')).toBeVisible();
+  });
+
+  test('las respuestas describen el sitio real: pago inactivo y límite del carrito', async ({ page }) => {
+    await page.goto('/ayuda/');
+    await expect(page.getByText('El pago en línea no está activo')).toBeAttached();
+    await expect(page.getByText('Hasta 10 unidades de cada talla.')).toBeAttached();
+    // Con páginas informativas publicadas, la respuesta enlaza a ellas.
+    await page.getByText('¿Dónde consulto envíos, cambios y devoluciones?').click();
+    await expect(
+      page.locator('details#condiciones').getByRole('link', { name: 'Página informativa de prueba' }),
+    ).toBeVisible();
+  });
+
+  test('el sitio no usa cookies ni contacta con terceros', async ({ page, context, baseURL }) => {
+    const origins = new Set<string>();
+    page.on('request', (request) => {
+      if (!request.url().startsWith('data:')) origins.add(new URL(request.url()).origin);
+    });
+    for (const path of ['/', '/tienda/', '/ayuda/', '/producto/prenda-de-prueba-dos/']) {
+      await page.goto(path);
+    }
+    await page.getByRole('button', { name: 'Añadir al carrito' }).click();
+    await expect(cartToggle(page)).toContainText('1');
+    expect([...origins]).toEqual([new URL(baseURL ?? '').origin]);
+    expect(await context.cookies()).toEqual([]);
+    // Lo único guardado en el navegador es el carrito.
+    const keys = await page.evaluate(() => Object.keys(localStorage).concat(Object.keys(sessionStorage)));
+    expect(keys).toEqual(['kyro.cart.v1']);
   });
 });
 
@@ -359,6 +458,14 @@ test.describe('menú móvil', () => {
     await page.getByRole('button', { name: 'Menú' }).click();
     await menu.getByRole('link', { name: 'Tienda' }).click();
     await expect(page).toHaveURL(/\/tienda\/$/);
+  });
+
+  test('lleva a ayuda y contacto', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) >= 768, 'solo en pantallas estrechas');
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Menú' }).click();
+    await page.getByRole('dialog', { name: 'Menú' }).getByRole('link', { name: 'Ayuda y contacto' }).click();
+    await expect(page).toHaveURL(/\/ayuda\/$/);
   });
 
   test('incluye las categorías del catálogo', async ({ page }) => {

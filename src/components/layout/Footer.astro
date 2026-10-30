@@ -1,5 +1,6 @@
 ---
 import { copy } from '../../config/copy';
+import { helpTitle } from '../../config/help';
 import { store } from '../../config/store';
 import { getActiveProducts, getCategories } from '../../lib/catalog';
 import { getInfoPages } from '../../lib/pages';
@@ -9,7 +10,8 @@ import Wordmark from '../brand/Wordmark.astro';
 const year = new Date().getFullYear();
 const categories = getCategories(await getActiveProducts()).slice(0, 6);
 const infoPages = await getInfoPages();
-const hasContact = Boolean(store.contact.email) || store.social.length > 0;
+// En columnas estrechas, el correo se parte tras la arroba y no a mitad de palabra.
+const emailParts = store.contact.email?.split('@') ?? [];
 ---
 
 <footer class="site-footer">
@@ -30,6 +32,24 @@ const hasContact = Boolean(store.contact.email) || store.social.length > 0;
               </li>
             ))
           }
+          <li><a class="nav-link" href={routes.cart()}>Carrito</a></li>
+        </ul>
+      </div>
+
+      <div class="site-footer__group">
+        <h2 class="site-footer__heading">Atención al cliente</h2>
+        <ul role="list">
+          <li><a class="nav-link" href={routes.help()}>{helpTitle}</a></li>
+          <li><a class="nav-link" href={`${routes.help()}#preguntas`}>Preguntas frecuentes</a></li>
+          {
+            store.contact.email && (
+              <li>
+                <a class="nav-link site-footer__email" href={`mailto:${store.contact.email}`}>
+                  {emailParts[0]}@<wbr />{emailParts[1]}
+                </a>
+              </li>
+            )
+          }
         </ul>
       </div>
 
@@ -37,7 +57,15 @@ const hasContact = Boolean(store.contact.email) || store.social.length > 0;
         <h2 class="site-footer__heading">KYRO</h2>
         <ul role="list">
           <li><a class="nav-link" href={routes.brand()}>La marca</a></li>
-          <li><a class="nav-link" href={routes.cart()}>Carrito</a></li>
+          {
+            store.social.map((link) => (
+              <li>
+                <a class="nav-link" href={link.url} rel="noopener noreferrer" target="_blank">
+                  {link.label}
+                </a>
+              </li>
+            ))
+          }
         </ul>
       </div>
 
@@ -50,30 +78,6 @@ const hasContact = Boolean(store.contact.email) || store.social.length > 0;
                 <li>
                   <a class="nav-link" href={routes.info(page.id)}>
                     {page.data.title}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )
-      }
-
-      {
-        hasContact && (
-          <div class="site-footer__group">
-            <h2 class="site-footer__heading">Contacto</h2>
-            <ul role="list">
-              {store.contact.email && (
-                <li>
-                  <a class="nav-link" href={`mailto:${store.contact.email}`}>
-                    {store.contact.email}
-                  </a>
-                </li>
-              )}
-              {store.social.map((link) => (
-                <li>
-                  <a class="nav-link" href={link.url} rel="noopener noreferrer" target="_blank">
-                    {link.label}
                   </a>
                 </li>
               ))}
@@ -141,6 +145,10 @@ const hasContact = Boolean(store.contact.email) || store.social.length > 0;
 
   .site-footer__group a {
     font-size: var(--text-sm);
+  }
+
+  .site-footer__email {
+    overflow-wrap: anywhere;
   }
 
   .site-footer__masthead {

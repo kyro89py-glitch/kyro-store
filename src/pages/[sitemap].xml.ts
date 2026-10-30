@@ -1,6 +1,7 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { store } from '../config/store';
 import { getActiveProducts, getCategories } from '../lib/catalog';
+import { getInfoPages } from '../lib/pages';
 import { routes } from '../lib/urls';
 
 // /sitemap.xml solo se genera cuando la tienda se lanza: `store.indexable` en true y
@@ -20,6 +21,8 @@ export const GET: APIRoute = async ({ site }) => {
     routes.home(),
     routes.shop(),
     routes.brand(),
+    routes.help(),
+    ...(await getInfoPages()).map((page) => routes.info(page.id)),
     ...getCategories(products).map((category) => routes.category(category.slug)),
     ...products.map((product) => routes.product(product.id)),
   ];

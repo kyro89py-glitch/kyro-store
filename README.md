@@ -60,6 +60,7 @@ escritorio, tableta, móvil y el build de producción.
 src/
   config/store.ts      Ajustes de la tienda (contacto, redes, indexación, pago)
   config/copy.ts       Textos de marca (borrador para revisión)
+  config/help.ts       Preguntas frecuentes de /ayuda/ (solo comportamiento comprobable del sitio)
   content.config.ts    Esquemas estrictos del catálogo y de las imágenes de campaña
   content/products/    Catálogo real: una carpeta por producto
   content/campaign/    Imagen editorial de la portada, con procedencia y licencia
@@ -89,6 +90,7 @@ docs/                  Arquitectura, catálogo, imágenes, recursos provisionale
 - [Rendimiento: cómo medir, línea base y limitaciones](docs/RENDIMIENTO.md)
 - [Experiencia inmersiva «Cámara oscura»: referencia, propuesta y límites](docs/EXPERIENCIA-INMERSIVA.md)
 - [Auditoría técnica de la tienda y decisiones pendientes](docs/AUDITORIA.md)
+- [Evolución de la tienda: avance por fases](docs/EVOLUCION-TIENDA.md)
 - [Seguridad](SECURITY.md)
 
 ## Pendiente de KYRO
@@ -97,7 +99,7 @@ docs/                  Arquitectura, catálogo, imágenes, recursos provisionale
 - Fotografía de producto y de campaña, con licencia (ver `docs/IMAGENES.md`).
 - Productos reales: nombres, precios, moneda, tallas y disponibilidad.
 - Revisión de los textos de `src/config/copy.ts`.
-- Datos de contacto y redes (`src/config/store.ts`).
+- Redes sociales (`src/config/store.ts`). El correo de contacto ya está definido.
 - Textos de términos, privacidad, envíos y devoluciones (`src/content/pages/`).
 - País de facturación, para elegir la pasarela de pago.
 

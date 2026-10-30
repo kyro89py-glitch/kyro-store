@@ -7,6 +7,9 @@ Fecha: 30-10-2026 · Rama auditada: `experiencia-inmersiva` (`2cf579f`) · Rama 
 es exactamente `origin/experiencia-inmersiva` en GitHub (verificable en remoto). `main`
 sigue en `5ba8d17`, sin cambios.
 
+> Esta auditoría es la foto del punto de partida. El avance posterior se registra en
+> [EVOLUCION-TIENDA.md](EVOLUCION-TIENDA.md).
+
 ## Clasificación usada
 
 | Etiqueta | Significado |
