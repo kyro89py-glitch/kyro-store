@@ -88,6 +88,7 @@ docs/                  Arquitectura, catálogo, imágenes, recursos provisionale
 - [Fase 2: pagos y pedidos](docs/FASE-2-PAGOS.md)
 - [Rendimiento: cómo medir, línea base y limitaciones](docs/RENDIMIENTO.md)
 - [Experiencia inmersiva «Cámara oscura»: referencia, propuesta y límites](docs/EXPERIENCIA-INMERSIVA.md)
+- [Auditoría técnica de la tienda y decisiones pendientes](docs/AUDITORIA.md)
 - [Seguridad](SECURITY.md)
 
 ## Pendiente de KYRO
