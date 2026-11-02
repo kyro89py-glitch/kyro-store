@@ -13,6 +13,7 @@ images:
     alt: Imagen abstracta de prueba, tono bronce
   - src: ./imagen-3.jpg
     alt: Imagen abstracta de prueba, tono pizarra
+    generated: true
 variants:
   - sku: TEST-001-S
     label: S

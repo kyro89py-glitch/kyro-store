@@ -15,13 +15,24 @@ test('sin productos, la portada y la tienda muestran el estado vacío', async ({
   expect(errors).toEqual([]);
 });
 
-test('sin datos, la portada no muestra secciones vacías ni imagen de campaña', async ({ page }) => {
+test('sin productos, la portada no muestra secciones vacías', async ({ page }) => {
   await page.goto('/');
   const titles = page.getByRole('main').getByRole('heading', { level: 2 });
   await expect(titles).toHaveText(['Colecciones']);
   await expect(page.locator('.panel')).toHaveCount(0);
-  await expect(page.locator('.manifesto img')).toHaveCount(0);
-  await expect(page.locator('.manifesto figcaption')).toHaveCount(0);
+});
+
+test('la imagen de campaña se ve entera e indica que está generada con IA', async ({ page }) => {
+  await page.goto('/');
+  const figure = page.locator('.manifesto__foto');
+  const image = figure.locator('img');
+  await expect(image).toHaveAttribute('alt', /remera blanca «'92» de Manchester United/);
+  await expect(figure.locator('figcaption')).toHaveText('Imagen generada con IA');
+  await image.scrollIntoViewIfNeeded();
+  await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+  // Misma proporción que la foto (4:5): no se recorta.
+  const box = await figure.boundingBox();
+  expect(Math.abs((box?.width ?? 0) / (box?.height ?? 1) - 1122 / 1402)).toBeLessThan(0.01);
 });
 
 test('el pie de página no inventa categorías ni redes; solo el correo oficial', async ({ page }) => {
@@ -34,6 +45,7 @@ test('el pie de página no inventa categorías ni redes; solo el correo oficial'
 });
 
 test('sin productos, la búsqueda muestra el estado vacío y ningún filtro', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/buscar/');
   await expect(page.getByText('La primera colección está en preparación.')).toBeVisible();
   await expect(page.getByRole('search')).toHaveCount(0);
@@ -44,6 +56,8 @@ test('sin productos, la búsqueda muestra el estado vacío y ningún filtro', as
 });
 
 test('sin páginas informativas, la ayuda dice que las condiciones no están publicadas', async ({ page }) => {
+  // Sin animaciones: axe mediría el contraste de textos a medio aparecer.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/ayuda/');
   await expect(
     page.getByText('Las condiciones de envío, cambios y devoluciones todavía no están publicadas en este sitio.'),

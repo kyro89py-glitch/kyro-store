@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { lacksRealPhoto } from './lib/catalog-rules';
 
 /**
  * Catálogo de productos.
@@ -53,6 +54,11 @@ const products = defineCollection({
             z.object({
               src: image(),
               alt: z.string().trim().min(1, 'Cada imagen necesita texto alternativo').max(200),
+              /**
+               * true si es una imagen generada con IA (p. ej. un modelo vistiendo la
+               * prenda). La ficha la señala y debe conservar al menos una foto real.
+               */
+              generated: z.boolean().default(false),
             }),
           )
           .min(1)
@@ -90,6 +96,13 @@ const products = defineCollection({
         position: z.number().int().default(0),
       })
       .superRefine((product, ctx) => {
+        if (lacksRealPhoto(product.images)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['images'],
+            message: 'Con imágenes generadas con IA, la ficha debe conservar al menos una fotografía real de la prenda.',
+          });
+        }
         if (product.price.compareAt !== undefined && product.price.compareAt <= product.price.amount) {
           ctx.addIssue({
             code: 'custom',
@@ -132,6 +145,8 @@ const campaign = defineCollection({
         focus: z.enum(['center', 'top', 'bottom', 'left', 'right']).default('center'),
         /** true si no es fotografía propia de KYRO (banco de imágenes, prueba…). */
         provisional: z.boolean(),
+        /** true si la imagen está generada con IA: el sitio lo indica junto a ella. */
+        generated: z.boolean().default(false),
         credit: z
           .object({
             author: z.string().trim().min(1),

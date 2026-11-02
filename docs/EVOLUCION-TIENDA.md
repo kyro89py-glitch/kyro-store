@@ -47,3 +47,23 @@ Nada de esta rama está publicado ni fusionado; `main` no se ha tocado.
 Verificación completa de esta fase: `astro check` 0 errores; 70 pruebas unitarias; build de
 producción y de pruebas; 232 pruebas e2e superadas y 10 omitidas a propósito (pruebas del
 menú móvil en los perfiles de escritorio y tableta, donde ese menú no existe).
+
+## Ficha de producto y foto editorial
+
+Punto de reversión: etiqueta local `respaldo/antes-ficha-editorial` (`628b9dd`).
+
+| Cambio | Estado |
+| --- | --- |
+| Fichas de la remera «'92» y del pantalón cargo | **Pendiente**: no existen. El catálogo real está vacío y faltan nombre, precio, moneda, tallas y existencias; no se inventan |
+| Foto editorial del modelo (remera «'92» + cargo) como imagen de campaña de la portada, entera (4:5), con «Imagen generada con IA» y un acercamiento lento al desplazar (solo con movimiento permitido) | Probado (producción) |
+| Fidelidad de la foto frente a las originales: «'92», «Manchester United» y estampado del cargo, correctos; **escudo y trébol de las mangas intercambiados**, y trébol deformado | Confirmado (comparación visual); pendiente de decisión de KYRO |
+| Esquema: `generated` en imágenes de producto y de campaña; el build falla si una ficha solo tiene imágenes generadas | Probado (unitarias) |
+| Galería: puntos para elegir foto en móvil, enlace de cada foto a su versión grande (funciona sin JavaScript), visor a pantalla completa con deslizamiento, flechas del teclado y botones; las editoriales no se recortan | Probado |
+| Elegir y añadir: talla elegida junto a la etiqueta, explicación de las tallas tachadas, «Añadido ✓» en el botón | Probado |
+| Barra de compra fija en móvil (mismo formulario y mismo carrito); se aparta cuando el botón principal está en pantalla | Probado |
+| Fotos con reserva JPG en lugar de PNG para navegadores sin AVIF/WebP | Confirmado |
+| Casilla «Solo disponibles» de la búsqueda a 24 px | Confirmado (barrido de anchos) |
+
+Medición (`scripts/medir-rendimiento.mjs`, sin GPU; CPU 4× y red 4G en móvil): portada de
+producción LCP 1428 ms escritorio / 2012 ms móvil, CLS 0, la foto de campaña no se descarga
+en la carga inicial; ficha de demostración LCP 140 / 680 ms, TBT 0, CLS 0.

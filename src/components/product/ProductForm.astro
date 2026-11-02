@@ -1,6 +1,7 @@
 ---
 import type { Product } from '../../lib/catalog';
 import { isPurchasable } from '../../lib/catalog';
+import Price from '../catalog/Price.astro';
 
 interface Props {
   product: Product;
@@ -13,13 +14,24 @@ const available = variants.filter((variant) => variant.available);
 const preselected = available.length === 1 ? available[0]?.sku : undefined;
 const optionId = `option-${product.id}`;
 // "esta talla" en el caso habitual; con otro tipo de opción, un genérico correcto.
-const optionNoun = optionName.toLowerCase() === 'talla' ? 'esta talla' : 'esta opción';
+const isSize = optionName.toLowerCase() === 'talla';
+const optionNoun = isSize ? 'esta talla' : 'esta opción';
+const preselectedLabel = variants.find((variant) => variant.sku === preselected)?.label;
+// Solo se explica el tachado si hay algo tachado y algo que elegir.
+const hasSoldOut = purchasable && variants.some((variant) => !variant.available);
+const formId = `form-${product.id}`;
 ---
 
 <kyro-product-form data-option-noun={optionNoun}>
-  <form class="product-form" novalidate>
-    <fieldset class="variants" aria-describedby={`${optionId}-error`}>
-      <legend class="variants__legend">{optionName}</legend>
+  <form class="product-form" id={formId} novalidate>
+    <fieldset
+      class="variants"
+      aria-describedby={hasSoldOut ? `${optionId}-soldout ${optionId}-error` : `${optionId}-error`}
+    >
+      <legend class="variants__legend">
+        {optionName}
+        <span class="variants__chosen" data-chosen>{preselectedLabel}</span>
+      </legend>
       <div class="variants__options">
         {
           variants.map((variant) => (
@@ -40,6 +52,13 @@ const optionNoun = optionName.toLowerCase() === 'talla' ? 'esta talla' : 'esta o
           ))
         }
       </div>
+      {
+        hasSoldOut && (
+          <p class="variants__note" id={`${optionId}-soldout`}>
+            {isSize ? 'Las tallas tachadas están agotadas.' : 'Las opciones tachadas están agotadas.'}
+          </p>
+        )
+      }
       <p class="product-form__error" id={`${optionId}-error`} data-form-error hidden>
         Selecciona una opción de {optionName.toLowerCase()} para continuar.
       </p>
@@ -67,14 +86,47 @@ const optionNoun = optionName.toLowerCase() === 'talla' ? 'esta talla' : 'esta o
       )
     }
 
-    <button class="button button--primary button--block" type="submit" disabled={!purchasable}>
-      {purchasable ? 'Añadir al carrito' : 'No disponible'}
+    <button class="button button--primary button--block product-form__submit" type="submit" disabled={!purchasable} data-submit>
+      <span class="product-form__submit-label">{purchasable ? 'Añadir al carrito' : 'No disponible'}</span>
+      {
+        purchasable && (
+          <span class="product-form__submit-done" aria-hidden="true">
+            Añadido
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+              <path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+            </svg>
+          </span>
+        )
+      }
     </button>
     <p class="product-form__status" role="status" data-form-status></p>
     <noscript>
       <p class="product-form__status">Para añadir piezas al carrito, activa JavaScript en tu navegador.</p>
     </noscript>
   </form>
+
+  {
+    /*
+     * Móvil: cuando el botón principal sale de la pantalla, una barra fija mantiene la
+     * compra a mano. Envía el mismo formulario: no hay una segunda lógica de carrito.
+     */
+    purchasable && (
+      <div class="buy-bar" role="region" aria-label={`Compra rápida: ${product.data.name}`} data-buy-bar hidden>
+        <div class="buy-bar__info">
+          <p class="buy-bar__name">{product.data.name}</p>
+          <p class="buy-bar__meta">
+            <Price amount={product.data.price.amount} currency={product.data.price.currency} compareAt={product.data.price.compareAt} />
+            <span class="buy-bar__choice" data-buy-bar-choice>
+              {preselectedLabel ? `${optionName} ${preselectedLabel}` : `Elige ${optionName.toLowerCase()}`}
+            </span>
+          </p>
+        </div>
+        <button class="button button--primary buy-bar__button" type="submit" form={formId}>
+          Añadir
+        </button>
+      </div>
+    )
+  }
 </kyro-product-form>
 
 <style>
@@ -249,6 +301,156 @@ const optionNoun = optionName.toLowerCase() === 'talla' ? 'esta talla' : 'esta o
     }
   }
 
+  /* La talla elegida se lee junto a la etiqueta: "Talla · M". */
+  .variants__chosen:not(:empty)::before {
+    content: '·';
+    margin-inline: 0.45em;
+    color: var(--color-ivory-muted);
+  }
+
+  .variants__chosen {
+    color: var(--color-ivory);
+  }
+
+  .variants__chosen[data-changed] {
+    animation: chosen-in 420ms var(--ease-out);
+  }
+
+  @keyframes chosen-in {
+    from {
+      opacity: 0;
+      translate: 0 0.3rem;
+    }
+  }
+
+  .variants__note {
+    color: var(--color-ivory-muted);
+    font-size: var(--text-xs);
+    letter-spacing: 0.02em;
+  }
+
+  /*
+   * Confirmación en el propio botón: el texto deja paso a "Añadido ✓" un momento y
+   * vuelve. El aviso para lectores de pantalla lo da el mensaje de estado.
+   */
+  .product-form__submit {
+    position: relative;
+  }
+
+  .product-form__submit-label,
+  .product-form__submit-done {
+    transition:
+      opacity var(--duration-base) var(--ease-out),
+      translate var(--duration-base) var(--ease-out);
+  }
+
+  .product-form__submit-done {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    opacity: 0;
+    translate: 0 0.6rem;
+  }
+
+  .product-form__submit[data-done] .product-form__submit-label {
+    opacity: 0;
+    translate: 0 -0.6rem;
+  }
+
+  .product-form__submit[data-done] .product-form__submit-done {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  .product-form__submit-done path {
+    stroke-dasharray: 16;
+    stroke-dashoffset: 16;
+    transition: stroke-dashoffset 420ms var(--ease-out) 120ms;
+  }
+
+  .product-form__submit[data-done] .product-form__submit-done path {
+    stroke-dashoffset: 0;
+  }
+
+  /* ---------- Barra de compra fija (móvil) ---------- */
+
+  .buy-bar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--gutter) calc(var(--space-sm) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-line);
+    background: rgb(14 16 18 / 0.92);
+    backdrop-filter: blur(14px) saturate(1.1);
+    translate: 0 0;
+    transition:
+      translate var(--duration-slow) var(--ease-out),
+      display var(--duration-slow) allow-discrete;
+  }
+
+  @starting-style {
+    .buy-bar {
+      translate: 0 100%;
+    }
+  }
+
+  .buy-bar[data-away] {
+    translate: 0 100%;
+  }
+
+  .buy-bar__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .buy-bar__name {
+    overflow: hidden;
+    font-size: var(--text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .buy-bar__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-sm);
+    color: var(--color-ivory-muted);
+    font-size: var(--text-xs);
+  }
+
+  .buy-bar__button {
+    min-height: 2.75rem;
+    padding-inline: var(--space-lg);
+  }
+
+  @media (min-width: 60rem) {
+    .buy-bar {
+      display: none;
+    }
+  }
+
+  /* Con la barra visible, el final de la página no queda tapado. */
+  @media (max-width: 59.99rem) {
+    :global(body:has([data-buy-bar]:not([hidden])) .site-footer) {
+      padding-bottom: calc(var(--space-lg) + 4.5rem + env(safe-area-inset-bottom));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .buy-bar,
+    .product-form__submit-label,
+    .product-form__submit-done,
+    .product-form__submit-done path {
+      transition: none;
+    }
+  }
+
   /* Sin JavaScript no se puede añadir al carrito: no se muestran controles inertes. */
   :global(html:not(.js)) .product-form__quantity,
   :global(html:not(.js)) .product-form button[type='submit'] {
@@ -285,6 +487,7 @@ const optionNoun = optionName.toLowerCase() === 'talla' ? 'esta talla' : 'esta o
   import { addItem, quantityOf } from '../../lib/cart/state';
 
   const max = store.cart.maxQuantityPerLine;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
   class KyroProductForm extends HTMLElement {
     connectedCallback() {
@@ -295,12 +498,17 @@ const optionNoun = optionName.toLowerCase() === 'talla' ? 'esta talla' : 'esta o
 
       const fieldset = form.querySelector('fieldset');
       const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      const chosen = form.querySelector<HTMLElement>('[data-chosen]');
+      const bar = this.querySelector<HTMLElement>('[data-buy-bar]');
+      const barChoice = this.querySelector<HTMLElement>('[data-buy-bar-choice]');
+      const optionName = fieldset?.querySelector('legend')?.firstChild?.textContent?.trim() ?? '';
       const decrease = form.querySelector<HTMLButtonElement>('[data-quantity-decrease]');
       const increase = form.querySelector<HTMLButtonElement>('[data-quantity-increase]');
       const value = form.querySelector<HTMLOutputElement>('[data-quantity-value]');
       const note = form.querySelector<HTMLElement>('[data-quantity-note]');
       const noun = this.dataset['optionNoun'] ?? 'esta opción';
       let quantity = 1;
+      let doneTimer: number | undefined;
 
       const selectedSku = () => {
         const sku = new FormData(form).get('sku');
@@ -350,19 +558,43 @@ const optionNoun = optionName.toLowerCase() === 'talla' ? 'esta talla' : 'esta o
       onCartChange(renderQuantity);
       renderQuantity();
 
+      // La talla elegida se muestra junto a la etiqueta y en la barra de compra.
+      const renderChoice = (animate: boolean) => {
+        const input = form.querySelector<HTMLInputElement>('input[name="sku"]:checked');
+        const label = input?.parentElement?.querySelector('.variant__label')?.firstChild?.textContent?.trim() ?? '';
+        if (chosen && chosen.textContent !== label) {
+          chosen.textContent = label;
+          if (animate) replay(chosen, 'data-changed');
+        }
+        if (barChoice) barChoice.textContent = label ? `${optionName} ${label}` : `Elige ${optionName.toLowerCase()}`;
+      };
+      renderChoice(false);
+
       form.addEventListener('change', () => {
         error.hidden = true;
         fieldset?.removeAttribute('data-invalid');
         renderQuantity();
+        renderChoice(true);
       });
+
+      // Barra fija (móvil): aparece cuando el botón principal no está en pantalla.
+      if (bar && submit) {
+        bar.hidden = false;
+        new IntersectionObserver(([entry]) => {
+          bar.toggleAttribute('data-away', Boolean(entry?.isIntersecting));
+          bar.inert = Boolean(entry?.isIntersecting);
+        }).observe(submit);
+      }
 
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         const sku = selectedSku();
         if (!sku) {
           error.hidden = false;
+          // Desde la barra fija, las tallas pueden estar fuera de la pantalla.
+          fieldset?.scrollIntoView({ block: 'center', behavior: reduced.matches ? 'auto' : 'smooth' });
           replay(fieldset, 'data-invalid');
-          form.querySelector<HTMLInputElement>('input[name="sku"]:not(:disabled)')?.focus();
+          form.querySelector<HTMLInputElement>('input[name="sku"]:not(:disabled)')?.focus({ preventScroll: true });
           return;
         }
 
@@ -377,6 +609,10 @@ const optionNoun = optionName.toLowerCase() === 'talla' ? 'esta talla' : 'esta o
         quantity = 1;
         renderQuantity();
         replay(submit, 'data-added');
+        // "Añadido ✓" en el botón un momento; después vuelve a su texto.
+        window.clearTimeout(doneTimer);
+        submit?.setAttribute('data-done', '');
+        doneTimer = window.setTimeout(() => submit?.removeAttribute('data-done'), 1800);
         openCart();
       });
     }

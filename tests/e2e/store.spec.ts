@@ -401,6 +401,115 @@ test.describe('búsqueda', () => {
   });
 });
 
+test.describe('ficha: galería', () => {
+  const isMobile = (page: import('@playwright/test').Page) => (page.viewportSize()?.width ?? 0) < 960;
+
+  test('los puntos del carrusel eligen la foto (móvil)', async ({ page }) => {
+    test.skip(!isMobile(page), 'en escritorio las fotos se ven apiladas');
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    const dots = page.getByRole('group', { name: 'Elegir foto' }).getByRole('button');
+    await expect(dots).toHaveCount(3);
+    await expect(dots.first()).toHaveAttribute('aria-current', 'true');
+    await page.getByRole('button', { name: 'Foto 3 de 3' }).click();
+    await expect(page.locator('[data-gallery-current]')).toHaveText('03');
+    await expect(page.getByRole('button', { name: 'Foto 3 de 3' })).toHaveAttribute('aria-current', 'true');
+    await expect(dots.first()).not.toHaveAttribute('aria-current');
+  });
+
+  test('el visor amplía la foto pulsada y se recorre con botones y teclado', async ({ page }) => {
+    const errors = trackErrors(page);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    await page.getByRole('link', { name: 'Ampliar la foto 1 de 3' }).click();
+    const viewer = page.getByRole('dialog', { name: 'Fotografías del producto a pantalla completa' });
+    await expect(viewer).toBeVisible();
+    await expect(viewer.locator('[data-viewer-current]')).toHaveText('01');
+    await expect(viewer.getByRole('button', { name: 'Foto anterior' })).toBeDisabled();
+    await viewer.getByRole('button', { name: 'Foto siguiente' }).click();
+    await expect(viewer.locator('[data-viewer-current]')).toHaveText('02');
+    await page.keyboard.press('ArrowRight');
+    await expect(viewer.locator('[data-viewer-current]')).toHaveText('03');
+    await expect(viewer.getByRole('button', { name: 'Foto siguiente' })).toBeDisabled();
+    // La foto generada con IA lo indica también a pantalla completa.
+    await expect(viewer.getByText('Imagen generada con IA')).toBeVisible();
+    // La foto se ve entera: no sobresale de su marco ni de la pantalla.
+    const fits = await viewer.locator('.viewer__slide').nth(2).evaluate((slide) => {
+      const frame = slide.querySelector('figure')?.getBoundingClientRect();
+      const img = slide.querySelector('img')?.getBoundingClientRect();
+      return Boolean(frame && img && img.height <= frame.height + 1 && img.bottom <= innerHeight + 1);
+    });
+    expect(fits).toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(viewer).toBeHidden();
+    await expect(page.getByRole('link', { name: 'Ampliar la foto 1 de 3' })).toBeFocused();
+    expect(errors).toEqual([]);
+  });
+
+  test('señala solo las imágenes generadas con IA y no recorta las editoriales', async ({ page }) => {
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    const slides = page.locator('.gallery__slide');
+    await expect(slides.nth(2).locator('.gallery__tag')).toHaveText('Imagen generada con IA');
+    await expect(slides.nth(0).locator('.gallery__tag')).toHaveCount(0);
+    expect(await slides.nth(2).locator('img').evaluate((img) => getComputedStyle(img).objectFit)).toBe('contain');
+    await page.goto('/producto/prenda-de-prueba-dos/');
+    await expect(page.getByText('Imagen generada con IA')).toHaveCount(0);
+  });
+});
+
+test.describe('ficha: elegir y añadir', () => {
+  test('la talla elegida se lee junto a la etiqueta y se explican las tachadas', async ({ page }) => {
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    await expect(page.getByText('Las tallas tachadas están agotadas.')).toBeVisible();
+    await expect(page.locator('.variants__chosen')).toHaveText('');
+    await page.getByRole('radio', { name: 'L', exact: true }).check();
+    await expect(page.locator('.variants__chosen')).toHaveText('L');
+    // Una pieza sin tallas agotadas no muestra la explicación.
+    await page.goto('/producto/prenda-de-prueba-dos/');
+    await expect(page.getByText('Las tallas tachadas están agotadas.')).toHaveCount(0);
+    await expect(page.locator('.variants__chosen')).toHaveText('Única');
+  });
+
+  test('el botón confirma «Añadido» y vuelve a su estado', async ({ page }) => {
+    await page.goto('/producto/prenda-de-prueba-dos/');
+    const submit = page.locator('[data-submit]');
+    await submit.click();
+    await expect(submit).toHaveAttribute('data-done', '');
+    await expect(page.getByRole('status').filter({ hasText: 'Añadido al carrito.' })).toBeAttached();
+    await expect(submit).not.toHaveAttribute('data-done', { timeout: 4000 });
+  });
+
+  test('en móvil, la barra fija añade al carrito con el mismo formulario', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) >= 960, 'la barra solo existe en pantallas estrechas');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    const bar = page.getByRole('region', { name: 'Compra rápida: Prenda de prueba 1' });
+    // Al entrar, el botón principal está por debajo de la galería: la barra está a mano.
+    await expect(bar).toBeVisible();
+    await expect(bar).not.toHaveAttribute('data-away');
+    await expect(bar.getByText('Elige talla')).toBeVisible();
+
+    // Sin talla, lleva hasta las tallas y pide elegir una.
+    await bar.getByRole('button', { name: 'Añadir' }).click();
+    await expect(page.getByText('Selecciona una opción de talla para continuar.')).toBeInViewport();
+
+    await page.getByRole('radio', { name: 'S', exact: true }).check();
+    await expect(bar.getByText('Talla S')).toBeAttached();
+    // Con el botón principal en pantalla, la barra se aparta y no recibe el foco.
+    await page.locator('[data-submit]').scrollIntoViewIfNeeded();
+    await expect(bar).toHaveAttribute('data-away', '');
+    await page.mouse.wheel(0, -2000);
+    await expect(bar).not.toHaveAttribute('data-away');
+    await bar.getByRole('button', { name: 'Añadir' }).click();
+    await expect(cartToggle(page)).toHaveAccessibleName('Carrito, 1 artículo');
+  });
+
+  test('en escritorio no hay barra fija', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) < 960, 'solo en escritorio');
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    await expect(page.locator('[data-buy-bar]')).toBeHidden();
+  });
+});
+
 test.describe('ficha: precio anterior e información de compra', () => {
   test('muestra el precio anterior tachado solo cuando existe', async ({ page }) => {
     await page.goto('/producto/prenda-de-prueba-cuatro/');
@@ -697,6 +806,16 @@ test.describe('movimiento', () => {
 
 test.describe('sin JavaScript', () => {
   test.use({ javaScriptEnabled: false });
+
+  test('cada foto de la ficha enlaza a su versión grande', async ({ page }) => {
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    const link = page.getByRole('link', { name: 'Ampliar la foto 1 de 3' });
+    await expect(link).toHaveAttribute('href', /\.webp$/);
+    const response = await page.request.get((await link.getAttribute('href')) ?? '');
+    expect(response.status()).toBe(200);
+    await expect(page.getByRole('group', { name: 'Elegir foto' })).toBeHidden();
+    await expect(page.locator('[data-buy-bar]')).toBeHidden();
+  });
 
   test('no muestra controles que no funcionarían', async ({ page }) => {
     await page.goto('/buscar/');

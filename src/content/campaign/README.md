@@ -1,7 +1,7 @@
 # Imágenes de campaña
 
-Vacía a propósito: aquí va la fotografía editorial de la portada cuando KYRO la
-tenga, con su procedencia y licencia declaradas. Mientras tanto, la portada muestra
-la composición de luz sin fotografía.
+La fotografía editorial de la portada, con su procedencia declarada. Hoy es
+`portada.png`: una imagen **generada con IA** a partir de las fotografías de la
+remera «'92» y del pantalón cargo; el sitio lo indica junto a ella (`generated: true`).
 
 Guía y ejemplo en [`docs/IMAGENES.md`](../../../docs/IMAGENES.md).

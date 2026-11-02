@@ -34,6 +34,9 @@ images:
     alt: Descripción de lo que se ve en la foto
   - src: ./espalda.jpg
     alt: Descripción de lo que se ve en la foto
+  - src: ./modelo.png
+    alt: Descripción de lo que se ve en la foto
+    generated: true      # opcional; imagen generada con IA (ver docs/IMAGENES.md)
 optionName: Talla        # opcional; por defecto "Talla"
 variants:
   - sku: KY-0001-S
@@ -64,7 +67,7 @@ Descripción larga opcional, en Markdown.
 | `status` | Obligatorio. Solo `active` aparece en el sitio; `draft` sirve para preparar fichas. |
 | `price.amount` | Entero positivo en la **unidad mínima**: céntimos para USD/EUR (`12550` = 125,50), guaraníes para PYG (`350000` = 350.000). |
 | `price.currency` | Código ISO 4217 en mayúsculas. Todos los productos activos deben usar la misma moneda. |
-| `images` | Entre 1 y 12, cada una con texto alternativo. La primera es la portada; la segunda aparece al pasar el cursor en la tienda. |
+| `images` | Entre 1 y 12, cada una con texto alternativo. La primera es la portada; la segunda aparece al pasar el cursor en la tienda. Las generadas con IA llevan `generated: true` y siempre debe quedar al menos una fotografía real. |
 | `variants` | Entre 1 y 30. `available` es obligatorio: la tienda nunca supone que hay existencias. |
 | `sku` | Mayúsculas, números y guiones; único en todo el catálogo. |
 | `category` | Genera la URL de la categoría; dos categorías no pueden escribirse distinto y producir la misma URL. |

@@ -78,6 +78,7 @@ const total = String(panels.length).padStart(2, '0');
                         widths={[480, 720, 960, 1280]}
                         sizes="(min-width: 48rem) 40vh, 80vw"
                         formats={['avif', 'webp']}
+                        fallbackFormat="jpg"
                         loading={index < 2 ? 'eager' : 'lazy'}
                       />
                     )}

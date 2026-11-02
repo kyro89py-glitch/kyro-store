@@ -5,8 +5,10 @@ ninguna imagen ajena se presenta como fotografía propia de KYRO.
 
 ## Imagen editorial de la portada
 
-Hoy no hay ninguna: la portada muestra una composición de luz y grano hecha con CSS.
-Para añadir la fotografía de campaña:
+Hoy es `src/content/campaign/portada.png`: un modelo con la remera «'92» y el pantalón
+cargo gris, **generada con IA** a partir de las fotografías de esas prendas. Se muestra
+entera (4:5, sin recortes) en el bloque marfil del manifiesto, con la indicación «Imagen
+generada con IA». Para cambiarla o añadir otra:
 
 ```
 src/content/campaign/
@@ -21,6 +23,7 @@ image: ./portada.jpg
 alt: Descripción de lo que se ve en la foto
 focus: center            # center · top · bottom · left · right
 provisional: false       # true si NO es fotografía propia de KYRO
+generated: false         # true si la imagen está generada con IA (el sitio lo indica)
 credit:                  # obligatorio si provisional es true
   author: Nombre del fotógrafo o del estudio
   source: Dónde se obtuvo (sesión propia, banco de imágenes…)
@@ -53,6 +56,18 @@ La misma foto se recorta a tres formatos de cine:
 
 Ver [CATALOGO.md](CATALOGO.md#fotografía) y el brief de sesión en [MARCA.md](MARCA.md#fotografía-brief-para-la-sesión).
 
+### Imágenes generadas con IA
+
+Una imagen de producto generada con IA (por ejemplo, un modelo vistiendo la prenda) se
+declara con `generated: true`:
+
+- La ficha la señala con «Imagen generada con IA», también en el visor a pantalla completa.
+- Se ve entera (sin recorte) en la galería.
+- **El build falla si todas las imágenes de una ficha son generadas**: siempre queda al
+  menos una fotografía real de la prenda para comprobar lo que se compra.
+- Antes de usarla, se compara con las fotografías originales: colores, estampados,
+  escudos, logotipos, textos, bolsillos y proporciones. Ver [MODA-IA.md](MODA-IA.md#4-protocolo-de-fidelidad-lo-que-hará-cumplir-el-código).
+
 ## Lista de comprobación de licencia
 
 Antes de usar una imagen que no sea de una sesión propia:
@@ -65,6 +80,6 @@ Antes de usar una imagen que no sea de una sesión propia:
 5. ¿Exige atribución? Se declara en `credit`.
 6. Se guarda copia de la licencia o del acuerdo fuera del repositorio.
 
-Durante esta fase no se pudo descargar ni verificar ninguna imagen de bancos libres:
-la red del entorno de desarrollo bloquea Unsplash, Pexels, Wikimedia Commons y
-Openverse. Por eso la portada se entrega sin fotografía.
+Durante la primera fase no se pudo descargar ni verificar ninguna imagen de bancos
+libres: la red del entorno de desarrollo bloquea Unsplash, Pexels, Wikimedia Commons y
+Openverse.

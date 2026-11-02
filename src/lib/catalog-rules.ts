@@ -58,3 +58,11 @@ export function findCatalogErrors(entries: CatalogEntrySummary[]): string[] {
 
   return errors;
 }
+
+/**
+ * Una ficha con imágenes generadas con IA debe conservar al menos una fotografía real
+ * de la prenda: es la referencia que permite comprobar lo que se compra.
+ */
+export function lacksRealPhoto(images: { generated: boolean }[]): boolean {
+  return images.some((image) => image.generated) && images.every((image) => image.generated);
+}
