@@ -27,6 +27,8 @@ test('la imagen de campaña se ve entera e indica que está generada con IA', as
   const figure = page.locator('.manifesto__foto');
   const image = figure.locator('img');
   await expect(image).toHaveAttribute('alt', /remera blanca «'92» de Manchester United/);
+  // Se usa la versión con las mangas corregidas, no la original.
+  await expect(image).toHaveAttribute('src', /portada-corregida/);
   await expect(figure.locator('figcaption')).toHaveText('Imagen generada con IA');
   await image.scrollIntoViewIfNeeded();
   await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);

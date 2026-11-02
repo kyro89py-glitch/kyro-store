@@ -56,7 +56,7 @@ Punto de reversión: etiqueta local `respaldo/antes-ficha-editorial` (`628b9dd`)
 | --- | --- |
 | Fichas de la remera «'92» y del pantalón cargo | **Pendiente**: no existen. El catálogo real está vacío y faltan nombre, precio, moneda, tallas y existencias; no se inventan |
 | Foto editorial del modelo (remera «'92» + cargo) como imagen de campaña de la portada, entera (4:5), con «Imagen generada con IA» y un acercamiento lento al desplazar (solo con movimiento permitido) | Probado (producción) |
-| Fidelidad de la foto frente a las originales: «'92», «Manchester United» y estampado del cargo, correctos; **escudo y trébol de las mangas intercambiados**, y trébol deformado | Confirmado (comparación visual); pendiente de decisión de KYRO |
+| Fidelidad de la foto frente a las originales: «'92», «Manchester United» y estampado del cargo, correctos; escudo y trébol de las mangas estaban intercambiados y el trébol, deformado | Corregido con retoque manual a partir de fotografías de detalle reales (`portada-corregida.png`; la original se conserva). Verificado con medidas de luz, color y textura |
 | Esquema: `generated` en imágenes de producto y de campaña; el build falla si una ficha solo tiene imágenes generadas | Probado (unitarias) |
 | Galería: puntos para elegir foto en móvil, enlace de cada foto a su versión grande (funciona sin JavaScript), visor a pantalla completa con deslizamiento, flechas del teclado y botones; las editoriales no se recortan | Probado |
 | Elegir y añadir: talla elegida junto a la etiqueta, explicación de las tallas tachadas, «Añadido ✓» en el botón | Probado |

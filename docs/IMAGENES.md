@@ -5,8 +5,10 @@ ninguna imagen ajena se presenta como fotografía propia de KYRO.
 
 ## Imagen editorial de la portada
 
-Hoy es `src/content/campaign/portada.png`: un modelo con la remera «'92» y el pantalón
-cargo gris, **generada con IA** a partir de las fotografías de esas prendas. Se muestra
+Hoy es `src/content/campaign/portada-corregida.png`: un modelo con la remera «'92» y el
+pantalón cargo gris, **generada con IA** a partir de las fotografías de esas prendas y
+retocada a mano para corregir los emblemas de las mangas; la original sin retocar se
+conserva en `portada.png` (detalle en el README de esa carpeta). Se muestra
 entera (4:5, sin recortes) en el bloque marfil del manifiesto, con la indicación «Imagen
 generada con IA». Para cambiarla o añadir otra:
 
