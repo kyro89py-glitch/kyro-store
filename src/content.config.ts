@@ -1,7 +1,7 @@
-import { defineCollection } from 'astro:content';
+import { defineCollection, type ImageFunction } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
-import { lacksRealPhoto } from './lib/catalog-rules';
+import { generatedOutsideModelView, IMAGE_VIEWS, lacksRealPhoto } from './lib/catalog-rules';
 
 /**
  * Catálogo de productos.
@@ -21,6 +21,45 @@ const useFixtures = process.env.KYRO_CATALOG === 'fixtures';
 const catalogBase = useFixtures ? './tests/fixtures/catalog' : './src/content/products';
 const campaignBase = useFixtures ? './tests/fixtures/campaign' : './src/content/campaign';
 const pagesBase = useFixtures ? './tests/fixtures/pages' : './src/content/pages';
+const looksBase = useFixtures ? './tests/fixtures/looks' : './src/content/looks';
+
+/**
+ * Imagen de una galería (fichas y looks). `view` y `label` ordenan la experiencia: la
+ * galería muestra el nombre de cada vista ("Look completo", "Remera · espalda",
+ * "Detalle · escudo") y permite saltar entre ellas.
+ */
+const galleryImage = (image: ImageFunction) =>
+  z.object({
+    src: image(),
+    alt: z.string().trim().min(1, 'Cada imagen necesita texto alternativo').max(200),
+    /**
+     * true si es una imagen generada con IA (p. ej. un modelo vistiendo la prenda). Se
+     * señala, solo puede ser una vista con modelo y siempre queda una foto real.
+     */
+    generated: z.boolean().default(false),
+    /** Qué muestra: modelo (look completo), frente, espalda o detalle. */
+    view: z.enum(IMAGE_VIEWS).optional(),
+    /** Nombre corto visible en la galería, p. ej. "Detalle · escudo". */
+    label: z.string().trim().min(1).max(40).optional(),
+  });
+
+/** Reglas de fidelidad comunes a toda galería con imágenes generadas. */
+function checkGallery(images: { generated: boolean; view?: (typeof IMAGE_VIEWS)[number] | undefined }[], ctx: z.RefinementCtx) {
+  if (lacksRealPhoto(images)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['images'],
+      message: 'Con imágenes generadas con IA, la galería debe conservar al menos una fotografía real de la prenda.',
+    });
+  }
+  for (const index of generatedOutsideModelView(images)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['images', index, 'view'],
+      message: 'Una imagen generada con IA solo puede ser una vista con modelo (view: modelo); frente, espalda y detalles deben ser fotografías reales.',
+    });
+  }
+}
 
 const products = defineCollection({
   loader: glob({
@@ -49,20 +88,7 @@ const products = defineCollection({
            */
           compareAt: z.number().int().positive().optional(),
         }),
-        images: z
-          .array(
-            z.object({
-              src: image(),
-              alt: z.string().trim().min(1, 'Cada imagen necesita texto alternativo').max(200),
-              /**
-               * true si es una imagen generada con IA (p. ej. un modelo vistiendo la
-               * prenda). La ficha la señala y debe conservar al menos una foto real.
-               */
-              generated: z.boolean().default(false),
-            }),
-          )
-          .min(1)
-          .max(12),
+        images: z.array(galleryImage(image)).min(1).max(16),
         /** Nombre de la opción que eligen los clientes. */
         optionName: z.string().trim().min(1).max(30).default('Talla'),
         variants: z
@@ -96,13 +122,7 @@ const products = defineCollection({
         position: z.number().int().default(0),
       })
       .superRefine((product, ctx) => {
-        if (lacksRealPhoto(product.images)) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['images'],
-            message: 'Con imágenes generadas con IA, la ficha debe conservar al menos una fotografía real de la prenda.',
-          });
-        }
+        checkGallery(product.images, ctx);
         if (product.price.compareAt !== undefined && product.price.compareAt <= product.price.amount) {
           ctx.addIssue({
             code: 'custom',
@@ -147,6 +167,11 @@ const campaign = defineCollection({
         provisional: z.boolean(),
         /** true si la imagen está generada con IA: el sitio lo indica junto a ella. */
         generated: z.boolean().default(false),
+        /** Opcional: slug del look al que lleva la imagen (src/content/looks/<slug>/). */
+        look: z
+          .string()
+          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+          .optional(),
         credit: z
           .object({
             author: z.string().trim().min(1),
@@ -193,4 +218,40 @@ const pages = defineCollection({
   }),
 });
 
-export const collections = { products, campaign, pages };
+/**
+ * Looks: un conjunto completo presentado como campaña, con su galería (vista con modelo,
+ * frente, espalda y detalles). No vende por sí mismo: enlaza a las fichas de las prendas
+ * cuando existen.
+ *
+ *   src/content/looks/<slug>/index.md + sus imágenes → /looks/<slug>/
+ */
+const looks = defineCollection({
+  loader: glob({
+    pattern: '*/index.md',
+    base: looksBase,
+    generateId: ({ entry }) => entry.replace(/\/index\.md$/, ''),
+  }),
+  schema: ({ image }) =>
+    z
+      .object({
+        title: z.string().trim().min(1).max(80),
+        summary: z.string().trim().min(1).max(240),
+        images: z.array(galleryImage(image)).min(1).max(20),
+        /** Prendas del look. `product` (slug) enlaza a su ficha cuando existe. */
+        garments: z
+          .array(
+            z.object({
+              name: z.string().trim().min(1).max(120),
+              product: z
+                .string()
+                .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+                .optional(),
+            }),
+          )
+          .default([]),
+        order: z.number().int().default(0),
+      })
+      .superRefine((look, ctx) => checkGallery(look.images, ctx)),
+});
+
+export const collections = { products, campaign, pages, looks };

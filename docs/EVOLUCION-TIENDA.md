@@ -67,3 +67,18 @@ Punto de reversión: etiqueta local `respaldo/antes-ficha-editorial` (`628b9dd`)
 Medición (`scripts/medir-rendimiento.mjs`, sin GPU; CPU 4× y red 4G en móvil): portada de
 producción LCP 1428 ms escritorio / 2012 ms móvil, CLS 0, la foto de campaña no se descarga
 en la carga inicial; ficha de demostración LCP 140 / 680 ms, TBT 0, CLS 0.
+
+## Galería para examinar las prendas y look «'92»
+
+| Cambio | Estado |
+| --- | --- |
+| Vistas con nombre en la galería (`view`: modelo, frente, espalda, detalle; `label` visible) | Probado |
+| Regla de fidelidad: una imagen generada con IA solo puede ser la vista con modelo; el build falla si un frente, una espalda o un detalle es generado | Probado (unitarias) |
+| Miniaturas: tira deslizable en móvil y columna fija en escritorio que lleva a cada vista | Probado |
+| Visor a pantalla completa con zoom: pellizco, arrastre y doble toque en pantallas táctiles; clic y cursor en escritorio; rueda con Ctrl o gesto del trackpad; botones −/+ y teclado (+, −, 0, flechas) | Probado (con eventos de puntero sintéticos para el pellizco) |
+| Zoom sin perder calidad: al ampliar se pide una versión mayor de la misma foto, y el zoom máximo se limita a lo que permite su resolución real | Probado (cambio de `sizes`); límite verificado en capturas |
+| Fotos de otra proporción, vistas con modelo y generadas: se ven enteras, sin recorte | Confirmado |
+| Página `/looks/92/`: vista con modelo + 8 fotografías reales (frente y espalda de cada prenda, escudo, trébol, etiquetas, tejido y talla del cargo); sin precios ni enlaces a fichas que no existen | Probado (producción, accesibilidad y sin desbordamiento de 320 a 1440 px) |
+| La foto y el texto de la portada llevan al look | Probado |
+| Desbordamiento en móvil con muchas miniaturas (la columna crecía con la tira): corregido en el look y en la ficha | Probado |
+| Prueba de los gestos en un teléfono real | **No verificado**: solo emulación |

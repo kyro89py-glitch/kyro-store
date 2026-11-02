@@ -66,3 +66,16 @@ export function findCatalogErrors(entries: CatalogEntrySummary[]): string[] {
 export function lacksRealPhoto(images: { generated: boolean }[]): boolean {
   return images.some((image) => image.generated) && images.every((image) => image.generated);
 }
+
+/** Qué muestra cada imagen de una galería. */
+export const IMAGE_VIEWS = ['modelo', 'frente', 'espalda', 'detalle'] as const;
+export type ImageView = (typeof IMAGE_VIEWS)[number];
+
+/**
+ * Posiciones de las imágenes generadas con IA que se presentan como algo distinto de una
+ * vista con modelo. Un frente, una espalda o un detalle de la prenda deben ser
+ * fotografías reales: un detalle generado podría no coincidir con lo que se compra.
+ */
+export function generatedOutsideModelView(images: { generated: boolean; view?: ImageView | undefined }[]): number[] {
+  return images.flatMap((image, index) => (image.generated && image.view !== 'modelo' ? [index] : []));
+}

@@ -456,6 +456,112 @@ test.describe('ficha: galería', () => {
   });
 });
 
+test.describe('ficha: vistas y zoom', () => {
+  const viewer = (page: import('@playwright/test').Page) =>
+    page.getByRole('dialog', { name: 'Fotografías del producto a pantalla completa' });
+  const stage = (page: import('@playwright/test').Page, index = 0) => viewer(page).locator('[data-zoom-stage]').nth(index);
+  const level = (page: import('@playwright/test').Page) => viewer(page).locator('[data-zoom-level]');
+
+  test('cada vista se nombra y las miniaturas llevan a ella', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    await expect(page.locator('.gallery__label')).toHaveText(['Frente', 'Detalle', 'Con modelo']);
+    const thumbs = page.getByRole('group', { name: 'Elegir foto' }).getByRole('button');
+    await expect(thumbs).toHaveCount(3);
+    await expect(page.getByRole('button', { name: 'Foto 2 de 3: Detalle' })).toBeVisible();
+    await page.getByRole('button', { name: 'Foto 3 de 3: Con modelo' }).click();
+    await expect(page.locator('.gallery__slide').nth(2)).toBeInViewport({ ratio: 0.5 });
+    await expect(page.getByRole('button', { name: 'Foto 3 de 3: Con modelo' })).toHaveAttribute('aria-current', 'true');
+  });
+
+  test('los botones y el teclado amplían y vuelven a ajustar, con más resolución al ampliar', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    await page.getByRole('link', { name: /Ampliar la foto 1 de 3/ }).click();
+    await expect(level(page)).toHaveText('100 %');
+    await expect(viewer(page).getByRole('button', { name: 'Alejar' })).toBeDisabled();
+    await viewer(page).getByRole('button', { name: 'Acercar' }).click();
+    await expect(stage(page)).toHaveAttribute('data-zoomed', '');
+    await expect(level(page)).not.toHaveText('100 %');
+    expect(await stage(page).locator('img').evaluate((img) => getComputedStyle(img).transform)).not.toBe('none');
+    // El navegador pide una versión mayor de la misma foto.
+    await expect(stage(page).locator('img')).not.toHaveAttribute('sizes', '100vw');
+    await viewer(page).getByRole('button', { name: 'Alejar' }).click();
+    await expect(level(page)).toHaveText('100 %');
+    await expect(stage(page)).not.toHaveAttribute('data-zoomed');
+
+    await page.keyboard.press('+');
+    await expect(stage(page)).toHaveAttribute('data-zoomed', '');
+    // Con la foto ampliada, las flechas recorren la foto en vez de cambiar de foto.
+    await page.keyboard.press('ArrowRight');
+    await expect(viewer(page).locator('[data-viewer-current]')).toHaveText('01');
+    await page.keyboard.press('0');
+    await expect(level(page)).toHaveText('100 %');
+    // Al pasar a otra foto, el zoom vuelve a empezar.
+    await page.keyboard.press('+');
+    await page.keyboard.press('0');
+    await page.keyboard.press('ArrowRight');
+    await expect(viewer(page).locator('[data-viewer-current]')).toHaveText('02');
+    await expect(viewer(page).locator('[data-viewer-label]')).toHaveText('Detalle');
+  });
+
+  test('con ratón, un clic amplía en ese punto y otro vuelve a ajustar', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) < 960, 'gesto de escritorio');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    await page.getByRole('link', { name: /Ampliar la foto 1 de 3/ }).click();
+    const box = (await stage(page).boundingBox())!;
+    await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.3);
+    await expect(stage(page)).toHaveAttribute('data-zoomed', '');
+    // La foto ampliada se recorre con el cursor.
+    const before = await stage(page).locator('img').evaluate((img) => getComputedStyle(img).transform);
+    await page.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.9);
+    await expect.poll(() => stage(page).locator('img').evaluate((img) => getComputedStyle(img).transform)).not.toBe(before);
+    await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.5);
+    await expect(stage(page)).not.toHaveAttribute('data-zoomed');
+  });
+
+  test('en pantallas táctiles se pellizca para ampliar y se desliza para cambiar de foto', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) >= 960, 'gesto táctil');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/producto/prenda-de-prueba-uno/');
+    await page.getByRole('link', { name: /Ampliar la foto 1 de 3/ }).click();
+    const target = stage(page);
+    const box = (await target.boundingBox())!;
+    const cx = box.x + box.width / 2;
+    const cy = box.y + box.height / 2;
+    const touch = (type: string, id: number, x: number, y: number) =>
+      target.dispatchEvent(type, { pointerId: id, pointerType: 'touch', isPrimary: id === 1, clientX: x, clientY: y, bubbles: true });
+
+    // Deslizar con un dedo: pasa a la foto siguiente.
+    await touch('pointerdown', 1, cx + 120, cy);
+    for (let step = 1; step <= 6; step += 1) await touch('pointermove', 1, cx + 120 - step * 40, cy);
+    await touch('pointerup', 1, cx - 120, cy);
+    await expect(viewer(page).locator('[data-viewer-current]')).toHaveText('02');
+
+    // Pellizcar con dos dedos: amplía, y entonces el carrusel queda quieto.
+    const second = stage(page, 1);
+    const pinch = (type: string, id: number, x: number, y: number) =>
+      second.dispatchEvent(type, { pointerId: id, pointerType: 'touch', isPrimary: id === 1, clientX: x, clientY: y, bubbles: true });
+    await pinch('pointerdown', 1, cx - 30, cy);
+    await pinch('pointerdown', 2, cx + 30, cy);
+    for (let step = 1; step <= 5; step += 1) {
+      await pinch('pointermove', 1, cx - 30 - step * 18, cy);
+      await pinch('pointermove', 2, cx + 30 + step * 18, cy);
+    }
+    await pinch('pointerup', 1, cx - 120, cy);
+    await pinch('pointerup', 2, cx + 120, cy);
+    await expect(second).toHaveAttribute('data-zoomed', '');
+    await expect(viewer(page).locator('[data-viewer-track]')).toHaveAttribute('data-locked', '');
+    // Con un dedo, la foto ampliada se arrastra.
+    const before = await second.locator('img').evaluate((img) => getComputedStyle(img).transform);
+    await pinch('pointerdown', 1, cx, cy);
+    await pinch('pointermove', 1, cx - 40, cy - 40);
+    await pinch('pointerup', 1, cx - 40, cy - 40);
+    expect(await second.locator('img').evaluate((img) => getComputedStyle(img).transform)).not.toBe(before);
+  });
+});
+
 test.describe('ficha: elegir y añadir', () => {
   test('la talla elegida se lee junto a la etiqueta y se explican las tachadas', async ({ page }) => {
     await page.goto('/producto/prenda-de-prueba-uno/');

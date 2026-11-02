@@ -57,6 +57,64 @@ test('sin productos, la búsqueda muestra el estado vacío y ningún filtro', as
   await expectNoA11yViolations(page);
 });
 
+test.describe('look «92»', () => {
+  test('la portada lleva al look y el look reúne la vista con modelo y las fotos reales', async ({ page }) => {
+    const errors = trackErrors(page);
+    await page.goto('/');
+    await page.getByRole('link', { name: "Ver el look «'92»" }).click();
+    await expect(page).toHaveURL(/\/looks\/92\/$/);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText("Look «'92»");
+    const labels = page.locator('.gallery__label');
+    await expect(labels).toHaveText([
+      'Look completo',
+      'Remera · frente',
+      'Remera · espalda',
+      'Detalle · escudo',
+      'Detalle · trébol',
+      'Detalle · etiquetas',
+      'Cargo · frente',
+      'Cargo · espalda',
+      'Detalle · tejido y talla',
+    ]);
+    // Solo la vista con modelo está generada con IA, y se indica.
+    await expect(page.locator('.gallery__slide').first().locator('.gallery__tag')).toHaveText('Imagen generada con IA');
+    await expect(page.locator('.gallery__tag')).toHaveCount(1);
+    await expect(page.getByRole('group', { name: 'Elegir foto' }).getByRole('button')).toHaveCount(9);
+    // Las prendas se nombran; no hay enlaces a fichas que no existen ni precios.
+    const garments = page.getByRole('region', { name: 'Prendas del look' });
+    await expect(garments.getByRole('listitem')).toHaveCount(2);
+    await expect(garments.getByRole('link')).toHaveCount(0);
+    await expect(page.getByText(/\d+[.,]\d{2}\s?[A-Z]{3}/)).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('las fotos de detalle se abren a pantalla completa y se amplían', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/looks/92/');
+    await page.getByRole('link', { name: /Ampliar la foto 4 de 9/ }).click();
+    const viewer = page.getByRole('dialog', { name: "Fotografías del look «'92» a pantalla completa" });
+    await expect(viewer.locator('[data-viewer-label]')).toHaveText('Detalle · escudo');
+    await viewer.getByRole('button', { name: 'Acercar' }).click();
+    await expect(viewer.locator('[data-zoom-stage]').nth(3)).toHaveAttribute('data-zoomed', '');
+    await expect.poll(() => viewer.locator('[data-zoom-stage]').nth(3).locator('img').evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+  });
+
+  test('el look no se desborda en ningún ancho', async ({ page }) => {
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/looks/92/');
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow, `desbordamiento a ${width} px`).toBeLessThanOrEqual(0);
+    }
+  });
+
+  test('el look es accesible', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/looks/92/');
+    await expectNoA11yViolations(page);
+  });
+});
+
 test('sin páginas informativas, la ayuda dice que las condiciones no están publicadas', async ({ page }) => {
   // Sin animaciones: axe mediría el contraste de textos a medio aparecer.
   await page.emulateMedia({ reducedMotion: 'reduce' });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lacksRealPhoto } from '../../src/lib/catalog-rules';
+import { generatedOutsideModelView, lacksRealPhoto } from '../../src/lib/catalog-rules';
 
 describe('lacksRealPhoto (imágenes generadas con IA)', () => {
   it('acepta fichas solo con fotografías', () => {
@@ -13,5 +13,26 @@ describe('lacksRealPhoto (imágenes generadas con IA)', () => {
   it('rechaza una ficha en la que todas las imágenes son generadas', () => {
     expect(lacksRealPhoto([{ generated: true }])).toBe(true);
     expect(lacksRealPhoto([{ generated: true }, { generated: true }])).toBe(true);
+  });
+});
+
+describe('generatedOutsideModelView (fidelidad de los detalles)', () => {
+  it('acepta una imagen generada como vista con modelo', () => {
+    expect(generatedOutsideModelView([{ generated: true, view: 'modelo' }, { generated: false, view: 'detalle' }])).toEqual([]);
+  });
+
+  it('señala imágenes generadas presentadas como frente, espalda, detalle o sin vista', () => {
+    expect(
+      generatedOutsideModelView([
+        { generated: true, view: 'detalle' },
+        { generated: false, view: 'frente' },
+        { generated: true, view: 'espalda' },
+        { generated: true },
+      ]),
+    ).toEqual([0, 2, 3]);
+  });
+
+  it('las fotografías reales pueden ser cualquier vista', () => {
+    expect(generatedOutsideModelView([{ generated: false }, { generated: false, view: 'detalle' }])).toEqual([]);
   });
 });

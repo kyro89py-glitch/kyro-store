@@ -67,6 +67,8 @@ declara con `generated: true`:
 - Se ve entera (sin recorte) en la galería.
 - **El build falla si todas las imágenes de una ficha son generadas**: siempre queda al
   menos una fotografía real de la prenda para comprobar lo que se compra.
+- Solo puede ser la vista con modelo (`view: modelo`): un frente, una espalda o un detalle
+  generado podría no coincidir con la prenda, así que el build lo rechaza.
 - Antes de usarla, se compara con las fotografías originales: colores, estampados,
   escudos, logotipos, textos, bolsillos y proporciones. Ver [MODA-IA.md](MODA-IA.md#4-protocolo-de-fidelidad-lo-que-hará-cumplir-el-código).
 

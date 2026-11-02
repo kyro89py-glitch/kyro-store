@@ -1,6 +1,7 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { store } from '../config/store';
 import { getActiveProducts, getCategories } from '../lib/catalog';
+import { getLooks } from '../lib/looks';
 import { getInfoPages } from '../lib/pages';
 import { routes } from '../lib/urls';
 
@@ -22,6 +23,7 @@ export const GET: APIRoute = async ({ site }) => {
     routes.shop(),
     routes.brand(),
     routes.help(),
+    ...(await getLooks()).map((look) => routes.look(look.id)),
     ...(await getInfoPages()).map((page) => routes.info(page.id)),
     ...getCategories(products).map((category) => routes.category(category.slug)),
     ...products.map((product) => routes.product(product.id)),

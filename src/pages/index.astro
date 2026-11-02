@@ -1,6 +1,6 @@
 ---
 import { Picture } from 'astro:assets';
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import Escena from '../components/brand/Escena.astro';
 import Colecciones from '../components/catalog/Colecciones.astro';
 import FeaturedGrid from '../components/catalog/FeaturedGrid.astro';
@@ -21,6 +21,11 @@ const categories = getCategories(products);
 // Hay productos pero ninguno con fecha ni destacado: se muestra la colección tal cual.
 const showCollection = products.length > 0 && newArrivals.length === 0 && featured.length === 0;
 const campaign = (await getCollection('campaign')).find((entry) => entry.data.placement === 'hero');
+// La foto de campaña lleva a su look (galería con las fotos reales de cada prenda).
+const look = campaign?.data.look ? await getEntry('looks', campaign.data.look) : undefined;
+if (campaign?.data.look && !look) {
+  throw new Error(`La imagen de campaña enlaza al look "${campaign.data.look}", que no existe en src/content/looks/.`);
+}
 const shopLink = { label: 'Ver toda la tienda', href: routes.shop() };
 
 // Datos estructurados de la marca: solo lo que está configurado.
@@ -58,11 +63,30 @@ const jsonLd = [
     <div class="manifesto__inner container">
       <div class="manifesto__copy">
         <p class="manifesto__text display" data-reveal="title">{copy.home.manifesto}</p>
-        <a class="text-link text-link--dark" href={routes.brand()} data-reveal="rise">Conocer la marca</a>
+        <p class="manifesto__links" data-reveal="rise">
+          {
+            look && (
+              <a class="text-link text-link--dark" href={routes.look(look.id)}>
+                Ver el {look.data.title.replace(/^Look /, 'look ')}
+              </a>
+            )
+          }
+          <a class="text-link text-link--dark" href={routes.brand()}>
+            Conocer la marca
+          </a>
+        </p>
       </div>
       {
         campaign && (
           <figure class="manifesto__foto" data-reveal="aperture">
+            {look && (
+              <a
+                class="manifesto__enlace"
+                href={routes.look(look.id)}
+                tabindex="-1"
+                aria-hidden="true"
+              />
+            )}
             <Picture
               class:list={['manifesto__imagen', `manifesto__imagen--${campaign.data.focus}`]}
               src={campaign.data.image}
@@ -182,6 +206,20 @@ const jsonLd = [
 
   .manifesto__foto :global(.manifesto__imagen--bottom) {
     object-position: 50% 85%;
+  }
+
+  .manifesto__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-xl);
+  }
+
+  /* Toda la foto lleva al look (el enlace visible y accesible es el del texto). */
+  .manifesto__enlace {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    cursor: zoom-in;
   }
 
   .manifesto__credito {

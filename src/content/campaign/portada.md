@@ -8,4 +8,5 @@ focus: center
 # portada.png es la versión original sin retocar y se conserva intacta.
 provisional: false
 generated: true
+look: '92'
 ---

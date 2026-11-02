@@ -1,30 +1,47 @@
 ---
-import { getImage, Picture } from 'astro:assets';
-import type { Product } from '../../lib/catalog';
+import type { ImageMetadata } from 'astro';
+import { getImage, Image, Picture } from 'astro:assets';
+import type { ImageView } from '../../lib/catalog-rules';
+
+export interface GalleryImage {
+  src: ImageMetadata;
+  alt: string;
+  generated?: boolean;
+  view?: ImageView | undefined;
+  label?: string | undefined;
+}
 
 interface Props {
-  images: Product['data']['images'];
+  images: GalleryImage[];
   /**
    * Nombre de transición de la primera foto: la de la tarjeta viaja hasta aquí al
    * abrir la ficha. Las demás se abren como un obturador al entrar en pantalla.
    */
   vt?: string | undefined;
+  /** Nombre accesible de la galería. */
+  label?: string;
 }
-const { images, vt } = Astro.props;
+const { images, vt, label = 'Fotografías del producto' } = Astro.props;
 const count = images.length;
 const pad = (value: number) => String(value).padStart(2, '0');
 const widths = [480, 720, 960, 1280, 1600, 2000];
 // Versión grande de cada foto: sin JavaScript, cada foto enlaza a ella; con él, se ve
 // en el visor a pantalla completa.
 const large = await Promise.all(images.map((image) => getImage({ src: image.src, width: 2000, format: 'webp' })));
+// Se ve entera (sin recorte) la vista con modelo, toda imagen generada y cualquier foto
+// cuya proporción no sea la del marco (4:5): así nunca se corta una parte de la prenda.
+const contain = (image: GalleryImage) =>
+  image.generated || image.view === 'modelo' || Math.abs(image.src.width / image.src.height - 0.8) > 0.03;
+const name = (image: GalleryImage, index: number) =>
+  `Foto ${index + 1} de ${count}${image.label ? `: ${image.label}` : ''}`;
 ---
 
-<kyro-gallery class="gallery">
-  <ul class="gallery__track" role="list" aria-label="Fotografías del producto" tabindex="0" data-gallery-track>
+<kyro-gallery class:list={['gallery', { 'gallery--rail': count > 1 }]}>
+  <ul class="gallery__track" role="list" aria-label={label} tabindex="0" data-gallery-track>
     {
       images.map((image, index) => (
         <li
-          class:list={['gallery__slide', { 'gallery__slide--ia': image.generated }]}
+          class:list={['gallery__slide', { 'gallery__slide--contain': contain(image) }]}
           data-vt={index === 0 ? vt : undefined}
           data-reveal={index === 0 ? undefined : 'aperture'}
         >
@@ -32,19 +49,20 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
             class="gallery__open"
             href={large[index]?.src}
             data-gallery-open={index}
-            aria-label={`Ampliar la foto ${index + 1} de ${count}`}
+            aria-label={`Ampliar la foto ${index + 1} de ${count}${image.label ? ` (${image.label})` : ''}`}
           >
             <Picture
               src={image.src}
               alt={image.alt}
               widths={widths}
-              sizes="(min-width: 60rem) 58vw, 100vw"
+              sizes="(min-width: 60rem) 52vw, 100vw"
               formats={['avif', 'webp']}
               fallbackFormat="jpg"
               loading={index === 0 ? 'eager' : 'lazy'}
               fetchpriority={index === 0 ? 'high' : 'auto'}
             />
           </a>
+          {image.label && <p class="gallery__label">{image.label}</p>}
           {image.generated && <p class="gallery__tag">Imagen generada con IA</p>}
         </li>
       ))
@@ -53,62 +71,82 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
 
   {
     count > 1 && (
-      <div class="gallery__nav">
+      <>
         <p class="gallery__counter" aria-hidden="true">
           <span data-gallery-current>01</span>
           <span class="gallery__counter-rule" />
           {pad(count)}
         </p>
-        <div class="gallery__dots" role="group" aria-label="Elegir foto" data-gallery-dots>
-          {images.map((_, index) => (
+        <div class="gallery__thumbs" role="group" aria-label="Elegir foto" data-gallery-dots>
+          {images.map((image, index) => (
             <button
-              class="gallery__dot"
+              class="gallery__thumb"
               type="button"
-              aria-label={`Foto ${index + 1} de ${count}`}
+              aria-label={name(image, index)}
               aria-current={index === 0 ? 'true' : undefined}
               data-gallery-dot={index}
-            />
+            >
+              <Image src={image.src} alt="" width={160} format="webp" loading="lazy" />
+            </button>
           ))}
         </div>
-      </div>
+      </>
     )
   }
 
-  <dialog class="viewer" aria-label="Fotografías del producto a pantalla completa" data-viewer>
+  <dialog class="viewer" aria-label={`${label} a pantalla completa`} data-viewer>
     <ul class="viewer__track" role="list" data-viewer-track>
       {
         images.map((image, index) => (
-          <li class="viewer__slide">
-            <figure class="viewer__figure">
+          <li class="viewer__slide" data-label={image.label ?? ''}>
+            <figure
+              class="viewer__figure"
+              data-zoom-stage
+              data-full-width={image.src.width}
+              data-full-height={image.src.height}
+            >
               <Picture
                 src={image.src}
                 alt={image.alt}
-                widths={[720, 1080, 1600, 2000]}
+                widths={[720, 1080, 1600, 2400, 3200]}
                 sizes="100vw"
                 formats={['avif', 'webp']}
                 fallbackFormat="jpg"
                 loading="lazy"
+                draggable="false"
               />
               {image.generated && <figcaption class="viewer__tag">Imagen generada con IA</figcaption>}
             </figure>
-            <span class="visually-hidden">
-              Foto {index + 1} de {count}
-            </span>
+            <span class="visually-hidden">{name(image, index)}</span>
           </li>
         ))
       }
     </ul>
     <div class="viewer__bar">
-      {
-        count > 1 && (
-          <p class="viewer__counter" aria-hidden="true">
-            <span data-viewer-current>01</span>
-            <span class="gallery__counter-rule" />
-            {pad(count)}
-          </p>
-        )
-      }
+      <p class="viewer__counter">
+        {
+          count > 1 && (
+            <span class="viewer__count" aria-hidden="true">
+              <span data-viewer-current>01</span>
+              <span class="gallery__counter-rule" />
+              {pad(count)}
+            </span>
+          )
+        }
+        <span class="viewer__label" data-viewer-label>
+          {images[0]?.label}
+        </span>
+      </p>
       <div class="viewer__actions">
+        <div class="viewer__zoom" role="group" aria-label="Zoom">
+          <button class="viewer__step" type="button" aria-label="Alejar" data-zoom-out disabled>
+            <span aria-hidden="true">−</span>
+          </button>
+          <output class="viewer__level" data-zoom-level>100 %</output>
+          <button class="viewer__step" type="button" aria-label="Acercar" data-zoom-in>
+            <span aria-hidden="true">+</span>
+          </button>
+        </div>
         {
           count > 1 && (
             <>
@@ -126,6 +164,7 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
         </button>
       </div>
     </div>
+    <p class="viewer__hint" aria-hidden="true">Pellizca o toca dos veces para ampliar</p>
   </dialog>
 </kyro-gallery>
 
@@ -179,8 +218,8 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
     transition: scale 900ms var(--ease-out);
   }
 
-  /* Las fotos editoriales (modelo de cuerpo entero) se ven enteras, sin recortar. */
-  .gallery__slide--ia :global(img) {
+  /* Vista con modelo, imágenes generadas y fotos de otra proporción: enteras. */
+  .gallery__slide--contain :global(img) {
     object-fit: contain;
   }
 
@@ -191,11 +230,10 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
     }
   }
 
+  .gallery__label,
   .gallery__tag,
   .viewer__tag {
     position: absolute;
-    left: var(--space-sm);
-    bottom: var(--space-sm);
     padding: var(--space-2xs) var(--space-xs);
     background: var(--color-scrim);
     color: var(--color-ivory);
@@ -204,19 +242,22 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
     pointer-events: none;
   }
 
-  /* ---------- Navegación del carrusel (móvil) ---------- */
-
-  .gallery__nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-md);
-    padding: var(--space-sm) var(--gutter) 0;
+  .gallery__label {
+    top: var(--space-sm);
+    left: var(--space-sm);
   }
 
-  /* Contador de plano: "01 — 03". */
+  .gallery__tag,
+  .viewer__tag {
+    left: var(--space-sm);
+    bottom: var(--space-sm);
+  }
+
+  /* ---------- Contador y miniaturas ---------- */
+
+  /* Contador de plano: "01 — 09" (móvil). */
   .gallery__counter,
-  .viewer__counter {
+  .viewer__count {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
@@ -226,44 +267,65 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
     letter-spacing: 0.08em;
   }
 
+  .gallery__counter {
+    padding: var(--space-sm) var(--gutter) 0;
+  }
+
   .gallery__counter-rule {
     width: 1.25rem;
     height: 1px;
     background: var(--color-line-strong);
   }
 
-  .gallery__dots {
+  /* Tira de miniaturas: salta a cualquier vista (frente, espalda, detalles…). */
+  .gallery__thumbs {
     display: flex;
+    min-width: 0;
+    max-width: 100%;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--gutter) var(--space-2xs);
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 
-  /* Cada punto es un objetivo táctil de 32 px aunque se dibuje como una raya fina. */
-  .gallery__dot {
-    display: grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
+  .gallery__thumbs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gallery__thumb {
+    flex: none;
+    width: 3.5rem;
+    aspect-ratio: 4 / 5;
     padding: 0;
-    border: 0;
-    background: none;
-  }
-
-  .gallery__dot::before {
-    content: '';
-    width: 0.9rem;
-    height: 2px;
-    background: var(--color-line-strong);
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    border-radius: 2px;
+    background: var(--color-surface);
+    opacity: 0.6;
     transition:
-      width var(--duration-base) var(--ease-out),
-      background-color var(--duration-base) var(--ease-out);
+      opacity var(--duration-base) var(--ease-out),
+      border-color var(--duration-base) var(--ease-out);
   }
 
-  .gallery__dot[aria-current='true']::before {
-    width: 1.6rem;
-    background: var(--color-champagne);
+  .gallery__thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
-  /* Los puntos solo funcionan con JavaScript: sin él no se muestran. */
-  :global(html:not(.js)) .gallery__dots {
+  .gallery__thumb[aria-current='true'] {
+    border-color: var(--color-champagne);
+    opacity: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .gallery__thumb:hover {
+      opacity: 1;
+    }
+  }
+
+  /* Las miniaturas solo funcionan con JavaScript: sin él no se muestran. */
+  :global(html:not(.js)) .gallery__thumbs {
     display: none;
   }
 
@@ -278,9 +340,21 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
     }
   }
 
-  /* Escritorio: imágenes apiladas; la primera a sangre, el resto en pares. */
+  /*
+   * Escritorio: las fotos apiladas (la primera a sangre, el resto en pares) y, a la
+   * izquierda, una columna fija de miniaturas que lleva a cada vista.
+   */
   @media (min-width: 60rem) {
+    .gallery--rail {
+      display: grid;
+      grid-template-columns: 4rem minmax(0, 1fr);
+      align-items: start;
+      gap: var(--space-sm);
+    }
+
     .gallery__track {
+      grid-column: 2;
+      grid-row: 1;
       grid-auto-flow: row;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--space-xs);
@@ -292,8 +366,23 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
       grid-column: 1 / -1;
     }
 
-    .gallery__nav {
+    .gallery__counter {
       display: none;
+    }
+
+    .gallery__thumbs {
+      position: sticky;
+      top: calc(var(--header-height) + var(--space-lg));
+      grid-column: 1;
+      grid-row: 1;
+      flex-direction: column;
+      max-height: calc(100svh - var(--header-height) - 2 * var(--space-lg));
+      padding: 0;
+      overflow: hidden auto;
+    }
+
+    .gallery__thumb {
+      width: 100%;
     }
   }
 
@@ -346,9 +435,17 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
     display: none;
   }
 
+  /* Mientras se arrastra con el dedo o con la foto ampliada, el carrusel no se mueve solo. */
+  .viewer__track[data-dragging] {
+    scroll-snap-type: none;
+  }
+
+  .viewer__track[data-locked] {
+    overflow-x: hidden;
+  }
+
   .viewer__slide {
     display: grid;
-    place-items: center;
     min-height: 0;
     padding: var(--space-md) var(--gutter) 0;
     scroll-snap-align: center;
@@ -359,6 +456,15 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
     width: 100%;
     height: 100%;
     margin: 0;
+    overflow: hidden;
+    cursor: zoom-in;
+    /* Los gestos (pellizcar, arrastrar, deslizar) los gestiona el visor. */
+    touch-action: none;
+    user-select: none;
+  }
+
+  .viewer__figure[data-zoomed] {
+    cursor: zoom-out;
   }
 
   .viewer__figure :global(picture) {
@@ -373,34 +479,63 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
     width: 100%;
     height: 100%;
     object-fit: contain;
-    scale: 0.97;
-    transition: scale 700ms var(--ease-out);
+    transform-origin: 50% 50%;
+    transition: transform 320ms var(--ease-out);
+    will-change: transform;
   }
 
-  .viewer[open] .viewer__figure :global(img) {
-    scale: 1;
-  }
-
-  @starting-style {
-    .viewer[open] .viewer__figure :global(img) {
-      scale: 0.97;
-    }
+  /* Durante un gesto, la foto sigue al dedo o al cursor sin retraso. */
+  .viewer__figure[data-gesture] :global(img) {
+    transition: none;
   }
 
   .viewer__bar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-md);
+    gap: var(--space-xs) var(--space-md);
     min-height: var(--header-height);
     padding: var(--space-xs) var(--gutter) calc(var(--space-xs) + env(safe-area-inset-bottom));
   }
 
-  .viewer__actions {
+  .viewer__counter {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-width: 0;
+  }
+
+  .viewer__label {
+    overflow: hidden;
+    color: var(--color-ivory);
+    font-size: var(--text-xs);
+    letter-spacing: 0.04em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .viewer__actions,
+  .viewer__zoom {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
+  }
+
+  .viewer__actions {
     margin-left: auto;
+  }
+
+  .viewer__zoom {
+    margin-right: var(--space-sm);
+  }
+
+  .viewer__level {
+    min-width: 3.25rem;
+    color: var(--color-ivory-muted);
+    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
   }
 
   .viewer__step,
@@ -436,21 +571,149 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
     color: var(--color-champagne);
   }
 
+  /* Indicación breve al abrir en pantallas táctiles; desaparece sola. */
+  .viewer__hint {
+    position: absolute;
+    left: 50%;
+    bottom: calc(var(--header-height) + var(--space-md));
+    padding: var(--space-2xs) var(--space-sm);
+    background: var(--color-scrim);
+    color: var(--color-ivory-muted);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+    pointer-events: none;
+    translate: -50% 0;
+    opacity: 0;
+  }
+
+  .viewer[open] .viewer__hint {
+    animation: viewer-hint 3200ms var(--ease-out) 300ms;
+  }
+
+  @keyframes viewer-hint {
+    15%,
+    75% {
+      opacity: 1;
+    }
+  }
+
+  /* En escritorio se explica solo: el cursor es una lupa y hay botones de zoom. */
+  @media (hover: hover) and (pointer: fine) {
+    .viewer__hint {
+      display: none;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .viewer,
     .viewer__figure :global(img),
-    .gallery__slide :global(img) {
+    .gallery__slide :global(img),
+    .gallery__thumb {
       transition: none;
+    }
+
+    .viewer[open] .viewer__hint {
+      animation: none;
     }
   }
 </style>
 
 <script>
-  // Carrusel móvil: contador y puntos al día; el carrusel solo es una parada del
-  // tabulador cuando realmente se desplaza. Visor: se abre en la foto pulsada, se
-  // desliza con el dedo, con las flechas del teclado o con sus botones.
+  // Galería: carrusel (móvil) o fotos apiladas (escritorio), con miniaturas que llevan a
+  // cada vista. Visor: deslizar, flechas y botones; zoom con pellizco, doble toque,
+  // cursor, rueda con Ctrl (o gesto del trackpad), teclado y botones. Al ampliar se pide
+  // una versión de más resolución de la misma foto.
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const behavior = (): ScrollBehavior => (reduced.matches ? 'auto' : 'smooth');
+  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+  /** Zoom de una foto del visor: escala y desplazamiento, siempre dentro del marco. */
+  class Zoom {
+    scale = 1;
+    x = 0;
+    y = 0;
+    max = 2;
+    #fullWidth: number;
+    #fullHeight: number;
+
+    constructor(
+      readonly stage: HTMLElement,
+      readonly img: HTMLImageElement,
+      readonly onChange: () => void,
+    ) {
+      this.#fullWidth = Number(stage.dataset['fullWidth']) || img.naturalWidth || 1;
+      this.#fullHeight = Number(stage.dataset['fullHeight']) || img.naturalHeight || 1;
+    }
+
+    /** Tamaño en pantalla de la foto ajustada al marco (sin zoom). */
+    fitted() {
+      const rect = this.stage.getBoundingClientRect();
+      const ratio = this.#fullWidth / this.#fullHeight;
+      const width = Math.min(rect.width, rect.height * ratio);
+      return { width, height: width / ratio, rect };
+    }
+
+    /** Zoom máximo según la resolución real de la foto: no se amplía más allá de su detalle. */
+    updateMax() {
+      const { width } = this.fitted();
+      const density = this.#fullWidth / Math.max(1, width * devicePixelRatio);
+      this.max = clamp(density * 1.5, 1.5, 4);
+    }
+
+    /** Escala alrededor de un punto de la pantalla (que queda quieto bajo el dedo o el cursor). */
+    zoomAt(scale: number, clientX?: number, clientY?: number) {
+      const { rect } = this.fitted();
+      const next = clamp(scale, 1, this.max);
+      const qx = (clientX ?? rect.left + rect.width / 2) - (rect.left + rect.width / 2);
+      const qy = (clientY ?? rect.top + rect.height / 2) - (rect.top + rect.height / 2);
+      this.x = qx - (next * (qx - this.x)) / this.scale;
+      this.y = qy - (next * (qy - this.y)) / this.scale;
+      this.scale = next;
+      this.apply();
+    }
+
+    panBy(dx: number, dy: number) {
+      this.x += dx;
+      this.y += dy;
+      this.apply();
+    }
+
+    /** Con el cursor: la foto ampliada se recorre siguiendo su posición en el marco. */
+    follow(clientX: number, clientY: number) {
+      const { width, height, rect } = this.fitted();
+      const mx = Math.max(0, (width * this.scale - rect.width) / 2);
+      const my = Math.max(0, (height * this.scale - rect.height) / 2);
+      this.x = (0.5 - (clientX - rect.left) / rect.width) * 2 * mx;
+      this.y = (0.5 - (clientY - rect.top) / rect.height) * 2 * my;
+      this.apply();
+    }
+
+    reset() {
+      this.scale = 1;
+      this.x = 0;
+      this.y = 0;
+      this.apply();
+    }
+
+    apply() {
+      const { width, height, rect } = this.fitted();
+      const mx = Math.max(0, (width * this.scale - rect.width) / 2);
+      const my = Math.max(0, (height * this.scale - rect.height) / 2);
+      this.x = clamp(this.x, -mx, mx);
+      this.y = clamp(this.y, -my, my);
+      // CSSOM (no atributo style): compatible con la CSP.
+      this.img.style.transform =
+        this.scale > 1.001 ? `translate(${this.x}px, ${this.y}px) scale(${this.scale})` : '';
+      this.stage.toggleAttribute('data-zoomed', this.scale > 1.001);
+      // Más resolución al ampliar: el navegador elige una versión mayor del srcset.
+      const wanted = Math.ceil(this.scale * 100);
+      const current = parseInt(this.img.getAttribute('sizes') ?? '100', 10) || 100;
+      if (this.scale > 1.001 && wanted > current) {
+        for (const element of this.stage.querySelectorAll('source, img')) element.setAttribute('sizes', `${wanted}vw`);
+      }
+      this.onChange();
+    }
+  }
 
   class KyroGallery extends HTMLElement {
     #observers: IntersectionObserver[] = [];
@@ -467,38 +730,117 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
       });
       this.#resize.observe(track);
 
+      // ---------- Galería: contador y miniaturas al día ----------
       const slides = [...track.children] as HTMLElement[];
-      const dots = [...this.querySelectorAll<HTMLButtonElement>('[data-gallery-dot]')];
+      const thumbs = [...this.querySelectorAll<HTMLButtonElement>('[data-gallery-dot]')];
       const current = this.querySelector('[data-gallery-current]');
-      this.#watch(track, slides, (index) => {
+      const visible = new Set<number>();
+      // Miniatura elegida: manda mientras su foto siga a la vista (en escritorio, dos
+      // fotos de la misma fila se ven a la vez).
+      let chosen: number | undefined;
+      const mark = (index: number) => {
         if (current) current.textContent = String(index + 1).padStart(2, '0');
-        dots.forEach((dot, i) => {
-          if (i === index) dot.setAttribute('aria-current', 'true');
-          else dot.removeAttribute('aria-current');
+        thumbs.forEach((thumb, i) => {
+          if (i !== index) {
+            thumb.removeAttribute('aria-current');
+            return;
+          }
+          thumb.setAttribute('aria-current', 'true');
+          // La miniatura activa queda a la vista dentro de su tira (sin mover la página).
+          const strip = thumb.parentElement;
+          if (strip && strip.scrollWidth > strip.clientWidth) {
+            strip.scrollTo({ left: thumb.offsetLeft - strip.clientWidth / 2 + thumb.clientWidth / 2, behavior: behavior() });
+          } else if (strip && strip.scrollHeight > strip.clientHeight) {
+            strip.scrollTo({ top: thumb.offsetTop - strip.clientHeight / 2 + thumb.clientHeight / 2, behavior: behavior() });
+          }
         });
-      });
-      for (const dot of dots) {
-        dot.addEventListener('click', () => {
-          const slide = slides[Number(dot.dataset['galleryDot'])];
-          if (slide) track.scrollTo({ left: slide.offsetLeft, behavior: behavior() });
+      };
+      const pageObserver = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const index = slides.indexOf(entry.target as HTMLElement);
+            if (entry.isIntersecting) visible.add(index);
+            else visible.delete(index);
+          }
+          if (chosen !== undefined && visible.has(chosen)) mark(chosen);
+          else {
+            chosen = undefined;
+            if (visible.size > 0) mark(Math.min(...visible));
+          }
+        },
+        { threshold: 0.55 },
+      );
+      for (const slide of slides) pageObserver.observe(slide);
+      this.#observers.push(pageObserver);
+
+      const carousel = () => track.scrollWidth > track.clientWidth;
+      for (const thumb of thumbs) {
+        thumb.addEventListener('click', () => {
+          const index = Number(thumb.dataset['galleryDot']);
+          const slide = slides[index];
+          if (!slide) return;
+          if (carousel()) {
+            track.scrollTo({ left: slide.offsetLeft, behavior: behavior() });
+          } else {
+            // Escritorio: las fotos están apiladas; la página baja hasta la elegida.
+            const header = document.querySelector('.site-header')?.getBoundingClientRect().height ?? 0;
+            window.scrollTo({ top: slide.getBoundingClientRect().top + scrollY - header - 16, behavior: behavior() });
+          }
+          chosen = index;
+          mark(index);
         });
       }
 
-      // Visor a pantalla completa.
+      // ---------- Visor ----------
       const viewerSlides = [...viewerTrack.children] as HTMLElement[];
       const prev = viewer.querySelector<HTMLButtonElement>('[data-viewer-prev]');
       const next = viewer.querySelector<HTMLButtonElement>('[data-viewer-next]');
+      const zoomIn = viewer.querySelector<HTMLButtonElement>('[data-zoom-in]');
+      const zoomOut = viewer.querySelector<HTMLButtonElement>('[data-zoom-out]');
+      const level = viewer.querySelector<HTMLOutputElement>('[data-zoom-level]');
       const viewerCurrent = viewer.querySelector('[data-viewer-current]');
+      const viewerLabel = viewer.querySelector('[data-viewer-label]');
       let index = 0;
-      this.#watch(viewerTrack, viewerSlides, (i) => {
+
+      const zooms: Zoom[] = viewerSlides.map((slide) => {
+        const stage = slide.querySelector<HTMLElement>('[data-zoom-stage]')!;
+        const img = stage.querySelector('img')!;
+        return new Zoom(stage, img, () => {
+          const zoom = zooms[index];
+          if (zoom?.stage !== stage) return;
+          const zoomed = zoom.scale > 1.001;
+          if (level) level.textContent = `${Math.round(zoom.scale * 100)} %`;
+          const focused = document.activeElement;
+          if (zoomOut) zoomOut.disabled = !zoomed;
+          if (zoomIn) zoomIn.disabled = zoom.scale >= zoom.max - 0.001;
+          // El foco nunca se queda en un botón desactivado (se perdería el teclado).
+          if (focused === zoomOut && zoomOut?.disabled) zoomIn?.focus();
+          if (focused === zoomIn && zoomIn?.disabled) zoomOut?.focus();
+          // Con la foto ampliada, arrastrar mueve la foto, no el carrusel.
+          viewerTrack.toggleAttribute('data-locked', zoomed);
+        });
+      });
+      const active = () => zooms[index];
+
+      const show = (i: number) => {
+        if (i !== index) zooms[index]?.reset();
         index = i;
         if (viewerCurrent) viewerCurrent.textContent = String(i + 1).padStart(2, '0');
+        if (viewerLabel) viewerLabel.textContent = viewerSlides[i]?.dataset['label'] ?? '';
         if (prev) prev.disabled = i === 0;
         if (next) next.disabled = i === viewerSlides.length - 1;
-      });
+        active()?.updateMax();
+        active()?.apply();
+      };
+      this.#watch(viewerTrack, viewerSlides, show);
+
       const go = (i: number, smooth = true) => {
-        const slide = viewerSlides[Math.max(0, Math.min(i, viewerSlides.length - 1))];
-        if (slide) viewerTrack.scrollTo({ left: slide.offsetLeft, behavior: smooth ? behavior() : 'auto' });
+        const target = clamp(i, 0, viewerSlides.length - 1);
+        const slide = viewerSlides[target];
+        if (!slide) return;
+        zooms[index]?.reset();
+        viewerTrack.scrollTo({ left: slide.offsetLeft, behavior: smooth ? behavior() : 'auto' });
+        show(target);
       };
 
       for (const link of this.querySelectorAll<HTMLAnchorElement>('[data-gallery-open]')) {
@@ -511,18 +853,182 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
       }
       prev?.addEventListener('click', () => go(index - 1));
       next?.addEventListener('click', () => go(index + 1));
+      const zoomStep = (direction: 1 | -1) => {
+        const zoom = active();
+        if (!zoom) return;
+        if (direction < 0 && zoom.scale / 1.6 <= 1.05) zoom.reset();
+        else zoom.zoomAt(direction > 0 ? zoom.scale * 1.6 : zoom.scale / 1.6);
+      };
+      zoomIn?.addEventListener('click', () => zoomStep(1));
+      zoomOut?.addEventListener('click', () => zoomStep(-1));
       viewer.querySelector('[data-viewer-close]')?.addEventListener('click', () => viewer.close());
-      viewer.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowLeft') go(index - 1);
-        else if (event.key === 'ArrowRight') go(index + 1);
+      document.addEventListener('keydown', (event) => {
+        const zoom = active();
+        if (!viewer.open || !zoom || event.defaultPrevented) return;
+        const zoomed = zoom.scale > 1.001;
+        if (event.key === '+' || event.key === '=') zoomStep(1);
+        else if (event.key === '-') zoomStep(-1);
+        else if (event.key === '0') zoom.reset();
+        else if (event.key === 'ArrowLeft') zoomed ? zoom.panBy(80, 0) : go(index - 1);
+        else if (event.key === 'ArrowRight') zoomed ? zoom.panBy(-80, 0) : go(index + 1);
+        else if (event.key === 'ArrowUp' && zoomed) zoom.panBy(0, 80);
+        else if (event.key === 'ArrowDown' && zoomed) zoom.panBy(0, -80);
         else return;
         event.preventDefault();
       });
-      // Al cerrar, el carrusel de la ficha queda en la foto que se estaba viendo.
       viewer.addEventListener('close', () => {
+        zooms[index]?.reset();
+        // Al cerrar, la galería de la página queda en la foto que se estaba viendo.
         const slide = slides[index];
-        if (slide && track.scrollWidth > track.clientWidth) track.scrollTo({ left: slide.offsetLeft });
+        if (slide && carousel()) track.scrollTo({ left: slide.offsetLeft });
+        mark(index);
       });
+      addEventListener('resize', () => {
+        if (!viewer.open) return;
+        active()?.updateMax();
+        active()?.apply();
+      });
+
+      for (const zoom of zooms) this.#gestures(zoom, viewerTrack, () => index, go);
+    }
+
+    /**
+     * Gestos sobre una foto del visor (eventos de puntero: dedo, ratón y lápiz):
+     * - dos dedos: pellizcar para ampliar;
+     * - un dedo sin zoom: deslizar entre fotos (el carrusel sigue al dedo);
+     * - un dedo con zoom: arrastrar la foto;
+     * - doble toque o clic: ampliar en ese punto / volver a ajustar;
+     * - ratón sobre una foto ampliada: se recorre siguiendo el cursor;
+     * - rueda con Ctrl (o pellizco del trackpad): zoom alrededor del cursor.
+     */
+    #gestures(zoom: Zoom, viewerTrack: HTMLElement, getIndex: () => number, go: (i: number) => void) {
+      const stage = zoom.stage;
+      const pointers = new Map<number, { x: number; y: number }>();
+      let pinch: { distance: number; scale: number; midX: number; midY: number } | undefined;
+      let swipe: { startX: number; startScroll: number; time: number } | undefined;
+      let moved = 0;
+      let lastTap = { time: 0, x: 0, y: 0 };
+
+      const midpoint = () => {
+        const [a, b] = [...pointers.values()];
+        return { x: (a!.x + b!.x) / 2, y: (a!.y + b!.y) / 2, distance: Math.hypot(a!.x - b!.x, a!.y - b!.y) };
+      };
+      const endSwipe = (lastX: number) => {
+        if (!swipe) return;
+        const dx = lastX - swipe.startX;
+        const speed = Math.abs(dx) / Math.max(1, performance.now() - swipe.time);
+        viewerTrack.removeAttribute('data-dragging');
+        const index = getIndex();
+        const far = Math.abs(dx) > stage.clientWidth * 0.18 || (speed > 0.5 && Math.abs(dx) > 20);
+        swipe = undefined;
+        go(far ? index + (dx < 0 ? 1 : -1) : index);
+      };
+      const toggleAt = (x: number, y: number) => {
+        if (zoom.scale > 1.001) zoom.reset();
+        else zoom.zoomAt(Math.min(2.5, zoom.max), x, y);
+      };
+
+      stage.addEventListener('pointerdown', (event) => {
+        try {
+          stage.setPointerCapture(event.pointerId);
+        } catch {
+          // Puntero sin captura posible: el gesto sigue funcionando.
+        }
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        moved = 0;
+        if (pointers.size === 2) {
+          // Empieza un pellizco: cancela el deslizamiento entre fotos.
+          if (swipe) {
+            viewerTrack.removeAttribute('data-dragging');
+            swipe = undefined;
+          }
+          const mid = midpoint();
+          pinch = { distance: mid.distance, scale: zoom.scale, midX: mid.x, midY: mid.y };
+          stage.setAttribute('data-gesture', '');
+        } else if (event.pointerType !== 'mouse' && zoom.scale <= 1.001) {
+          swipe = { startX: event.clientX, startScroll: viewerTrack.scrollLeft, time: performance.now() };
+          viewerTrack.setAttribute('data-dragging', '');
+        } else if (event.pointerType !== 'mouse') {
+          stage.setAttribute('data-gesture', '');
+        }
+      });
+
+      stage.addEventListener('pointermove', (event) => {
+        const previous = pointers.get(event.pointerId);
+        if (!previous) {
+          // Ratón sin pulsar sobre una foto ampliada: la foto sigue al cursor.
+          if (event.pointerType === 'mouse' && zoom.scale > 1.001) {
+            stage.setAttribute('data-gesture', '');
+            zoom.follow(event.clientX, event.clientY);
+          }
+          return;
+        }
+        const dx = event.clientX - previous.x;
+        const dy = event.clientY - previous.y;
+        moved += Math.abs(dx) + Math.abs(dy);
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (pinch && pointers.size === 2) {
+          const mid = midpoint();
+          zoom.zoomAt((pinch.scale * mid.distance) / Math.max(1, pinch.distance), mid.x, mid.y);
+          zoom.panBy(mid.x - pinch.midX, mid.y - pinch.midY);
+          pinch.midX = mid.x;
+          pinch.midY = mid.y;
+        } else if (swipe) {
+          viewerTrack.scrollLeft = swipe.startScroll - (event.clientX - swipe.startX);
+        } else if (zoom.scale > 1.001) {
+          if (event.pointerType === 'mouse') zoom.follow(event.clientX, event.clientY);
+          else zoom.panBy(dx, dy);
+        }
+      });
+
+      const release = (event: PointerEvent) => {
+        if (!pointers.has(event.pointerId)) return;
+        pointers.delete(event.pointerId);
+        if (pinch && pointers.size < 2) {
+          pinch = undefined;
+          // Un pellizco que termina casi sin zoom vuelve a la foto ajustada.
+          if (zoom.scale < 1.08) zoom.reset();
+        }
+        if (swipe && pointers.size === 0) endSwipe(event.clientX);
+        if (pointers.size === 0 && event.pointerType !== 'mouse') stage.removeAttribute('data-gesture');
+      };
+
+      stage.addEventListener('pointerup', (event) => {
+        const wasTap = moved < 8 && pointers.size === 1 && !pinch;
+        if (wasTap && swipe) {
+          viewerTrack.removeAttribute('data-dragging');
+          swipe = undefined;
+        }
+        release(event);
+        if (!wasTap) return;
+        if (event.pointerType === 'mouse') {
+          stage.removeAttribute('data-gesture');
+          toggleAt(event.clientX, event.clientY);
+          return;
+        }
+        // Doble toque: ampliar en ese punto o volver a ajustar.
+        const now = performance.now();
+        if (now - lastTap.time < 320 && Math.hypot(event.clientX - lastTap.x, event.clientY - lastTap.y) < 40) {
+          toggleAt(event.clientX, event.clientY);
+          lastTap = { time: 0, x: 0, y: 0 };
+        } else {
+          lastTap = { time: now, x: event.clientX, y: event.clientY };
+        }
+      });
+      stage.addEventListener('pointercancel', release);
+      stage.addEventListener('pointerleave', (event) => {
+        if (event.pointerType === 'mouse') stage.removeAttribute('data-gesture');
+      });
+      stage.addEventListener(
+        'wheel',
+        (event) => {
+          if (!event.ctrlKey) return;
+          event.preventDefault();
+          stage.setAttribute('data-gesture', '');
+          zoom.zoomAt(zoom.scale * Math.exp(-event.deltaY * 0.01), event.clientX, event.clientY);
+        },
+        { passive: false },
+      );
     }
 
     disconnectedCallback() {
@@ -530,7 +1036,7 @@ const large = await Promise.all(images.map((image) => getImage({ src: image.src,
       this.#resize?.disconnect();
     }
 
-    /** Avisa de qué foto ocupa la mayor parte del carrusel. */
+    /** Avisa de qué foto ocupa la mayor parte del carrusel del visor. */
     #watch(root: HTMLElement, slides: HTMLElement[], onChange: (index: number) => void) {
       const observer = new IntersectionObserver(
         (entries) => {

@@ -21,6 +21,7 @@ export const routes = {
   brand: () => href('marca'),
   info: (slug: string) => href(`info/${slug}`),
   help: () => href('ayuda'),
+  look: (slug: string) => href(`looks/${slug}`),
   search: (query?: string) => href(query ? `buscar?q=${encodeURIComponent(query)}` : 'buscar'),
   catalogIndex: () => href('catalog.json'),
 };

@@ -9,11 +9,17 @@ price:
 images:
   - src: ./imagen-1.jpg
     alt: Imagen abstracta de prueba, tono grafito
+    view: frente
+    label: Frente
   - src: ./imagen-2.jpg
     alt: Imagen abstracta de prueba, tono bronce
+    view: detalle
+    label: Detalle
   - src: ./imagen-3.jpg
     alt: Imagen abstracta de prueba, tono pizarra
     generated: true
+    view: modelo
+    label: Con modelo
 variants:
   - sku: TEST-001-S
     label: S

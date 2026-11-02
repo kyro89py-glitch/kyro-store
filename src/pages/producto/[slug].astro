@@ -188,8 +188,10 @@ const relatedTitle = `Más en ${data.category}`;
 </BaseLayout>
 
 <style>
+  /* La columna nunca crece con su contenido (la tira de miniaturas se desplaza dentro). */
   .product {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-xl);
   }
 
