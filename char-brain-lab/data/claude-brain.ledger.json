@@ -1,0 +1,241 @@
+{
+  "format": "char-brain-lab.ledger",
+  "formatVersion": 1,
+  "brain": "claude",
+  "head": "9bef2f417c8d81d3ceac9b9b8814b7041cc79e1688b7a0f1559721371769dda9",
+  "events": [
+    {
+      "v": 1,
+      "seq": 1,
+      "ledger": "claude",
+      "type": "ledger.created",
+      "at": "2026-11-03T17:58:36.195Z",
+      "actor": {
+        "kind": "brain",
+        "id": "claude"
+      },
+      "session": "claude-code:session_013QeR3kJAC2Qcp4dWJ6DqFN",
+      "payload": {
+        "brain": "claude",
+        "policy": {
+          "minSupportForConsolidation": 2,
+          "requireIndependentVerification": true,
+          "consolidationBy": [
+            "humano"
+          ],
+          "approvalBy": [
+            "brain",
+            "humano"
+          ],
+          "maxRetries": 3
+        }
+      },
+      "prev": null,
+      "hash": "6396a643444d70e828b4ff8212fcee31c95bcc833477928d35b1e72258880d04"
+    },
+    {
+      "v": 1,
+      "seq": 2,
+      "ledger": "claude",
+      "type": "experience.recorded",
+      "at": "2026-11-03T17:58:36.197Z",
+      "actor": {
+        "kind": "brain",
+        "id": "claude"
+      },
+      "session": "claude-code:session_013QeR3kJAC2Qcp4dWJ6DqFN",
+      "payload": {
+        "id": "claude:EXP-001",
+        "summary": "El encargo describe el prototipo char_dual_brain_autonomy_prototype.html y los documentos de memoria de Char como parte del proyecto, y pide inspeccionarlos antes de implementar.",
+        "source": {
+          "kind": "conversación",
+          "ref": "Encargo del usuario en la sesión de Claude Code del 2026-11-03",
+          "description": "Prompt maestro «Evolución real de Char Brain»"
+        },
+        "evidence": [],
+        "observedAt": "2026-11-03T17:58:36.197Z",
+        "epistemic": "observación"
+      },
+      "prev": "6396a643444d70e828b4ff8212fcee31c95bcc833477928d35b1e72258880d04",
+      "hash": "8cf11ca272c9e78de2296506647bad9e740a6eaf20fe81925f4759cd225ebe42"
+    },
+    {
+      "v": 1,
+      "seq": 3,
+      "ledger": "claude",
+      "type": "hypothesis.formulated",
+      "at": "2026-11-03T17:58:36.200Z",
+      "actor": {
+        "kind": "brain",
+        "id": "claude"
+      },
+      "session": "claude-code:session_013QeR3kJAC2Qcp4dWJ6DqFN",
+      "payload": {
+        "id": "claude:HIP-001",
+        "statement": "El prototipo de la fase 1 está en alguno de los repositorios o archivos accesibles desde esta sesión.",
+        "claim": {
+          "subject": "prototipo char_dual_brain_autonomy_prototype.html",
+          "property": "disponible en los repositorios y archivos accesibles desde la sesión",
+          "value": true
+        },
+        "basedOn": [
+          "claude:EXP-001"
+        ]
+      },
+      "prev": "8cf11ca272c9e78de2296506647bad9e740a6eaf20fe81925f4759cd225ebe42",
+      "hash": "add66baa5e92d8c24f04881f35aa3e66ae678dc79bf1266e9ca4ab20af5bb1e6"
+    },
+    {
+      "v": 1,
+      "seq": 4,
+      "ledger": "claude",
+      "type": "experiment.proposed",
+      "at": "2026-11-03T17:58:36.201Z",
+      "actor": {
+        "kind": "brain",
+        "id": "claude"
+      },
+      "session": "claude-code:session_013QeR3kJAC2Qcp4dWJ6DqFN",
+      "payload": {
+        "id": "claude:EXM-001",
+        "hypothesisId": "claude:HIP-001",
+        "description": "Buscar el archivo y los documentos de Char en kyro-store (árbol e historial completo), kyro-oficial, archivos subidos a la sesión, sistema de archivos del contenedor y búsqueda de código de GitHub de la cuenta.",
+        "mode": "investigación",
+        "criteria": [
+          {
+            "id": "C1",
+            "description": "Al menos una ubicación accesible contiene el archivo",
+            "metric": "ubicaciones_con_el_prototipo",
+            "operator": ">=",
+            "target": 1
+          }
+        ],
+        "criteriaHash": "eb4c272c8e6989674f3c145398579ce3751095d3f49f4542481fd29db4edb577",
+        "retryOf": null
+      },
+      "prev": "add66baa5e92d8c24f04881f35aa3e66ae678dc79bf1266e9ca4ab20af5bb1e6",
+      "hash": "52626677b175ec0c80c17ee12f6b1b48b552c6aa2baf60b1ef6db390d949d190"
+    },
+    {
+      "v": 1,
+      "seq": 5,
+      "ledger": "claude",
+      "type": "experiment.executed",
+      "at": "2026-11-03T17:58:36.203Z",
+      "actor": {
+        "kind": "brain",
+        "id": "claude"
+      },
+      "session": "claude-code:session_013QeR3kJAC2Qcp4dWJ6DqFN",
+      "payload": {
+        "experimentId": "claude:EXM-001",
+        "criteriaHash": "eb4c272c8e6989674f3c145398579ce3751095d3f49f4542481fd29db4edb577",
+        "infrastructure": "correcta",
+        "notes": "Todas las búsquedas terminaron sin errores de red ni de permisos."
+      },
+      "prev": "52626677b175ec0c80c17ee12f6b1b48b552c6aa2baf60b1ef6db390d949d190",
+      "hash": "ede96d53615ab0ac8741fc61ffe5d63caea1ca079448e28167a6f4d97666a032"
+    },
+    {
+      "v": 1,
+      "seq": 6,
+      "ledger": "claude",
+      "type": "result.observed",
+      "at": "2026-11-03T17:58:36.205Z",
+      "actor": {
+        "kind": "brain",
+        "id": "claude"
+      },
+      "session": "claude-code:session_013QeR3kJAC2Qcp4dWJ6DqFN",
+      "payload": {
+        "experimentId": "claude:EXM-001",
+        "measurements": {
+          "ubicaciones_con_el_prototipo": 0
+        },
+        "evidence": [
+          {
+            "kind": "comando",
+            "ref": "git log --all --name-only (kyro-store)",
+            "description": "11 commits, todos de la tienda KYRO; ningún archivo de Char Brain."
+          },
+          {
+            "kind": "comando",
+            "ref": "grep -rniI \"char|brain|dual|claude|nexo|epistem\" en kyro-store",
+            "description": "Solo coincidencias de la tienda (p. ej. --color-obsidian)."
+          },
+          {
+            "kind": "comando",
+            "ref": "git clone https://github.com/kyro89py-glitch/kyro-oficial",
+            "description": "Repositorio vacío: sin commits."
+          },
+          {
+            "kind": "comando",
+            "ref": "find / -xdev -iname \"*char_dual*\" -o -iname \"*dual_brain*\" -o -iname \"*char*brain*\"",
+            "description": "Sin resultados."
+          },
+          {
+            "kind": "comando",
+            "ref": "ls -la /mnt/user-data/uploads /mnt/attach",
+            "description": "Directorios vacíos."
+          },
+          {
+            "kind": "comando",
+            "ref": "gh api search/code: \"char_dual_brain\", \"Dual Brain\", \"Char Brain\" user:kyro89py-glitch",
+            "description": "0 resultados (el índice de búsqueda puede estar incompleto; por eso se clonó también kyro-oficial)."
+          }
+        ],
+        "notes": "Ubicaciones revisadas: 5."
+      },
+      "prev": "ede96d53615ab0ac8741fc61ffe5d63caea1ca079448e28167a6f4d97666a032",
+      "hash": "e426d55fb2a650bf05987f019def3bbb581bfcbce86a8cc09048b96100dc44d0"
+    },
+    {
+      "v": 1,
+      "seq": 7,
+      "ledger": "claude",
+      "type": "result.verified",
+      "at": "2026-11-03T17:58:36.207Z",
+      "actor": {
+        "kind": "brain",
+        "id": "claude"
+      },
+      "session": "claude-code:session_013QeR3kJAC2Qcp4dWJ6DqFN",
+      "payload": {
+        "experimentId": "claude:EXM-001",
+        "outcome": "confirmado",
+        "method": "Revisé la salida de cada comando en la misma sesión. Es una autoverificación: no cuenta como independiente.",
+        "evidence": [
+          {
+            "kind": "registro",
+            "ref": "Transcripción de la sesión de Claude Code (session_013QeR3kJAC2Qcp4dWJ6DqFN)"
+          }
+        ]
+      },
+      "prev": "e426d55fb2a650bf05987f019def3bbb581bfcbce86a8cc09048b96100dc44d0",
+      "hash": "4d780e20bd3c222bfe4585b7b35df081f0f648626a3e48e632e0692d1d34256a"
+    },
+    {
+      "v": 1,
+      "seq": 8,
+      "ledger": "claude",
+      "type": "learning.proposed",
+      "at": "2026-11-03T17:58:36.207Z",
+      "actor": {
+        "kind": "brain",
+        "id": "claude"
+      },
+      "session": "claude-code:session_013QeR3kJAC2Qcp4dWJ6DqFN",
+      "payload": {
+        "id": "claude:APR-001",
+        "hypothesisId": "claude:HIP-001",
+        "stance": "debilita",
+        "statement": "El prototipo no está en los repositorios ni en los archivos accesibles desde esta sesión. No significa que no exista: puede estar en un dispositivo del usuario o en las conversaciones con ChatGPT.",
+        "support": [
+          "claude:EXM-001"
+        ]
+      },
+      "prev": "4d780e20bd3c222bfe4585b7b35df081f0f648626a3e48e632e0692d1d34256a",
+      "hash": "9bef2f417c8d81d3ceac9b9b8814b7041cc79e1688b7a0f1559721371769dda9"
+    }
+  ]
+}

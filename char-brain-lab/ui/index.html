@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Char · Dual Brain Lab</title>
+    <meta
+      name="description"
+      content="Laboratorio local de aprendizaje controlado: dos memorias independientes, Char y Claude, con procedencia, evidencia e historial verificable."
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="fonts/archivo-latin-variable.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#workspace">Ir al espacio de trabajo</a>
+
+    <header class="masthead">
+      <div class="masthead-id">
+        <h1 class="title">Char · Dual Brain Lab</h1>
+        <p class="lede">
+          Laboratorio local de aprendizaje controlado. Dos memorias independientes; nada se fusiona ni se sincroniza.
+        </p>
+      </div>
+      <div class="masthead-meta" id="masthead-meta" aria-live="polite"></div>
+    </header>
+
+    <main>
+      <section id="field" class="field" aria-label="Estado de los dos Brains"></section>
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
+      <section id="workspace" class="workspace" aria-labelledby="ws-title" tabindex="-1"></section>
+      <section id="ledger" class="ledger" aria-labelledby="ledger-title"></section>
+    </main>
+
+    <footer class="colophon">
+      <p>
+        Versión 1 del laboratorio. Registra y evalúa; no ejecuta acciones ni se conecta a servicios externos. Las acciones de
+        esta interfaz se registran como persona, con el nombre declarado (sin autenticación).
+      </p>
+    </footer>
+
+    <dialog id="form-dialog" class="dialog"></dialog>
+    <input id="import-file" type="file" accept="application/json,.json" hidden />
+
+    <noscript>
+      <p class="noscript">El laboratorio necesita JavaScript para leer y verificar los registros.</p>
+    </noscript>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "char-brain-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Char · Dual Brain Lab: ciclo de aprendizaje controlado con dos memorias independientes.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "test": "node --test \"tests/unit/**/*.test.mjs\"",
+    "test:browser": "node --test \"tests/browser/**/*.test.mjs\"",
+    "verify-ledger": "node scripts/verify-ledger.mjs"
+  }
+}
