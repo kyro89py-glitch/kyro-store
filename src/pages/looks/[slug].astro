@@ -22,15 +22,17 @@ export const getStaticPaths = (async () => {
       }
       return { name: garment.name, href: product ? routes.product(product.id) : undefined };
     });
-    return { params: { slug: look.id }, props: { look, garments } };
+    const others = looks.filter((other) => other.id !== look.id).map((other) => ({ title: other.data.title, href: routes.look(other.id) }));
+    return { params: { slug: look.id }, props: { look, garments, others } };
   });
 }) satisfies GetStaticPaths;
 
 interface Props {
   look: Look;
   garments: { name: string; href: string | undefined }[];
+  others: { title: string; href: string }[];
 }
-const { look, garments } = Astro.props;
+const { look, garments, others } = Astro.props;
 const { data } = look;
 const generated = data.images.some((image) => image.generated);
 const real = data.images.filter((image) => !image.generated).length;
@@ -82,6 +84,23 @@ const real = data.images.filter((image) => !image.generated).length;
               : 'Todas son fotografías reales de las prendas: ábrelas para ampliarlas y ver cada detalle.'
           }
         </p>
+
+        {
+          others.length > 0 && (
+            <nav class="look__others" aria-label="Otros looks" data-reveal="rise">
+              <h2 class="look__heading">Otros looks</h2>
+              <ul role="list">
+                {others.map((other) => (
+                  <li>
+                    <a class="text-link" href={other.href}>
+                      {other.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )
+        }
       </div>
     </div>
   </article>
@@ -165,6 +184,19 @@ const real = data.images.filter((image) => !image.generated).length;
   .look__garment {
     font-size: var(--text-md);
     line-height: var(--leading-snug);
+  }
+
+  .look__others {
+    display: grid;
+    gap: var(--space-sm);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-line);
+  }
+
+  .look__others ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs) var(--space-lg);
   }
 
   .look__note {

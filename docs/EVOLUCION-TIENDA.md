@@ -82,3 +82,6 @@ en la carga inicial; ficha de demostración LCP 140 / 680 ms, TBT 0, CLS 0.
 | La foto y el texto de la portada llevan al look | Probado |
 | Desbordamiento en móvil con muchas miniaturas (la columna crecía con la tira): corregido en el look y en la ficha | Probado |
 | Prueba de los gestos en un teléfono real | **No verificado**: solo emulación |
+| Look «THE 212» (`/looks/212/`): fotografías reales de la remera «NY City Tee» (frente, espalda y etiquetas) y del cargo; enlazado desde «Otros looks» | Probado |
+| Imagen con modelo recibida para el look «THE 212» | **No se usa**: conserva la remera (frente y espalda), pero el pantalón tiene otro estampado y otros bolsillos, y las mangas tienen un logotipo añadido y otro deformado |
+| Aviso intermitente de Chromium al navegar entre páginas («Transition was aborted because of invalid state»): cancela solo la animación opcional; también ocurre en navegaciones anteriores (portada → look) | Las pruebas lo ignoran de forma explícita; **no verificado** en un navegador real |

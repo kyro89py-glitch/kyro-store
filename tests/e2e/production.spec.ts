@@ -99,19 +99,43 @@ test.describe('look «92»', () => {
     await expect.poll(() => viewer.locator('[data-zoom-stage]').nth(3).locator('img').evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
   });
 
+  test('el look «THE 212» solo muestra fotografías reales y se llega desde el otro look', async ({ page }) => {
+    const errors = trackErrors(page);
+    await page.goto('/looks/92/', { waitUntil: 'load' });
+    await page.getByRole('navigation', { name: 'Otros looks' }).getByRole('link', { name: 'Look «THE 212»' }).click();
+    await expect(page).toHaveURL(/\/looks\/212\/$/);
+    await expect(page.locator('.gallery__label')).toHaveText([
+      'Remera · frente',
+      'Remera · espalda',
+      'Detalle · etiquetas',
+      'Cargo · frente',
+      'Cargo · espalda',
+      'Detalle · tejido y talla',
+    ]);
+    // La imagen con modelo recibida no conserva el pantalón: no hay vista generada.
+    await expect(page.locator('.gallery__tag')).toHaveCount(0);
+    await expect(page.getByText('Todas son fotografías reales de las prendas')).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Otros looks' }).getByRole('link', { name: "Look «'92»" })).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
   test('el look no se desborda en ningún ancho', async ({ page }) => {
-    for (const width of [320, 390, 768, 1440]) {
-      await page.setViewportSize({ width, height: 900 });
-      await page.goto('/looks/92/');
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      expect(overflow, `desbordamiento a ${width} px`).toBeLessThanOrEqual(0);
+    for (const path of ['/looks/92/', '/looks/212/']) {
+      for (const width of [320, 390, 768, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(path);
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        expect(overflow, `desbordamiento en ${path} a ${width} px`).toBeLessThanOrEqual(0);
+      }
     }
   });
 
-  test('el look es accesible', async ({ page }) => {
+  test('los looks son accesibles', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/looks/92/');
-    await expectNoA11yViolations(page);
+    for (const path of ['/looks/92/', '/looks/212/']) {
+      await page.goto(path);
+      await expectNoA11yViolations(page);
+    }
   });
 });
 

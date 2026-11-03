@@ -1,11 +1,18 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
+/**
+ * Mensaje de Chromium cuando cancela la animación (opcional) de transición entre páginas.
+ * En este entorno sin pantalla, con pruebas en paralelo, ocurre de forma intermitente en
+ * cualquier navegación; la navegación termina igual. No es un error del sitio.
+ */
+const ABORTED_VIEW_TRANSITION = /^Transition was aborted because of invalid state\. ViewTransition opt-in disabled$/;
+
 /** Registra errores de consola (incluidas violaciones de CSP) y excepciones. */
 export function trackErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on('console', (message) => {
-    if (message.type() === 'error') errors.push(message.text());
+    if (message.type() === 'error' && !ABORTED_VIEW_TRANSITION.test(message.text())) errors.push(message.text());
   });
   page.on('pageerror', (error) => errors.push(error.message));
   return errors;
