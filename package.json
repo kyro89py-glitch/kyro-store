@@ -21,7 +21,7 @@
     "verify": "npm run check && npm run test && npm run build && npm run build:e2e && npm run test:e2e"
   },
   "dependencies": {
-    "astro": "7.4.3"
+    "astro": "7.4.4"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.12",
