@@ -211,6 +211,44 @@ test('el registro real de la inspección se importa y una copia alterada queda b
   await context.close();
 });
 
+test('una experiencia que contradice a otra abre una contradicción y se resuelve de forma explícita', { skip }, async () => {
+  const { context, page, errors } = await openLab();
+  await page.getByRole('button', { name: 'Importar la inspección inicial' }).click();
+  await page.waitForFunction(() => document.querySelector('#notice')?.textContent.includes('importado'));
+
+  await page.getByRole('button', { name: 'Registrar experiencia' }).click();
+  const form = dialog(page);
+  await form.getByLabel('Qué se observó').fill('El usuario indica que el prototipo está en su ordenador, no en GitHub');
+  await form.getByLabel('Tipo de fuente').selectOption('conversación');
+  await form.getByLabel('Fuente', { exact: true }).fill('Mensaje del usuario');
+  await form.getByLabel(/claude:EXP-001/).check();
+  await form.getByRole('button', { name: 'Registrar experiencia', exact: true }).click();
+  assert.match(await form.locator('.form-error').textContent(), /Elige el tipo de relación/);
+  await form.getByLabel('Relación con experiencias anteriores').selectOption('contradice');
+  await submit(page, 'Registrar experiencia');
+
+  assert.equal(await page.locator('.counts .is-alert dd').textContent(), '1');
+  assert.equal(await page.locator('.hemisphere.brain-claude .edge.rel-contradice').count(), 1);
+  const inspector = page.locator('#inspector');
+  assert.match(await inspector.textContent(), /Esta contradice claude:EXP-001/);
+  assert.match(await inspector.locator('.insp-head').textContent(), /contradicción/);
+
+  await page.getByRole('button', { name: /claude:EXP-001 frente a claude:EXP-002/ }).click();
+  assert.match(await inspector.textContent(), /Entreexperiencias/);
+  assert.match(await inspector.textContent(), /Propuesta de reconciliación \(no aplicada\)/);
+  await inspector.getByRole('button', { name: 'Resolver' }).click();
+  const options = await dialog(page).getByLabel('Resolución').locator('option').allTextContents();
+  assert.equal(options.some((option) => option.includes('sustituye')), false, 'una experiencia no se supera');
+  await dialog(page).getByLabel('Resolución').selectOption('compatibles');
+  await dialog(page).getByLabel('Justificación').fill('La búsqueda cubría lo accesible desde la sesión; el usuario habla de su ordenador');
+  await submit(page, 'Registrar resolución');
+  assert.equal(await page.locator('.counts .is-alert').count(), 0);
+  assert.match(await inspector.locator('.insp-head').textContent(), /resuelta/);
+  await shot(page, '07-contradiccion-entre-experiencias');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('móvil: sin desplazamiento horizontal y formularios dentro de la pantalla', { skip }, async () => {
   const { context, page, errors } = await openLab({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Importar la inspección inicial' }).click();

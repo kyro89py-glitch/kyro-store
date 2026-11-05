@@ -41,7 +41,8 @@ Chromium ya instalado. `LAB_SCREENSHOTS=<carpeta>` guarda capturas.
 ## Qué hace
 
 ```
-OBSERVAR     experience.recorded      fuente obligatoria; "hecho respaldado" exige evidencia
+OBSERVAR     experience.recorded      fuente obligatoria; "hecho respaldado" exige evidencia;
+                                      relación declarada con experiencias anteriores
 COMPRENDER   (parcial) clasificación epistemológica manual; experience.amended conserva el valor anterior
 HIPOTETIZAR  hypothesis.formulated    afirmación estructurada sujeto | propiedad | valor
 PLANIFICAR   experiment.proposed      criterios de éxito obligatorios, fijados con SHA-256
@@ -93,6 +94,17 @@ recargar un registro.
   mayúsculas ni puntuación final). Un duplicado se rechaza y remite al existente. Una
   contradicción entre aprendizajes activos se abre sola, bloquea la aprobación y ofrece una
   **propuesta** de reconciliación que no cambia nada; resolverla es un evento explícito.
+- **Relaciones entre experiencias.** Una experiencia nueva puede declarar que confirma,
+  amplía o contradice experiencias anteriores del mismo Brain; nunca las modifica.
+  "Contradice" abre una contradicción entre experiencias: ambas se muestran en
+  `contradicción` y cualquier aprendizaje cuya hipótesis se base en ellas queda bloqueado
+  hasta resolverla. Se resuelve descartando una (queda en su historial, con el estado
+  anterior) o declarándolas compatibles; una experiencia no se "supera". Una experiencia
+  de base descartada también bloquea aprobar y consolidar.
+- **Confianza sin métricas inventadas.** No hay puntuación de confianza. Cada hipótesis
+  muestra su base de evidencia (experimentos que la respaldan, la debilitan, no resueltos,
+  pendientes y con verificación independiente) y cada aprendizaje sus respaldos, sus
+  verificaciones independientes y la evidencia en contra.
 - **Sin acciones reales.** Los modos admitidos son simulación, investigación y análisis.
   Los modos reales o financieros se rechazan con un mensaje propio. No hay conexión con
   NEXO Capital, exchanges ni servicios externos.
@@ -142,6 +154,7 @@ revisión humana. Se importa desde la interfaz ("Importar la inspección inicial
 - La identidad "persona" es declarada; no hay autenticación.
 - La detección de duplicados y contradicciones es literal: no reconoce sinónimos y supone
   que cada propiedad tiene un solo valor (la revisión puede marcarlas como compatibles).
+  Entre experiencias no hay detección: la contradicción la declara quien registra.
 - El almacenamiento es el `localStorage` del navegador más exportación e importación en
   JSON. La importación solo admite registros nuevos o extensiones del actual; no fusiona.
 - No hay protocolo de coordinación: no se comparten ni se comparan registros entre Brains.

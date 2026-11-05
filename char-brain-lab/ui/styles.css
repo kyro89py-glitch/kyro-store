@@ -301,6 +301,17 @@ main,
   stroke: color-mix(in srgb, var(--accent) 35%, var(--line));
 }
 
+.edge.is-relation {
+  stroke: var(--muted);
+  stroke-opacity: 0.6;
+}
+
+.edge.rel-contradice {
+  stroke: var(--bad);
+  stroke-opacity: 1;
+  stroke-dasharray: 4 3;
+}
+
 .node {
   cursor: pointer;
 }

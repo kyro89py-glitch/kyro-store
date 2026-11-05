@@ -134,6 +134,15 @@ export const REVIEW_DECISIONS = Object.freeze(['aprobar', 'rechazar', 'solicitar
 
 export const RESOLUTIONS = Object.freeze(['a-supera-b', 'b-supera-a', 'descartar-a', 'descartar-b', 'compatibles']);
 
+/**
+ * Relación que una experiencia nueva declara con experiencias anteriores. Ninguna
+ * sobrescribe a la otra: "contradice" abre una contradicción que exige resolución.
+ */
+export const EXPERIENCE_RELATIONS = Object.freeze(['confirma', 'amplía', 'contradice']);
+
+/** Una experiencia no se "supera": se descarta (con historial) o se declara compatible. */
+export const EXPERIENCE_RESOLUTIONS = Object.freeze(['descartar-a', 'descartar-b', 'compatibles']);
+
 /** Política por defecto, grabada en el evento de creación de cada registro. */
 export const DEFAULT_POLICY = Object.freeze({
   /** Experimentos verificados que deben respaldar un aprendizaje para consolidarlo. */

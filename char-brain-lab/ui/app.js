@@ -11,6 +11,8 @@ import {
   EVIDENCE_KINDS,
   EXPERIENCE_AMEND_EPISTEMIC,
   EXPERIENCE_EPISTEMIC,
+  EXPERIENCE_RELATIONS,
+  EXPERIENCE_RESOLUTIONS,
   EXPERIMENT_MODES,
   EXPERIMENT_STATUS,
   LEARNING_STATUS,
@@ -149,7 +151,16 @@ const RESOLUTION_LABEL = {
 const RELATION_LABEL = {
   'valores-incompatibles': 'Asignan valores distintos a la misma propiedad',
   'polaridad-opuesta': 'Uno afirma lo que el otro niega',
+  declarada: 'Contradicción declarada al registrar la experiencia más reciente',
 };
+
+const EXPERIENCE_RESOLUTION_LABEL = {
+  'descartar-a': 'Descartar A (queda en el historial como descartada)',
+  'descartar-b': 'Descartar B (queda en el historial como descartada)',
+  compatibles: 'Son compatibles: ambas siguen en pie',
+};
+
+const LINK_LABEL = { confirma: 'confirma', 'amplía': 'amplía', contradice: 'contradice' };
 
 /** Etapas del ciclo y los eventos que las implementan de verdad. */
 const STAGES = [
@@ -183,6 +194,12 @@ const STAGES = [
 
 const epistemicChip = (value, prefix = '') => h('span', { class: `chip ep ep-${slug(value)}`, title: 'Estado epistemológico' }, `${prefix}${value}`);
 const statusChip = (value) => h('span', { class: `chip st st-${slug(value)}` }, value);
+/** Estado derivado (incluye contradicciones abiertas) y, si difiere, el registrado. */
+function experienceChips(memory, record) {
+  const derived = memory.epistemicOf(record);
+  return derived === record.epistemic ? [epistemicChip(derived)] : [epistemicChip(derived), epistemicChip(record.epistemic, 'registrada: ')];
+}
+
 const verdictChip = (value) =>
   value ? h('span', { class: `chip vd vd-${slug(value)}` }, `veredicto: ${value}`) : h('span', { class: 'chip vd vd-none' }, 'sin veredicto');
 
@@ -239,7 +256,7 @@ function findRecord(memory, id) {
   const state = memory.state;
   if (id.startsWith('CON:')) {
     const item = memory.contradictions().find((entry) => entry.id === id);
-    return item ? { ...item, kind: 'contradiccion' } : null;
+    return item ? { ...item, between: item.kind, kind: 'contradiccion' } : null;
   }
   return state.experiences[id] ?? state.hypotheses[id] ?? state.experiments[id] ?? state.learnings[id] ?? null;
 }
@@ -392,11 +409,19 @@ function neuralField(brain, memory) {
     const a = positions.get(from);
     const b = positions.get(to);
     if (!a || !b) return;
+    if (a.x === b.x) {
+      const bulge = a.x < width / 2 ? -34 : 34;
+      edges.append(s('path', { class: `edge ${cls}`, d: `M${a.x},${a.y} C${a.x + bulge},${a.y} ${b.x + bulge},${b.y} ${b.x},${b.y}` }));
+      return;
+    }
     const mid = (a.x + b.x) / 2;
     edges.append(s('path', { class: `edge ${cls}`, d: `M${a.x},${a.y} C${mid},${a.y} ${mid},${b.y} ${b.x},${b.y}` }));
   };
   if (memory) {
     const state = memory.state;
+    for (const experience of Object.values(state.experiences)) {
+      (experience.relations ?? []).forEach((relation) => link(experience.id, relation.to, `is-relation rel-${slug(relation.kind)}`));
+    }
     for (const hypothesis of Object.values(state.hypotheses)) hypothesis.basedOn.forEach((id) => link(hypothesis.id, id));
     for (const experiment of Object.values(state.experiments)) link(experiment.id, experiment.hypothesisId);
     for (const learning of Object.values(state.learnings)) {
@@ -622,7 +647,7 @@ function recordsPanel(memory) {
       button('Registrar experiencia', () => forms.recordExperience(), { variant: 'primary' }),
     ),
     group('Experiencias', experiences, 'Ninguna todavía. Empieza registrando qué se observó y de dónde viene.', (record) =>
-      recordRow(memory, record, record.summary, [epistemicChip(record.epistemic)]),
+      recordRow(memory, record, record.summary, experienceChips(memory, record)),
     ),
     group('Hipótesis', Object.values(state.hypotheses), 'Se formulan desde una experiencia.', (record) =>
       recordRow(memory, record, record.statement, [epistemicChip(EPISTEMIC.hipotesis)]),
@@ -634,7 +659,7 @@ function recordsPanel(memory) {
       recordRow(memory, record, record.statement, [statusChip(record.status), epistemicChip(memory.epistemicOf(record))]),
     ),
     group('Contradicciones', memory.contradictions(), 'Ninguna. Aparecen solas cuando dos aprendizajes activos chocan.', (record) =>
-      recordRow(memory, { ...record, kind: 'contradiccion' }, `${record.a} frente a ${record.b}`, [statusChip(record.status)]),
+      recordRow(memory, { ...record, kind: 'contradiccion' }, `${record.a} frente a ${record.b}`, [statusChip(record.status), h('span', { class: 'chip' }, `entre ${record.kind}`)]),
     ),
   );
 }
@@ -676,9 +701,28 @@ function historyBlock(memory, id) {
   );
 }
 
+function relationsBlock(memory, record) {
+  const outgoing = record.relations ?? [];
+  const incoming = Object.values(memory.state.experiences).flatMap((experience) =>
+    (experience.relations ?? []).filter((relation) => relation.to === record.id).map((relation) => ({ from: experience.id, kind: relation.kind })),
+  );
+  if (!outgoing.length && !incoming.length) return null;
+  return h(
+    'section',
+    {},
+    h('h4', {}, 'Relaciones con otras experiencias'),
+    h(
+      'ul',
+      { class: 'linked' },
+      outgoing.map((relation) => h('li', {}, `Esta ${LINK_LABEL[relation.kind]} `, refButton(memory, relation.to))),
+      incoming.map((relation) => h('li', {}, refButton(memory, relation.from), ` ${LINK_LABEL[relation.kind]} esta`)),
+    ),
+  );
+}
+
 function inspectExperience(memory, record) {
   return [
-    inspectorHead(record, [epistemicChip(record.epistemic)]),
+    inspectorHead(record, experienceChips(memory, record)),
     h('p', { class: 'insp-text' }, record.summary),
     facts([
       ['Memoria de', BRAINS[memory.brain].name],
@@ -690,6 +734,7 @@ function inspectExperience(memory, record) {
     ]),
     h('h4', {}, 'Evidencia'),
     evidenceList(record.evidence),
+    relationsBlock(memory, record),
     record.amendments.length
       ? h(
           'section',
@@ -740,6 +785,7 @@ function inspectHypothesis(memory, record) {
       ['Formulada', fmtDate(record.formulatedAt)],
       ['Basada en', h('span', {}, record.basedOn.map((id) => refButton(memory, id)))],
     ]),
+    evidenceBase(memory.hypothesisEvidence(record.id)),
     h('h4', {}, 'Experimentos'),
     experiments.length
       ? h(
@@ -759,6 +805,22 @@ function inspectHypothesis(memory, record) {
     ),
     canLearn ? null : h('p', { class: 'hint' }, 'Para proponer un aprendizaje hace falta un resultado verificado que respalde o debilite la hipótesis.'),
   ];
+}
+
+function evidenceBase(tally) {
+  return h(
+    'section',
+    { class: 'evidence-base' },
+    h('h4', {}, 'Base de evidencia'),
+    facts([
+      ['Respaldan', String(tally.respaldada)],
+      ['Debilitan', String(tally.debilitada)],
+      ['No resueltos', String(tally.noResuelta)],
+      ['Pendientes', String(tally.pendiente)],
+      ['Con verificación independiente', `${tally.independiente} de ${tally.respaldada + tally.debilitada}`],
+    ]),
+    h('p', { class: 'muted' }, 'El laboratorio no calcula una puntuación de confianza: muestra la evidencia de la que se derivaría.'),
+  );
 }
 
 function criteriaTable(record) {
@@ -878,6 +940,7 @@ function inspectLearning(memory, record) {
       ['Propuesto por', `${actorLabel(record.proposedBy)}, ${fmtDate(record.proposedAt)}`],
       ['Respaldos', h('span', {}, record.support.map((id) => refButton(memory, id)))],
       ['Verificaciones independientes', `${checks.independent} de ${checks.support}`],
+      ['Evidencia en contra', checks.counterEvidence.length ? h('span', {}, checks.counterEvidence.map((id) => refButton(memory, id))) : 'ninguna verificada'],
       record.supersededBy ? ['Superado por', refButton(memory, record.supersededBy)] : null,
       record.priorIds.length ? ['Propuesto antes como', h('span', {}, record.priorIds.map((id) => refButton(memory, id)))] : null,
     ]),
@@ -918,15 +981,21 @@ function inspectLearning(memory, record) {
 }
 
 function inspectContradiction(memory, record) {
-  const a = memory.state.learnings[record.a];
-  const b = memory.state.learnings[record.b];
+  const betweenExperiences = record.between === 'experiencias';
+  const collection = betweenExperiences ? memory.state.experiences : memory.state.learnings;
+  const a = collection[record.a];
+  const b = collection[record.b];
+  const describe = (item) => (betweenExperiences ? `${item.summary} (${item.epistemic})` : `${item.statement} (${item.status})`);
+  const labels = betweenExperiences ? EXPERIENCE_RESOLUTION_LABEL : RESOLUTION_LABEL;
   const proposal = record.status === 'abierta' ? memory.suggestReconciliation(record.id) : null;
   return [
-    inspectorHead({ ...record, layer: 'evolutiva' }, [statusChip(record.status)]),
+    inspectorHead({ ...record, layer: betweenExperiences ? 'experiencia' : 'evolutiva' }, [statusChip(record.status)]),
     h('p', { class: 'insp-text' }, RELATION_LABEL[record.relation] ?? record.relation),
     facts([
-      ['A', h('span', {}, refButton(memory, a.id), ` ${a.statement} (${a.status})`)],
-      ['B', h('span', {}, refButton(memory, b.id), ` ${b.statement} (${b.status})`)],
+      ['Entre', betweenExperiences ? 'experiencias' : 'aprendizajes'],
+      ['A', h('span', {}, refButton(memory, a.id), ` ${describe(a)}`)],
+      ['B', h('span', {}, refButton(memory, b.id), ` ${describe(b)}`)],
+      record.declaredBy ? ['Declarada por', refButton(memory, record.declaredBy)] : null,
     ]),
     proposal
       ? h(
@@ -935,12 +1004,12 @@ function inspectContradiction(memory, record) {
           h('h4', {}, 'Propuesta de reconciliación (no aplicada)'),
           h('p', {}, proposal.rationale),
           h('p', {}, proposal.nextStep),
-          proposal.resolution ? h('p', {}, `Sugerencia: ${RESOLUTION_LABEL[proposal.resolution]}.`) : null,
+          proposal.resolution ? h('p', {}, `Sugerencia: ${labels[proposal.resolution]}.`) : null,
         )
       : null,
     record.resolution
       ? facts([
-          ['Resolución', RESOLUTION_LABEL[record.resolution.resolution]],
+          ['Resolución', labels[record.resolution.resolution]],
           ['Justificación', record.resolution.notes],
           ['Resuelta por', `${actorLabel(record.resolution.actor)}, ${fmtDate(record.resolution.at)}`],
         ])
@@ -1327,6 +1396,10 @@ const forms = {
   },
 
   recordExperience() {
+    const previous = Object.values(lab.memory(ui.brain).state.experiences).map((experience) => [
+      experience.id,
+      `${experience.id}: ${experience.summary.slice(0, 90)}`,
+    ]);
     openForm({
       title: 'Registrar experiencia',
       submit: 'Registrar experiencia',
@@ -1345,8 +1418,28 @@ const forms = {
           help: 'Un hecho respaldado necesita al menos una evidencia.',
         },
         { type: 'evidence', name: 'evidence', label: 'Evidencia', help: 'Opcional para una observación; obligatoria para un hecho respaldado.' },
+        ...(previous.length
+          ? [
+              {
+                type: 'select',
+                name: 'relationKind',
+                label: 'Relación con experiencias anteriores',
+                options: [['', 'Ninguna'], ...EXPERIENCE_RELATIONS.map((kind) => [kind, `Esta experiencia ${kind}…`])],
+                value: '',
+                help: 'Ninguna experiencia sobrescribe a otra. Si la contradice, se abre una contradicción que hay que resolver.',
+              },
+              { type: 'checks', name: 'relationTo', label: 'Experiencias relacionadas', options: previous },
+            ]
+          : []),
       ],
       onSubmit: (values) => {
+        const targets = values.relationTo ?? [];
+        if (values.relationKind && !targets.length) {
+          throw new RuleViolation('CAMPO_REQUERIDO', 'Elige al menos una experiencia anterior para la relación.');
+        }
+        if (!values.relationKind && targets.length) {
+          throw new RuleViolation('CAMPO_REQUERIDO', 'Elige el tipo de relación con las experiencias marcadas.');
+        }
         const id = run((memory) =>
           memory.recordExperience(
             {
@@ -1355,6 +1448,7 @@ const forms = {
               observedAt: isoFromLocal(values.observedAt),
               epistemic: values.epistemic,
               evidence: values.evidence,
+              relations: targets.map((to) => ({ to, kind: values.relationKind })),
             },
             ctx(),
           ),
@@ -1678,7 +1772,9 @@ const forms = {
           type: 'select',
           name: 'resolution',
           label: 'Resolución',
-          options: Object.entries(RESOLUTION_LABEL),
+          options: Object.entries(contradiction.between === 'experiencias' ? EXPERIENCE_RESOLUTION_LABEL : RESOLUTION_LABEL).filter(
+            ([value]) => contradiction.between !== 'experiencias' || EXPERIENCE_RESOLUTIONS.includes(value),
+          ),
           value: proposal?.resolution ?? 'compatibles',
         },
         { type: 'textarea', name: 'notes', label: 'Justificación' },

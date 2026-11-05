@@ -17,6 +17,7 @@ import {
   criteriaHash,
   emptyState,
   epistemicOf,
+  hypothesisEvidence,
   nextId,
   openContradictions,
   suggestReconciliation,
@@ -143,7 +144,7 @@ export class BrainMemory {
   // ----------------------------------------------------------------------------------
   // Comandos: OBSERVAR → COMPRENDER
 
-  recordExperience({ summary, source, evidence, observedAt, epistemic = EPISTEMIC.observacion }, ctx) {
+  recordExperience({ summary, source, evidence, observedAt, epistemic = EPISTEMIC.observacion, relations }, ctx) {
     const context = this.#at(ctx);
     const id = nextId(this.#state, 'experience');
     this.#append(
@@ -155,6 +156,7 @@ export class BrainMemory {
         evidence: cleanEvidence(evidence),
         observedAt: observedAt ?? context.at,
         epistemic,
+        relations: relations?.length ? relations.map((link) => ({ to: link.to, kind: link.kind })) : undefined,
       },
       context,
     );
@@ -321,6 +323,10 @@ export class BrainMemory {
   suggestReconciliation(contradictionId) {
     const item = contradictions(this.#state).find((entry) => entry.id === contradictionId);
     return item ? suggestReconciliation(this.#state, item) : null;
+  }
+
+  hypothesisEvidence(hypothesisId) {
+    return hypothesisEvidence(this.#state, hypothesisId);
   }
 
   epistemicOf(record) {

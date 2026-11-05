@@ -23,6 +23,8 @@ import {
   EVIDENCE_KINDS,
   EXPERIENCE_AMEND_EPISTEMIC,
   EXPERIENCE_EPISTEMIC,
+  EXPERIENCE_RELATIONS,
+  EXPERIENCE_RESOLUTIONS,
   EXPERIMENT_MODES,
   EXPERIMENT_STATUS,
   FORBIDDEN_MODES,
@@ -228,10 +230,14 @@ function contradictionId(a, b) {
   return `CON:${[a, b].sort().join('|')}`;
 }
 
-/** Contradicciones entre aprendizajes activos, más las ya resueltas (para el historial). */
+/**
+ * Contradicciones abiertas y resueltas:
+ * - entre aprendizajes activos, detectadas por su afirmación estructurada;
+ * - entre experiencias, declaradas al registrar la más reciente ("contradice").
+ */
 export function contradictions(state) {
-  const active = Object.values(state.learnings).filter((learning) => ACTIVE_LEARNING.includes(learning.status));
   const list = [];
+  const active = Object.values(state.learnings).filter((learning) => ACTIVE_LEARNING.includes(learning.status));
   for (let i = 0; i < active.length; i++) {
     for (let j = i + 1; j < active.length; j++) {
       const relation = claimRelation(active[i].claim, active[j].claim);
@@ -239,12 +245,25 @@ export function contradictions(state) {
       const [a, b] = [active[i].id, active[j].id].sort();
       const id = contradictionId(a, b);
       const resolution = state.resolutions[id] ?? null;
-      list.push({ id, a, b, relation, status: resolution ? 'resuelta' : 'abierta', resolution });
+      list.push({ id, a, b, kind: 'aprendizajes', relation, status: resolution ? 'resuelta' : 'abierta', resolution });
+    }
+  }
+  for (const experience of Object.values(state.experiences)) {
+    for (const link of experience.relations ?? []) {
+      if (link.kind !== 'contradice') continue;
+      const other = state.experiences[link.to];
+      const [a, b] = [experience.id, link.to].sort();
+      const id = contradictionId(a, b);
+      if (list.some((item) => item.id === id)) continue;
+      const resolution = state.resolutions[id] ?? null;
+      const bothStand = experience.epistemic !== EPISTEMIC.descartado && other.epistemic !== EPISTEMIC.descartado;
+      if (!resolution && !bothStand) continue;
+      list.push({ id, a, b, kind: 'experiencias', relation: 'declarada', declaredBy: experience.id, status: resolution ? 'resuelta' : 'abierta', resolution });
     }
   }
   for (const resolution of Object.values(state.resolutions)) {
     if (!list.some((item) => item.id === resolution.id)) {
-      list.push({ id: resolution.id, a: resolution.a, b: resolution.b, relation: resolution.relation, status: 'resuelta', resolution });
+      list.push({ id: resolution.id, a: resolution.a, b: resolution.b, kind: resolution.kind, relation: resolution.relation, status: 'resuelta', resolution });
     }
   }
   return list;
@@ -264,6 +283,31 @@ export function counterEvidence(state, learning) {
     .map((experiment) => experiment.id);
 }
 
+/** Experiencias de base que ya no sostienen la hipótesis: descartadas o en contradicción abierta. */
+function baseProblems(state, learning) {
+  const problems = [];
+  const basedOn = state.hypotheses[learning.hypothesisId]?.basedOn ?? [];
+  const discarded = basedOn.filter((id) => state.experiences[id]?.epistemic === EPISTEMIC.descartado);
+  const disputed = basedOn.filter((id) => state.experiences[id]?.epistemic !== EPISTEMIC.descartado && openContradictions(state, id).length);
+  if (discarded.length) problems.push(`La hipótesis se basa en experiencias descartadas: ${discarded.join(', ')}.`);
+  if (disputed.length) problems.push(`La hipótesis se basa en experiencias con contradicción abierta: ${disputed.join(', ')}.`);
+  return problems;
+}
+
+/** Base de evidencia de una hipótesis. No es una puntuación: son los recuentos de los que se derivaría. */
+export function hypothesisEvidence(state, hypothesisId) {
+  const experiments = Object.values(state.experiments).filter((experiment) => experiment.hypothesisId === hypothesisId);
+  const decided = experiments.filter((experiment) => [VERDICT.respaldada, VERDICT.debilitada].includes(experiment.verdict));
+  return {
+    respaldada: experiments.filter((experiment) => experiment.verdict === VERDICT.respaldada).length,
+    debilitada: experiments.filter((experiment) => experiment.verdict === VERDICT.debilitada).length,
+    noResuelta: experiments.filter((experiment) => experiment.verdict === VERDICT.noResuelta).length,
+    pendiente: experiments.filter((experiment) => experiment.verdict === null && experiment.status !== EXPERIMENT_STATUS.cancelado).length,
+    cancelado: experiments.filter((experiment) => experiment.status === EXPERIMENT_STATUS.cancelado).length,
+    independiente: decided.filter((experiment) => experiment.verification?.independent).length,
+  };
+}
+
 export function approvalBlockers(state, learning, actor = null) {
   const blockers = [];
   if (learning.status !== LEARNING_STATUS.candidato) {
@@ -278,6 +322,7 @@ export function approvalBlockers(state, learning, actor = null) {
   }
   const counter = counterEvidence(state, learning);
   if (counter.length) blockers.push(`Hay evidencia verificada en contra: ${counter.join(', ')}.`);
+  blockers.push(...baseProblems(state, learning));
   return blockers;
 }
 
@@ -302,6 +347,7 @@ export function consolidationBlockers(state, learning, actor = null) {
   }
   const counter = counterEvidence(state, learning);
   if (counter.length) blockers.push(`Hay evidencia verificada en contra: ${counter.join(', ')}.`);
+  blockers.push(...baseProblems(state, learning));
   return blockers;
 }
 
@@ -309,6 +355,9 @@ export function consolidationBlockers(state, learning, actor = null) {
 export function epistemicOf(state, record) {
   switch (record.kind) {
     case 'experiencia':
+      if (record.epistemic !== EPISTEMIC.descartado && openContradictions(state, record.id).length) {
+        return EPISTEMIC.contradiccion;
+      }
       return record.epistemic;
     case 'hipotesis':
       return EPISTEMIC.hipotesis;
@@ -347,6 +396,24 @@ export function epistemicOf(state, record) {
  * nada. Aplicarla exige un evento `contradiction.resolved` con autor y motivo.
  */
 export function suggestReconciliation(state, contradiction) {
+  if (contradiction.kind === 'experiencias') {
+    const a = state.experiences[contradiction.a];
+    const b = state.experiences[contradiction.b];
+    const describe = (experience) => `${experience.id}: ${experience.epistemic}, ${experience.evidence.length} evidencia(s)`;
+    const strong = (experience) => experience.epistemic === EPISTEMIC.hecho && experience.evidence.length > 0;
+    const bare = (experience) => experience.evidence.length === 0;
+    let resolution = null;
+    if (strong(a) && bare(b)) resolution = 'descartar-b';
+    if (strong(b) && bare(a)) resolution = 'descartar-a';
+    return {
+      estado: 'PROPUESTA',
+      resolution,
+      rationale: `${describe(a)} · ${describe(b)}.`,
+      nextStep: resolution
+        ? 'Una está respaldada por evidencia y la otra no tiene ninguna. Revisar la que no la tiene antes de descartarla.'
+        : 'Comprobar si se observaron en las mismas condiciones: si no, pueden ser compatibles; si sí, buscar evidencia que las distinga.',
+    };
+  }
   const a = state.learnings[contradiction.a];
   const b = state.learnings[contradiction.b];
   const score = (learning) => ({
@@ -441,6 +508,16 @@ const HANDLERS = {
     if (p.epistemic === EPISTEMIC.hecho && (p.evidence ?? []).length === 0) {
       fail('EVIDENCIA_REQUERIDA', 'Un hecho respaldado necesita al menos una evidencia.');
     }
+    const relations = p.relations ?? [];
+    if (!Array.isArray(relations) || relations.length > 20) fail('TIPO_NO_VALIDO', 'Las relaciones deben ser una lista (máximo 20).');
+    const related = new Set();
+    for (const link of relations) {
+      if (!link || typeof link !== 'object') fail('TIPO_NO_VALIDO', 'Cada relación debe ser un objeto.');
+      oneOf(link.kind, EXPERIENCE_RELATIONS, 'Tipo de relación');
+      getRecord(state, 'experiences', link.to, 'Experiencia relacionada');
+      if (related.has(link.to)) fail('VALOR_NO_VALIDO', `${link.to} aparece dos veces en las relaciones.`);
+      related.add(link.to);
+    }
     const duplicate = Object.values(state.experiences).find(
       (experience) =>
         normalizeText(experience.summary) === normalizeText(p.summary) &&
@@ -462,9 +539,10 @@ const HANDLERS = {
       recordedAt: event.at,
       recordedBy: event.actor,
       session: event.session,
+      relations,
       amendments: [],
     };
-    touch(state, [p.id], event);
+    touch(state, [p.id, ...relations.map((link) => link.to)], event);
   },
 
   'experience.amended'(state, event) {
@@ -784,6 +862,41 @@ const HANDLERS = {
     if (p.a !== open.a || p.b !== open.b) fail('VALOR_NO_VALIDO', 'Los aprendizajes indicados no corresponden a la contradicción.');
     oneOf(p.resolution, RESOLUTIONS, 'Resolución');
     text(p.notes, 'la justificación de la resolución');
+    const record = () => {
+      state.resolutions[open.id] = {
+        id: open.id,
+        a: open.a,
+        b: open.b,
+        kind: open.kind,
+        relation: open.relation,
+        resolution: p.resolution,
+        notes: p.notes,
+        seq: event.seq,
+        at: event.at,
+        actor: event.actor,
+      };
+    };
+    if (open.kind === 'experiencias') {
+      if (!EXPERIENCE_RESOLUTIONS.includes(p.resolution)) {
+        fail('RESOLUCION_NO_VALIDA', 'Una experiencia no se supera: se descarta, con su historial, o se declara compatible.');
+      }
+      const discard = (experience) => {
+        experience.amendments.push({
+          seq: event.seq,
+          at: event.at,
+          actor: event.actor,
+          reason: `Resolución de ${open.id}: ${p.notes}`,
+          changes: { epistemic: EPISTEMIC.descartado },
+          previous: { summary: experience.summary, epistemic: experience.epistemic, evidenceCount: experience.evidence.length },
+        });
+        experience.epistemic = EPISTEMIC.descartado;
+      };
+      if (p.resolution === 'descartar-a') discard(state.experiences[open.a]);
+      if (p.resolution === 'descartar-b') discard(state.experiences[open.b]);
+      record();
+      touch(state, [open.id, open.a, open.b], event);
+      return;
+    }
     const a = state.learnings[open.a];
     const b = state.learnings[open.b];
     requireHumanForConsolidated([a, b], event.actor, 'Resolver una contradicción que afecta a');
@@ -799,17 +912,7 @@ const HANDLERS = {
     } else if (p.resolution === 'descartar-b') {
       setLearningStatus(b, LEARNING_STATUS.descartado, event, { reason });
     }
-    state.resolutions[open.id] = {
-      id: open.id,
-      a: open.a,
-      b: open.b,
-      relation: open.relation,
-      resolution: p.resolution,
-      notes: p.notes,
-      seq: event.seq,
-      at: event.at,
-      actor: event.actor,
-    };
+    record();
     touch(state, [open.id, a.id, b.id], event);
   },
 };
