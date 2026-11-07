@@ -1,0 +1,50 @@
+<div class="page-width contact-section">
+  {%- form 'contact', id: 'ContactForm', class: 'contact' -%}
+    {%- if form.posted_successfully? -%}
+      <p class="form-message form-message--success" role="status" tabindex="-1">{{ 'contact.success' | t }}</p>
+    {%- elsif form.errors -%}
+      <div class="form-message form-message--error" role="alert">{{ form.errors | default_errors }}</div>
+    {%- endif -%}
+
+    <div class="contact__row">
+      <label class="field">
+        <span class="field__label">{{ 'contact.name' | t }}</span>
+        <input class="field__input" type="text" name="contact[name]" autocomplete="name" value="{{ form.name }}">
+      </label>
+      <label class="field">
+        <span class="field__label">{{ 'contact.email' | t }}</span>
+        <input class="field__input" type="email" name="contact[email]" autocomplete="email" value="{{ form.email }}" required>
+      </label>
+    </div>
+    <label class="field">
+      <span class="field__label">{{ 'contact.phone' | t }}</span>
+      <input class="field__input" type="tel" name="contact[phone]" autocomplete="tel" value="{{ form.phone }}">
+    </label>
+    <label class="field">
+      <span class="field__label">{{ 'contact.message' | t }}</span>
+      <textarea class="field__input" name="contact[body]" required>{{ form.body }}</textarea>
+    </label>
+    <div>
+      <button type="submit" class="button">{{ 'contact.send' | t }}</button>
+    </div>
+  {%- endform -%}
+</div>
+
+{% schema %}
+{
+  "name": "Formulario de contacto",
+  "tag": "div",
+  "class": "section-contact-form",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Los mensajes llegan al correo de la tienda configurado en Shopify."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Formulario de contacto"
+    }
+  ]
+}
+{% endschema %}

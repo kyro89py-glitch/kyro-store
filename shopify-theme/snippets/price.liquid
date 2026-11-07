@@ -1,0 +1,41 @@
+{% doc %}
+  Renders a price. On product cards it shows the lowest price ("From …") when variants
+  have different prices; on the product page it shows the selected variant.
+
+  @param {product} product - The product
+  @param {variant} [variant] - The selected variant (product page)
+  @param {boolean} [large] - Larger type (product page)
+  @example
+  {% render 'price', product: product, variant: product.selected_or_first_available_variant, large: true %}
+{% enddoc %}
+
+{%- liquid
+  if variant
+    assign price = variant.price
+    assign compare_at = variant.compare_at_price
+  else
+    assign price = product.price
+    assign compare_at = product.compare_at_price
+  endif
+  assign on_sale = false
+  if compare_at > price
+    assign on_sale = true
+  endif
+  assign formatted_price = price | money
+  assign formatted_compare = compare_at | money
+-%}
+
+<div class="price{% if on_sale %} price--sale{% endif %}{% if large %} price--large{% endif %}" data-price>
+  {%- if variant == blank and product.price_varies -%}
+    <span class="price__regular">{{ 'products.product.from_price' | t: price: formatted_price }}</span>
+  {%- else -%}
+    <span class="visually-hidden">{{ 'products.product.regular_price' | t }}</span>
+    <span class="price__regular" data-price-regular>{{ formatted_price }}</span>
+  {%- endif -%}
+  <s class="price__compare" data-price-compare{% unless on_sale %} hidden{% endunless %}>
+    {%- if on_sale -%}
+      <span class="visually-hidden">{{ 'products.product.compare_price' | t }}</span>
+      {{ formatted_compare }}
+    {%- endif -%}
+  </s>
+</div>

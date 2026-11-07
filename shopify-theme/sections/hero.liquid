@@ -1,0 +1,189 @@
+{%- liquid
+  assign heading_tag = 'h2'
+  if section.index == 1
+    assign heading_tag = 'h1'
+  endif
+  assign overlay = section.settings.overlay | divided_by: 100.0
+-%}
+
+<section class="hero hero--{{ section.settings.height }} hero--{{ section.settings.alignment }} hero--{{ section.settings.layout }}" style="--hero-overlay: {{ overlay }};">
+  <div class="hero__media">
+    {%- if section.settings.image != blank -%}
+      {%- if section.settings.image_mobile != blank -%}
+        <picture>
+          <source
+            media="(max-width: 47.99em)"
+            srcset="{{ section.settings.image_mobile | image_url: width: 750 }} 750w, {{ section.settings.image_mobile | image_url: width: 1100 }} 1100w, {{ section.settings.image_mobile | image_url: width: 1500 }} 1500w"
+            sizes="100vw"
+          >
+          {{
+            section.settings.image
+            | image_url: width: 3000
+            | image_tag: loading: 'eager', fetchpriority: 'high', sizes: '100vw', widths: '960, 1280, 1600, 2000, 2400, 3000'
+          }}
+        </picture>
+      {%- else -%}
+        {{
+          section.settings.image
+          | image_url: width: 3000
+          | image_tag: loading: 'eager', fetchpriority: 'high', sizes: '100vw', widths: '750, 960, 1280, 1600, 2000, 2400, 3000'
+        }}
+      {%- endif -%}
+    {%- elsif request.design_mode -%}
+      {{ 'lifestyle-1' | placeholder_svg_tag }}
+    {%- endif -%}
+  </div>
+
+  <div class="hero__content">
+    {%- if section.settings.kicker != blank -%}
+      <p class="kicker" data-reveal>{{ section.settings.kicker | escape }}</p>
+    {%- endif -%}
+    {%- if section.settings.heading != blank -%}
+      <{{ heading_tag }} class="hero__heading editorial" data-reveal>{{ section.settings.heading }}</{{ heading_tag }}>
+    {%- endif -%}
+    {%- if section.settings.text != blank -%}
+      <p class="hero__text" data-reveal style="--reveal-index: 1;">{{ section.settings.text | escape }}</p>
+    {%- endif -%}
+    {%- if section.settings.button_label != blank or section.settings.link_label != blank -%}
+      <div class="hero__actions" data-reveal style="--reveal-index: 2;">
+        {%- if section.settings.button_label != blank -%}
+          <a class="button" href="{{ section.settings.button_link | default: routes.all_products_collection_url }}">
+            {{- section.settings.button_label | escape -}}
+          </a>
+        {%- endif -%}
+        {%- if section.settings.link_label != blank -%}
+          <a class="text-link" href="{{ section.settings.link_url | default: routes.collections_url }}">
+            {{- section.settings.link_label | escape -}}
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+
+  {%- if section.settings.caption != blank and section.settings.image != blank -%}
+    <p class="media-caption">{{ section.settings.caption | escape }}</p>
+  {%- endif -%}
+
+  {%- if section.settings.show_scroll_hint -%}
+    <span class="hero__scroll" aria-hidden="true">{{ 'general.scroll' | t }}</span>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "Imagen principal",
+  "tag": "div",
+  "class": "section-hero",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Imagen",
+      "info": "Fotografía horizontal de al menos 2400 px de ancho."
+    },
+    {
+      "type": "image_picker",
+      "id": "image_mobile",
+      "label": "Imagen para móvil",
+      "info": "Opcional. Fotografía vertical."
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "label": "Pie de la imagen",
+      "info": "Por ejemplo, «Imagen generada con IA» cuando corresponda."
+    },
+    {
+      "type": "range",
+      "id": "overlay",
+      "label": "Oscurecer la parte inferior",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "unit": "%",
+      "default": 70
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Composición",
+      "options": [
+        { "value": "full", "label": "Imagen a pantalla completa" },
+        { "value": "split", "label": "Dividida: texto e imagen vertical" }
+      ],
+      "default": "full",
+      "info": "«Dividida» conserva entera una foto vertical en escritorio."
+    },
+    {
+      "type": "select",
+      "id": "height",
+      "label": "Altura",
+      "options": [
+        { "value": "full", "label": "Pantalla completa" },
+        { "value": "large", "label": "Grande" },
+        { "value": "medium", "label": "Media" }
+      ],
+      "default": "full"
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Posición del texto",
+      "options": [
+        { "value": "bottom", "label": "Abajo a la izquierda" },
+        { "value": "center", "label": "Centro" }
+      ],
+      "default": "bottom"
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Antetítulo"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Título",
+      "default": "KYRO"
+    },
+    {
+      "type": "textarea",
+      "id": "text",
+      "label": "Texto"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Texto del botón",
+      "default": "Ver la tienda"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Enlace del botón"
+    },
+    {
+      "type": "text",
+      "id": "link_label",
+      "label": "Texto del enlace secundario",
+      "default": "Colecciones"
+    },
+    {
+      "type": "url",
+      "id": "link_url",
+      "label": "Enlace secundario"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_scroll_hint",
+      "label": "Mostrar la indicación «Desliza»",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Imagen principal"
+    }
+  ]
+}
+{% endschema %}

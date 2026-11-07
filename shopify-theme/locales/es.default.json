@@ -1,0 +1,147 @@
+{
+  "general": {
+    "accessibility": {
+      "skip_to_content": "Saltar al contenido",
+      "close": "Cerrar"
+    },
+    "pagination": {
+      "label": "Paginación",
+      "page": "Página {{ page }}",
+      "previous": "Página anterior",
+      "next": "Página siguiente"
+    },
+    "view_all": "Ver todo",
+    "scroll": "Desliza"
+  },
+  "header": {
+    "navigation": "Navegación principal",
+    "open_menu": "Abrir el menú",
+    "close_menu": "Cerrar el menú",
+    "menu": "Menú",
+    "search": "Buscar",
+    "cart": "Carrito",
+    "cart_count": {
+      "one": "{{ count }} artículo en el carrito",
+      "other": "{{ count }} artículos en el carrito"
+    }
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "Añadir al carrito",
+      "sold_out": "Agotado",
+      "unavailable": "No disponible",
+      "added": "Añadido al carrito.",
+      "view_cart": "Ver carrito",
+      "error": "No se pudo añadir. Inténtalo de nuevo.",
+      "quantity": "Cantidad",
+      "decrease": "Restar una unidad",
+      "increase": "Sumar una unidad",
+      "from_price": "Desde {{ price }}",
+      "regular_price": "Precio",
+      "compare_price": "Precio anterior",
+      "zoom": "Ampliar la imagen {{ index }}",
+      "close_zoom": "Cerrar la imagen ampliada",
+      "media_position": "Imagen {{ index }} de {{ count }}",
+      "gallery": "Galería del producto",
+      "taxes_included": "Impuestos incluidos.",
+      "shipping_at_checkout": "Envío calculado al finalizar la compra."
+    },
+    "recommendations": {
+      "title": "También te puede interesar"
+    }
+  },
+  "collections": {
+    "filters": {
+      "title": "Filtrar",
+      "clear": "Quitar filtros",
+      "apply": "Aplicar",
+      "from": "Desde",
+      "to": "Hasta",
+      "remove": "Quitar el filtro {{ value }}",
+      "sort_by": "Ordenar por",
+      "price_range": "Precio entre {{ min }} y {{ max }}"
+    },
+    "products_count": {
+      "one": "{{ count }} producto",
+      "other": "{{ count }} productos"
+    },
+    "empty": {
+      "title": "Todavía no hay productos aquí",
+      "text": "Vuelve pronto o explora el resto de la tienda.",
+      "filtered": "Ningún producto coincide con los filtros elegidos."
+    },
+    "list": {
+      "title": "Colecciones"
+    }
+  },
+  "search": {
+    "title": "Buscar",
+    "label": "Buscar en la tienda",
+    "placeholder": "¿Qué estás buscando?",
+    "submit": "Buscar",
+    "results_count": {
+      "one": "{{ count }} resultado para «{{ terms }}»",
+      "other": "{{ count }} resultados para «{{ terms }}»"
+    },
+    "no_results": "Sin resultados para «{{ terms }}».",
+    "no_results_text": "Revisa la ortografía o prueba con otra palabra.",
+    "products": "Productos",
+    "other_results": "Páginas y artículos"
+  },
+  "cart": {
+    "title": "Carrito",
+    "empty_title": "Tu carrito está vacío",
+    "continue": "Seguir comprando",
+    "subtotal": "Subtotal",
+    "taxes_shipping": "Impuestos, descuentos y envío se calculan al finalizar la compra.",
+    "checkout": "Finalizar compra",
+    "remove": "Quitar",
+    "remove_item": "Quitar {{ title }} del carrito",
+    "update": "Actualizar carrito",
+    "note": "Nota para el pedido",
+    "quantity_for": "Cantidad de {{ title }}",
+    "discount": "Descuento"
+  },
+  "contact": {
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "phone": "Teléfono (opcional)",
+    "message": "Mensaje",
+    "send": "Enviar mensaje",
+    "success": "Gracias. Tu mensaje se envió correctamente."
+  },
+  "footer": {
+    "email": "Correo electrónico",
+    "subscribe": "Suscribirme",
+    "subscribed": "Gracias por suscribirte.",
+    "policies": "Políticas",
+    "payment_methods": "Medios de pago aceptados",
+    "country": "País o región",
+    "update_country": "Actualizar país",
+    "social": "Redes sociales"
+  },
+  "not_found": {
+    "title": "Página no encontrada",
+    "text": "La página que buscas no existe o cambió de dirección.",
+    "back": "Volver a la tienda"
+  },
+  "password": {
+    "enter_password": "Acceso con contraseña",
+    "password": "Contraseña",
+    "enter": "Entrar",
+    "admin": "¿Eres el propietario de la tienda?",
+    "admin_link": "Inicia sesión"
+  },
+  "blog": {
+    "read_more": "Leer",
+    "back": "Volver al blog"
+  },
+  "gift_card": {
+    "title": "Tu tarjeta de regalo",
+    "code": "Código",
+    "expired": "Esta tarjeta de regalo caducó.",
+    "disabled": "Esta tarjeta de regalo está desactivada.",
+    "use": "Usar en la tienda",
+    "print": "Imprimir"
+  }
+}

@@ -1,0 +1,15 @@
+<div class="page-width error-page">
+  <p class="kicker">404</p>
+  <h1 class="error-page__code editorial">{{ 'not_found.title' | t }}</h1>
+  <p class="muted">{{ 'not_found.text' | t }}</p>
+  <a class="button" href="{{ routes.root_url }}">{{ 'not_found.back' | t }}</a>
+</div>
+
+{% schema %}
+{
+  "name": "Página no encontrada",
+  "tag": "div",
+  "class": "section-main-404",
+  "settings": []
+}
+{% endschema %}

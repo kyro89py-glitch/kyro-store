@@ -1,0 +1,53 @@
+{%- liquid
+  assign heading = section.settings.heading
+  if heading == blank
+    assign heading = 'collections.list.title' | t
+  endif
+-%}
+
+<div class="page-width">
+  <header class="page-header">
+    <h1 class="page-header__title editorial" data-reveal>{{ heading | escape }}</h1>
+  </header>
+
+  {%- paginate collections by 24 -%}
+    <div class="collection-tiles" style="--tiles: 3;">
+      {%- for item in collections -%}
+        <a href="{{ item.url }}" class="collection-tile" data-reveal style="--reveal-index: {{ forloop.index0 | modulo: 3 }};">
+          {%- if item.featured_image -%}
+            {{
+              item.featured_image
+              | image_url: width: 1600
+              | image_tag: loading: 'lazy', sizes: '(min-width: 48em) 33vw, 100vw', widths: '540, 720, 960, 1200, 1600'
+            }}
+          {%- else -%}
+            {{ 'collection-1' | placeholder_svg_tag }}
+          {%- endif -%}
+          <div class="collection-tile__content">
+            <h2 class="collection-tile__title editorial">{{ item.title | escape }}</h2>
+            {% render 'icon', name: 'arrow' %}
+          </div>
+        </a>
+      {%- endfor -%}
+    </div>
+    {% render 'pagination', paginate: paginate %}
+  {%- endpaginate -%}
+</div>
+
+<div class="section"></div>
+
+{% schema %}
+{
+  "name": "Lista de colecciones",
+  "tag": "div",
+  "class": "section-list-collections",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Título",
+      "default": "Colecciones"
+    }
+  ]
+}
+{% endschema %}

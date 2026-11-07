@@ -1,0 +1,225 @@
+{%- liquid
+  assign social_links = ''
+  if settings.social_instagram != blank
+    assign social_links = social_links | append: 'Instagram|' | append: settings.social_instagram | append: '§'
+  endif
+  if settings.social_tiktok != blank
+    assign social_links = social_links | append: 'TikTok|' | append: settings.social_tiktok | append: '§'
+  endif
+  if settings.social_x != blank
+    assign social_links = social_links | append: 'X|' | append: settings.social_x | append: '§'
+  endif
+  if settings.social_youtube != blank
+    assign social_links = social_links | append: 'YouTube|' | append: settings.social_youtube | append: '§'
+  endif
+  if settings.social_facebook != blank
+    assign social_links = social_links | append: 'Facebook|' | append: settings.social_facebook | append: '§'
+  endif
+  assign social_items = social_links | split: '§'
+-%}
+
+<footer class="site-footer">
+  <div class="page-width">
+    <div class="site-footer__grid">
+      <div class="site-footer__brand">
+        <a href="{{ routes.root_url }}" class="site-footer__wordmark">{% render 'wordmark' %}</a>
+        {%- if section.settings.text != blank -%}
+          <div class="rte">{{ section.settings.text }}</div>
+        {%- endif -%}
+
+        {%- if section.settings.show_newsletter -%}
+          {%- form 'customer', id: 'FooterNewsletter', class: 'newsletter' -%}
+            <input type="hidden" name="contact[tags]" value="newsletter">
+            {%- if section.settings.newsletter_heading != blank -%}
+              <p class="site-footer__heading">{{ section.settings.newsletter_heading | escape }}</p>
+            {%- endif -%}
+            <div class="newsletter__row">
+              <label class="visually-hidden" for="FooterNewsletterEmail">{{ 'footer.email' | t }}</label>
+              <input
+                id="FooterNewsletterEmail"
+                class="field__input"
+                type="email"
+                name="contact[email]"
+                autocomplete="email"
+                placeholder="{{ 'footer.email' | t }}"
+                required
+              >
+              <button class="icon-button" type="submit">
+                {% render 'icon', name: 'arrow' %}
+                <span class="visually-hidden">{{ 'footer.subscribe' | t }}</span>
+              </button>
+            </div>
+            {%- if form.posted_successfully? -%}
+              <p class="form-message form-message--success" role="status">{{ 'footer.subscribed' | t }}</p>
+            {%- elsif form.errors -%}
+              <div class="form-message form-message--error" role="alert">{{ form.errors | default_errors }}</div>
+            {%- endif -%}
+          {%- endform -%}
+        {%- endif -%}
+
+        {%- if social_items.size > 0 -%}
+          <ul class="social" role="list" aria-label="{{ 'footer.social' | t }}">
+            {%- for item in social_items -%}
+              {%- assign parts = item | split: '|' -%}
+              <li><a href="{{ parts[1] }}" rel="noopener" target="_blank">{{ parts[0] }}</a></li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      </div>
+
+      {%- if section.settings.menu_1 != blank -%}
+        <nav aria-label="{{ section.settings.menu_1_heading | default: section.settings.menu_1.title | escape }}">
+          <p class="site-footer__heading">{{ section.settings.menu_1_heading | default: section.settings.menu_1.title | escape }}</p>
+          <ul class="site-footer__links" role="list">
+            {%- for link in section.settings.menu_1.links -%}
+              <li><a href="{{ link.url }}">{{ link.title | escape }}</a></li>
+            {%- endfor -%}
+          </ul>
+        </nav>
+      {%- endif -%}
+
+      {%- if section.settings.menu_2 != blank -%}
+        <nav aria-label="{{ section.settings.menu_2_heading | default: section.settings.menu_2.title | escape }}">
+          <p class="site-footer__heading">{{ section.settings.menu_2_heading | default: section.settings.menu_2.title | escape }}</p>
+          <ul class="site-footer__links" role="list">
+            {%- for link in section.settings.menu_2.links -%}
+              <li><a href="{{ link.url }}">{{ link.title | escape }}</a></li>
+            {%- endfor -%}
+          </ul>
+        </nav>
+      {%- endif -%}
+
+      {%- if section.settings.show_policies and shop.policies.size > 0 -%}
+        <nav aria-label="{{ 'footer.policies' | t }}">
+          <p class="site-footer__heading">{{ 'footer.policies' | t }}</p>
+          <ul class="site-footer__links" role="list">
+            {%- for policy in shop.policies -%}
+              <li><a href="{{ policy.url }}">{{ policy.title | escape }}</a></li>
+            {%- endfor -%}
+          </ul>
+        </nav>
+      {%- endif -%}
+    </div>
+
+    <div class="site-footer__bottom">
+      <p>&copy; {{ 'now' | date: '%Y' }} {{ shop.name | escape }}</p>
+
+      {%- if section.settings.show_country_selector and localization.available_countries.size > 1 -%}
+        <div data-auto-submit>
+        {%- form 'localization', class: 'localization' -%}
+          <label class="visually-hidden" for="FooterCountry">{{ 'footer.country' | t }}</label>
+          <select id="FooterCountry" class="field__input" name="country_code">
+            {%- for country in localization.available_countries -%}
+              <option value="{{ country.iso_code }}"{% if country.iso_code == localization.country.iso_code %} selected{% endif %}>
+                {{- country.name }} ({{ country.currency.iso_code }} {{ country.currency.symbol }})
+              </option>
+            {%- endfor -%}
+          </select>
+          <noscript><button class="text-link" type="submit">{{ 'footer.update_country' | t }}</button></noscript>
+        {%- endform -%}
+        </div>
+      {%- endif -%}
+
+      {%- if section.settings.show_payment_icons and shop.enabled_payment_types.size > 0 -%}
+        <ul class="payment-icons" role="list" aria-label="{{ 'footer.payment_methods' | t }}">
+          {%- for type in shop.enabled_payment_types -%}
+            <li>{{ type | payment_type_svg_tag: class: 'payment-icon' }}</li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </div>
+  </div>
+
+  {%- if section.settings.show_display_wordmark -%}
+    <span class="site-footer__display" aria-hidden="true" data-text="{{ shop.name | escape }}"></span>
+  {%- endif -%}
+</footer>
+
+{% schema %}
+{
+  "name": "Pie de página",
+  "class": "section-footer",
+  "enabled_on": {
+    "groups": ["footer"]
+  },
+  "settings": [
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Texto de la marca",
+      "default": "<p>Ropa, zapatillas y accesorios.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Boletín"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_newsletter",
+      "label": "Mostrar la suscripción al boletín",
+      "info": "Los suscriptores se guardan como clientes de Shopify con consentimiento de marketing.",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "newsletter_heading",
+      "label": "Título del boletín",
+      "default": "Boletín"
+    },
+    {
+      "type": "header",
+      "content": "Menús"
+    },
+    {
+      "type": "link_list",
+      "id": "menu_1",
+      "label": "Primer menú",
+      "default": "footer"
+    },
+    {
+      "type": "text",
+      "id": "menu_1_heading",
+      "label": "Título del primer menú"
+    },
+    {
+      "type": "link_list",
+      "id": "menu_2",
+      "label": "Segundo menú"
+    },
+    {
+      "type": "text",
+      "id": "menu_2_heading",
+      "label": "Título del segundo menú"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_policies",
+      "label": "Mostrar las políticas de la tienda",
+      "info": "Se listan las políticas creadas en Configuración > Políticas.",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Barra inferior"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_country_selector",
+      "label": "Mostrar el selector de país",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment_icons",
+      "label": "Mostrar los medios de pago activos",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_display_wordmark",
+      "label": "Mostrar la marca a gran tamaño al final",
+      "default": true
+    }
+  ]
+}
+{% endschema %}

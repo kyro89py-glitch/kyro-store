@@ -1,0 +1,52 @@
+{%- liquid
+  assign heading = section.settings.heading
+  if heading == blank
+    assign heading = 'products.recommendations.title' | t
+  endif
+  assign recommendations_url = routes.product_recommendations_url | append: '?section_id=' | append: section.id | append: '&product_id=' | append: product.id | append: '&limit=' | append: section.settings.limit | append: '&intent=related'
+-%}
+
+<section class="section">
+  <div class="page-width" data-recommendations data-url="{{ recommendations_url }}">
+    {%- if recommendations.performed? and recommendations.products_count > 0 -%}
+      <div class="section-header">
+        <h2 class="section-header__title editorial">{{ heading | escape }}</h2>
+      </div>
+      <div class="product-grid product-grid--4">
+        {%- for product in recommendations.products -%}
+          {% render 'product-card', product: product, index: forloop.index0 %}
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Recomendaciones",
+  "tag": "div",
+  "class": "section-recommendations",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Título",
+      "info": "Si se deja vacío: «También te puede interesar»."
+    },
+    {
+      "type": "range",
+      "id": "limit",
+      "label": "Número de productos",
+      "min": 2,
+      "max": 8,
+      "step": 1,
+      "default": 4
+    }
+  ],
+  "presets": [
+    {
+      "name": "Recomendaciones"
+    }
+  ]
+}
+{% endschema %}

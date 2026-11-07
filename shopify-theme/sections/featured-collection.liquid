@@ -1,0 +1,107 @@
+{%- liquid
+  assign featured = section.settings.collection
+  if featured == blank
+    assign featured = collections.all
+  endif
+  assign limit = section.settings.products_to_show
+  assign columns = section.settings.columns | plus: 0
+  assign has_products = false
+  if featured.products_count > 0
+    assign has_products = true
+    assign shown = featured.products_count | at_most: limit
+    if shown < columns
+      assign columns = shown | at_least: 2
+    endif
+  endif
+-%}
+
+{%- if has_products or request.design_mode -%}
+  <section class="section">
+    <div class="page-width">
+      <div class="section-header">
+        <div class="section-header__titles">
+          {%- if section.settings.kicker != blank -%}
+            <p class="kicker" data-reveal>{{ section.settings.kicker | escape }}</p>
+          {%- endif -%}
+          {%- if section.settings.heading != blank -%}
+            <h2 class="section-header__title editorial" data-reveal>{{ section.settings.heading }}</h2>
+          {%- endif -%}
+        </div>
+        {%- if section.settings.show_view_all and has_products -%}
+          <a class="text-link" href="{{ featured.url }}" data-reveal>{{ 'general.view_all' | t }}</a>
+        {%- endif -%}
+      </div>
+
+      <div class="product-grid product-grid--{{ columns }}">
+        {%- if has_products -%}
+          {%- for product in featured.products limit: limit -%}
+            {% render 'product-card', product: product, index: forloop.index0 %}
+          {%- endfor -%}
+        {%- else -%}
+          {%- for i in (1..columns) -%}
+            <div class="product-card placeholder-card">
+              <div class="product-card__media">{{ 'product-1' | placeholder_svg_tag }}</div>
+            </div>
+          {%- endfor -%}
+        {%- endif -%}
+      </div>
+    </div>
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Productos destacados",
+  "tag": "div",
+  "class": "section-featured-collection",
+  "settings": [
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Colección",
+      "info": "Si no eliges una, se muestran los productos de toda la tienda."
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Antetítulo"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Título",
+      "default": "Selección"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Número de productos",
+      "min": 2,
+      "max": 16,
+      "step": 1,
+      "default": 8
+    },
+    {
+      "type": "select",
+      "id": "columns",
+      "label": "Columnas en escritorio",
+      "options": [
+        { "value": "3", "label": "3" },
+        { "value": "4", "label": "4" }
+      ],
+      "default": "4"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_view_all",
+      "label": "Mostrar «Ver todo»",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Productos destacados"
+    }
+  ]
+}
+{% endschema %}

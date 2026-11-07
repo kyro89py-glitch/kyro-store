@@ -1,0 +1,59 @@
+{% doc %}
+  Product card for grids: 4:5 photo (second photo on hover), title and price.
+
+  @param {product} product - The product
+  @param {string} [sizes] - The sizes attribute for the image
+  @param {number} [index] - Position in the grid, for the reveal delay
+  @param {string} [heading_tag] - Heading level for the title (default h3)
+  @example
+  {% render 'product-card', product: product, sizes: '(min-width: 75em) 25vw, 50vw', index: forloop.index0 %}
+{% enddoc %}
+
+{%- liquid
+  assign image_sizes = sizes | default: '(min-width: 75em) 25vw, (min-width: 48em) 33vw, 50vw'
+  assign reveal_index = index | default: 0 | modulo: 4
+  assign title_tag = heading_tag | default: 'h3'
+  assign secondary = false
+  if settings.card_secondary_image and product.media.size > 1
+    assign secondary = product.media[1].preview_image
+  endif
+-%}
+
+<article class="product-card" data-reveal style="--reveal-index: {{ reveal_index }};">
+  <a href="{{ product.url }}" class="product-card__link">
+    <div class="product-card__media">
+      {%- if product.featured_image -%}
+        {{
+          product.featured_image
+          | image_url: width: 1400
+          | image_tag:
+            class: 'product-card__image',
+            loading: 'lazy',
+            sizes: image_sizes,
+            widths: '360, 540, 720, 960, 1200, 1400'
+        }}
+        {%- if secondary -%}
+          {{
+            secondary
+            | image_url: width: 1400
+            | image_tag:
+              class: 'product-card__image product-card__image--secondary',
+              loading: 'lazy',
+              alt: '',
+              sizes: image_sizes,
+              widths: '360, 540, 720, 960, 1200, 1400'
+          }}
+        {%- endif -%}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag }}
+      {%- endif -%}
+      {%- unless product.available -%}
+        <span class="badge">{{ 'products.product.sold_out' | t }}</span>
+      {%- endunless -%}
+    </div>
+    <div class="product-card__info">
+      <{{ title_tag }} class="product-card__title">{{ product.title | escape }}</{{ title_tag }}>
+      {% render 'price', product: product %}
+    </div>
+  </a>
+</article>

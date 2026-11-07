@@ -1,0 +1,147 @@
+{
+  "general": {
+    "accessibility": {
+      "skip_to_content": "Skip to content",
+      "close": "Close"
+    },
+    "pagination": {
+      "label": "Pagination",
+      "page": "Page {{ page }}",
+      "previous": "Previous page",
+      "next": "Next page"
+    },
+    "view_all": "View all",
+    "scroll": "Scroll"
+  },
+  "header": {
+    "navigation": "Main navigation",
+    "open_menu": "Open menu",
+    "close_menu": "Close menu",
+    "menu": "Menu",
+    "search": "Search",
+    "cart": "Cart",
+    "cart_count": {
+      "one": "{{ count }} item in cart",
+      "other": "{{ count }} items in cart"
+    }
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "Add to cart",
+      "sold_out": "Sold out",
+      "unavailable": "Unavailable",
+      "added": "Added to cart.",
+      "view_cart": "View cart",
+      "error": "Could not add the item. Please try again.",
+      "quantity": "Quantity",
+      "decrease": "Decrease quantity",
+      "increase": "Increase quantity",
+      "from_price": "From {{ price }}",
+      "regular_price": "Price",
+      "compare_price": "Previous price",
+      "zoom": "Zoom image {{ index }}",
+      "close_zoom": "Close zoomed image",
+      "media_position": "Image {{ index }} of {{ count }}",
+      "gallery": "Product gallery",
+      "taxes_included": "Taxes included.",
+      "shipping_at_checkout": "Shipping calculated at checkout."
+    },
+    "recommendations": {
+      "title": "You may also like"
+    }
+  },
+  "collections": {
+    "filters": {
+      "title": "Filter",
+      "clear": "Clear filters",
+      "apply": "Apply",
+      "from": "From",
+      "to": "To",
+      "remove": "Remove filter {{ value }}",
+      "sort_by": "Sort by",
+      "price_range": "Price between {{ min }} and {{ max }}"
+    },
+    "products_count": {
+      "one": "{{ count }} product",
+      "other": "{{ count }} products"
+    },
+    "empty": {
+      "title": "No products here yet",
+      "text": "Check back soon or explore the rest of the store.",
+      "filtered": "No products match the selected filters."
+    },
+    "list": {
+      "title": "Collections"
+    }
+  },
+  "search": {
+    "title": "Search",
+    "label": "Search the store",
+    "placeholder": "What are you looking for?",
+    "submit": "Search",
+    "results_count": {
+      "one": "{{ count }} result for “{{ terms }}”",
+      "other": "{{ count }} results for “{{ terms }}”"
+    },
+    "no_results": "No results for “{{ terms }}”.",
+    "no_results_text": "Check the spelling or try another word.",
+    "products": "Products",
+    "other_results": "Pages and articles"
+  },
+  "cart": {
+    "title": "Cart",
+    "empty_title": "Your cart is empty",
+    "continue": "Continue shopping",
+    "subtotal": "Subtotal",
+    "taxes_shipping": "Taxes, discounts and shipping are calculated at checkout.",
+    "checkout": "Check out",
+    "remove": "Remove",
+    "remove_item": "Remove {{ title }} from cart",
+    "update": "Update cart",
+    "note": "Order note",
+    "quantity_for": "Quantity of {{ title }}",
+    "discount": "Discount"
+  },
+  "contact": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone (optional)",
+    "message": "Message",
+    "send": "Send message",
+    "success": "Thank you. Your message was sent."
+  },
+  "footer": {
+    "email": "Email",
+    "subscribe": "Subscribe",
+    "subscribed": "Thanks for subscribing.",
+    "policies": "Policies",
+    "payment_methods": "Accepted payment methods",
+    "country": "Country or region",
+    "update_country": "Update country",
+    "social": "Social media"
+  },
+  "not_found": {
+    "title": "Page not found",
+    "text": "The page you are looking for does not exist or has moved.",
+    "back": "Back to the store"
+  },
+  "password": {
+    "enter_password": "Enter with password",
+    "password": "Password",
+    "enter": "Enter",
+    "admin": "Are you the store owner?",
+    "admin_link": "Log in"
+  },
+  "blog": {
+    "read_more": "Read",
+    "back": "Back to blog"
+  },
+  "gift_card": {
+    "title": "Your gift card",
+    "code": "Code",
+    "expired": "This gift card has expired.",
+    "disabled": "This gift card is disabled.",
+    "use": "Shop now",
+    "print": "Print"
+  }
+}

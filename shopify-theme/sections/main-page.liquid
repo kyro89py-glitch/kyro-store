@@ -1,0 +1,26 @@
+<div class="page-width page-main">
+  <header class="page-header">
+    {%- if section.settings.kicker != blank -%}
+      <p class="kicker" data-reveal>{{ section.settings.kicker | escape }}</p>
+    {%- endif -%}
+    <h1 class="page-header__title editorial" data-reveal>{{ page.title | escape }}</h1>
+  </header>
+  {%- if page.content != blank -%}
+    <div class="rte">{{ page.content }}</div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Página",
+  "tag": "div",
+  "class": "section-main-page",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Antetítulo"
+    }
+  ]
+}
+{% endschema %}

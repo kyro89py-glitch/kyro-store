@@ -1,0 +1,39 @@
+{% layout none %}
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>{{ 'gift_card.title' | t }} – {{ shop.name }}</title>
+    {% style %}
+      :root {
+        --color-obsidian: {{ settings.colors_background }};
+        --color-obsidian-deep: {{ settings.colors_background_deep }};
+        --color-surface: {{ settings.colors_background | color_lighten: 4 }};
+        --color-ivory: {{ settings.colors_text }};
+        --color-ivory-muted: {{ settings.colors_text | color_mix: settings.colors_background, 62 }};
+        --color-champagne: {{ settings.colors_accent }};
+        --color-line: {{ settings.colors_text | color_modify: 'alpha', 0.14 }};
+        --color-line-strong: {{ settings.colors_text | color_modify: 'alpha', 0.34 }};
+      }
+    {% endstyle %}
+    {{ 'kyro.css' | asset_url | stylesheet_tag }}
+    {{ content_for_header }}
+  </head>
+  <body>
+    <main class="page-width password-page">
+      <span class="wordmark">{{ shop.name | escape }}</span>
+      <h1 class="editorial" style="font-size: var(--text-3xl);">{{ 'gift_card.title' | t }}</h1>
+      <p class="price price--large"><span class="price__regular">{{ gift_card.balance | money }}</span></p>
+      {%- if gift_card.expired -%}
+        <p class="muted">{{ 'gift_card.expired' | t }}</p>
+      {%- elsif gift_card.enabled == false -%}
+        <p class="muted">{{ 'gift_card.disabled' | t }}</p>
+      {%- endif -%}
+      <p class="field__label">{{ 'gift_card.code' | t }}</p>
+      <p class="editorial" style="font-size: var(--text-xl);">{{ gift_card.code | format_code }}</p>
+      <a class="button" href="{{ shop.url }}">{{ 'gift_card.use' | t }}</a>
+    </main>
+  </body>
+</html>

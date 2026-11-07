@@ -1,0 +1,14 @@
+{
+  "current": "Default",
+  "presets": {
+    "Default": {
+      "logo_width": 96,
+      "colors_background": "#0e1012",
+      "colors_background_deep": "#08090a",
+      "colors_text": "#f1ece3",
+      "colors_accent": "#c8b38a",
+      "animations_enabled": true,
+      "card_secondary_image": true
+    }
+  }
+}

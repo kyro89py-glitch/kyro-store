@@ -1,0 +1,21 @@
+{
+  "type": "header",
+  "name": "Grupo de cabecera",
+  "sections": {
+    "announcement": {
+      "type": "announcement-bar",
+      "settings": {
+        "text": "",
+        "link": ""
+      }
+    },
+    "header": {
+      "type": "header",
+      "settings": {
+        "menu": "main-menu",
+        "overlay_on_home": true
+      }
+    }
+  },
+  "order": ["announcement", "header"]
+}

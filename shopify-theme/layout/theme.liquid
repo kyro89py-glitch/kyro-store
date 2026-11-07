@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}" class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="{{ settings.colors_background }}">
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    {%- if settings.favicon != blank -%}
+      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 64, height: 64 }}">
+    {%- endif -%}
+
+    {{ 'archivo-latin-variable.woff2' | asset_url | preload_tag: as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }}
+    {{ 'bodoni-moda-latin-variable.woff2' | asset_url | preload_tag: as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }}
+
+    <title>
+      {{- page_title -}}
+      {%- if current_tags %} – {{ current_tags | join: ', ' }}{% endif -%}
+      {%- if current_page != 1 %} – {{ 'general.pagination.page' | t: page: current_page }}{% endif -%}
+      {%- unless page_title contains shop.name %} – {{ shop.name }}{% endunless -%}
+    </title>
+
+    {%- if page_description -%}
+      <meta name="description" content="{{ page_description | escape }}">
+    {%- endif -%}
+
+    {% render 'meta-tags' %}
+
+    {% style %}
+      @font-face {
+        font-family: 'Archivo';
+        src: url('{{ 'archivo-latin-variable.woff2' | asset_url }}') format('woff2');
+        font-weight: 100 900;
+        font-stretch: 62% 125%;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Bodoni Moda';
+        src: url('{{ 'bodoni-moda-latin-variable.woff2' | asset_url }}') format('woff2');
+        font-weight: 400 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Bodoni Moda';
+        src: url('{{ 'bodoni-moda-latin-italic-variable.woff2' | asset_url }}') format('woff2');
+        font-weight: 400 900;
+        font-style: italic;
+        font-display: swap;
+      }
+      :root {
+        --color-obsidian: {{ settings.colors_background }};
+        --color-obsidian-deep: {{ settings.colors_background_deep }};
+        --color-surface: {{ settings.colors_background | color_lighten: 4 }};
+        --color-surface-raised: {{ settings.colors_background | color_lighten: 8 }};
+        --color-ivory: {{ settings.colors_text }};
+        --color-ivory-muted: {{ settings.colors_text | color_mix: settings.colors_background, 62 }};
+        --color-champagne: {{ settings.colors_accent }};
+        --color-line: {{ settings.colors_text | color_modify: 'alpha', 0.14 }};
+        --color-line-strong: {{ settings.colors_text | color_modify: 'alpha', 0.34 }};
+        --color-scrim: {{ settings.colors_background_deep | color_modify: 'alpha', 0.72 }};
+        --color-header-bg: {{ settings.colors_background | color_modify: 'alpha', 0.86 }};
+        --color-bar-bg: {{ settings.colors_background_deep | color_modify: 'alpha', 0.94 }};
+      }
+    {% endstyle %}
+
+    {{ 'kyro.css' | asset_url | stylesheet_tag }}
+
+    <script>
+      document.documentElement.classList.replace('no-js', 'js');
+      window.KYRO = {
+        moneyFormat: {{ shop.money_format | json }},
+        routes: {
+          root_url: {{ routes.root_url | json }},
+          cart_url: {{ routes.cart_url | json }},
+          cart_add_url: {{ routes.cart_add_url | json }},
+          cart_update_url: {{ routes.cart_update_url | json }}
+        },
+        strings: {
+          addToCart: {{ 'products.product.add_to_cart' | t | json }},
+          soldOut: {{ 'products.product.sold_out' | t | json }},
+          unavailable: {{ 'products.product.unavailable' | t | json }},
+          added: {{ 'products.product.added' | t | json }},
+          viewCart: {{ 'products.product.view_cart' | t | json }},
+          error: {{ 'products.product.error' | t | json }}
+        }
+      };
+    </script>
+    {%- if settings.animations_enabled -%}
+      <script>
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('motion');
+      </script>
+    {%- endif -%}
+    <script src="{{ 'kyro.js' | asset_url }}" defer></script>
+
+    {{ content_for_header }}
+  </head>
+
+  <body class="template-{{ template.name | handle }}">
+    <a class="skip-link" href="#MainContent">{{ 'general.accessibility.skip_to_content' | t }}</a>
+
+    {% sections 'header-group' %}
+
+    <main id="MainContent" class="main" role="main" tabindex="-1">
+      {{ content_for_layout }}
+    </main>
+
+    {% sections 'footer-group' %}
+
+    <div class="toast" data-toast role="status" aria-live="polite" hidden></div>
+  </body>
+</html>

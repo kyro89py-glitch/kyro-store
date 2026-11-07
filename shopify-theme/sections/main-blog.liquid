@@ -1,0 +1,33 @@
+<div class="page-width">
+  <header class="page-header">
+    <h1 class="page-header__title editorial">{{ blog.title | escape }}</h1>
+  </header>
+  {%- paginate blog.articles by 12 -%}
+    <div class="article-grid">
+      {%- for article in blog.articles -%}
+        <a class="article-card" href="{{ article.url }}" data-reveal style="--reveal-index: {{ forloop.index0 | modulo: 3 }};">
+          {%- if article.image -%}
+            <div class="article-card__media">
+              {{ article.image | image_url: width: 1200 | image_tag: loading: 'lazy', sizes: '(min-width: 48em) 33vw, 100vw', widths: '540, 720, 960, 1200' }}
+            </div>
+          {%- endif -%}
+          <p class="kicker">{{ article.published_at | time_tag: format: 'date' }}</p>
+          <h2 class="article-card__title">{{ article.title | escape }}</h2>
+          <span class="text-link">{{ 'blog.read_more' | t }}</span>
+        </a>
+      {%- endfor -%}
+    </div>
+    {% render 'pagination', paginate: paginate %}
+  {%- endpaginate -%}
+</div>
+
+<div class="section"></div>
+
+{% schema %}
+{
+  "name": "Blog",
+  "tag": "div",
+  "class": "section-main-blog",
+  "settings": []
+}
+{% endschema %}

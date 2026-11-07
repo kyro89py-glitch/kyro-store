@@ -1,0 +1,87 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero",
+      "settings": {
+        "height": "full",
+        "alignment": "bottom",
+        "overlay": 70,
+        "kicker": "Ropa, zapatillas y accesorios",
+        "heading": "KYRO",
+        "text": "",
+        "button_label": "Ver la tienda",
+        "button_link": "",
+        "link_label": "Colecciones",
+        "link_url": "",
+        "show_scroll_hint": true
+      }
+    },
+    "featured": {
+      "type": "featured-collection",
+      "settings": {
+        "kicker": "Tienda",
+        "heading": "Selección",
+        "products_to_show": 8,
+        "columns": "4",
+        "show_view_all": true
+      }
+    },
+    "editorial": {
+      "type": "image-with-text",
+      "settings": {
+        "layout": "default",
+        "kicker": "KYRO",
+        "heading": "",
+        "text": "",
+        "button_label": "",
+        "button_link": ""
+      },
+      "disabled": true
+    },
+    "collections": {
+      "type": "collection-list",
+      "blocks": {
+        "collection-1": {
+          "type": "collection",
+          "settings": {}
+        },
+        "collection-2": {
+          "type": "collection",
+          "settings": {}
+        },
+        "collection-3": {
+          "type": "collection",
+          "settings": {}
+        }
+      },
+      "block_order": [
+        "collection-1",
+        "collection-2",
+        "collection-3"
+      ],
+      "settings": {
+        "kicker": "",
+        "heading": "Colecciones"
+      }
+    },
+    "statement": {
+      "type": "rich-text",
+      "settings": {
+        "alignment": "center",
+        "tight": false,
+        "kicker": "",
+        "heading": "KYRO",
+        "text": "<p>Ropa, zapatillas y accesorios.</p>",
+        "button_label": "Ver la tienda",
+        "button_link": ""
+      }
+    }
+  },
+  "order": [
+    "hero",
+    "featured",
+    "editorial",
+    "collections",
+    "statement"
+  ]
+}

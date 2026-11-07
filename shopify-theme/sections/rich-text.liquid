@@ -1,0 +1,75 @@
+<section class="section{% if section.settings.tight %} section--tight{% endif %}">
+  <div class="page-width rich-text{% if section.settings.alignment == 'center' %} rich-text--center{% endif %}">
+    {%- if section.settings.kicker != blank -%}
+      <p class="kicker" data-reveal>{{ section.settings.kicker | escape }}</p>
+    {%- endif -%}
+    {%- if section.settings.heading != blank -%}
+      <h2 class="rich-text__heading editorial" data-reveal>{{ section.settings.heading }}</h2>
+    {%- endif -%}
+    {%- if section.settings.text != blank -%}
+      <div class="rte" data-reveal style="--reveal-index: 1;">{{ section.settings.text }}</div>
+    {%- endif -%}
+    {%- if section.settings.button_label != blank -%}
+      <a class="text-link" href="{{ section.settings.button_link | default: routes.all_products_collection_url }}" data-reveal style="--reveal-index: 2;">
+        {{- section.settings.button_label | escape -}}
+      </a>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Texto destacado",
+  "tag": "div",
+  "class": "section-rich-text",
+  "settings": [
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Alineación",
+      "options": [
+        { "value": "left", "label": "Izquierda" },
+        { "value": "center", "label": "Centro" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "checkbox",
+      "id": "tight",
+      "label": "Menos espacio vertical",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Antetítulo"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Título",
+      "default": "Título"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Texto"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Texto del enlace"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Enlace"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Texto destacado"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,23 @@
+{
+  "type": "footer",
+  "name": "Grupo de pie de página",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "settings": {
+        "text": "<p>Ropa, zapatillas y accesorios.</p>",
+        "show_newsletter": true,
+        "newsletter_heading": "Boletín",
+        "menu_1": "footer",
+        "menu_1_heading": "",
+        "menu_2": "",
+        "menu_2_heading": "",
+        "show_policies": true,
+        "show_country_selector": true,
+        "show_payment_icons": true,
+        "show_display_wordmark": true
+      }
+    }
+  },
+  "order": ["footer"]
+}

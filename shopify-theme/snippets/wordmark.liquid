@@ -1,0 +1,29 @@
+{% doc %}
+  Renders the brand: the official logo when one is uploaded in the theme settings,
+  otherwise the store name set as a typographic wordmark.
+
+  @param {boolean} [eager] - Load the logo eagerly (header)
+  @example
+  {% render 'wordmark', eager: true %}
+{% enddoc %}
+
+{%- if settings.logo != blank -%}
+  {%- liquid
+    assign logo_width = settings.logo_width
+    assign logo_width_2x = settings.logo_width | times: 2
+    if eager
+      assign logo_loading = 'eager'
+    else
+      assign logo_loading = 'lazy'
+    endif
+  -%}
+  <span class="wordmark" style="--logo-width: {{ logo_width }}px;">
+    {{
+      settings.logo
+      | image_url: width: logo_width_2x
+      | image_tag: class: 'wordmark__image', alt: shop.name, loading: logo_loading, widths: logo_width_2x
+    }}
+  </span>
+{%- else -%}
+  <span class="wordmark">{{ shop.name | escape }}</span>
+{%- endif -%}

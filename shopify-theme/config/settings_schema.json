@@ -1,0 +1,126 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "KYRO",
+    "theme_version": "1.0.0",
+    "theme_author": "KYRO",
+    "theme_documentation_url": "https://github.com/kyro89py-glitch/kyro-store",
+    "theme_support_url": "https://github.com/kyro89py-glitch/kyro-store"
+  },
+  {
+    "name": "Marca",
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "Mientras no se cargue un logotipo oficial, la cabecera muestra el nombre de la tienda como marca tipográfica."
+      },
+      {
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Logotipo"
+      },
+      {
+        "type": "range",
+        "id": "logo_width",
+        "label": "Ancho del logotipo",
+        "min": 60,
+        "max": 240,
+        "step": 4,
+        "unit": "px",
+        "default": 96
+      },
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "Favicon",
+        "info": "Imagen cuadrada de al menos 64 × 64 px."
+      }
+    ]
+  },
+  {
+    "name": "Colores",
+    "settings": [
+      {
+        "type": "color",
+        "id": "colors_background",
+        "label": "Fondo (obsidiana)",
+        "default": "#0e1012"
+      },
+      {
+        "type": "color",
+        "id": "colors_background_deep",
+        "label": "Fondo profundo (obsidiana profundo)",
+        "default": "#08090a"
+      },
+      {
+        "type": "color",
+        "id": "colors_text",
+        "label": "Texto (marfil)",
+        "default": "#f1ece3"
+      },
+      {
+        "type": "color",
+        "id": "colors_accent",
+        "label": "Acento (champán)",
+        "default": "#c8b38a"
+      }
+    ]
+  },
+  {
+    "name": "Movimiento",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "animations_enabled",
+        "label": "Animar la aparición de los contenidos al desplazarse",
+        "info": "Se desactiva sola si el visitante pidió reducir el movimiento.",
+        "default": true
+      }
+    ]
+  },
+  {
+    "name": "Tarjetas de producto",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "card_secondary_image",
+        "label": "Mostrar la segunda foto al pasar el cursor",
+        "default": true
+      }
+    ]
+  },
+  {
+    "name": "Redes sociales",
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "Solo se muestran las redes con un enlace."
+      },
+      {
+        "type": "url",
+        "id": "social_instagram",
+        "label": "Instagram"
+      },
+      {
+        "type": "url",
+        "id": "social_tiktok",
+        "label": "TikTok"
+      },
+      {
+        "type": "url",
+        "id": "social_x",
+        "label": "X"
+      },
+      {
+        "type": "url",
+        "id": "social_youtube",
+        "label": "YouTube"
+      },
+      {
+        "type": "url",
+        "id": "social_facebook",
+        "label": "Facebook"
+      }
+    ]
+  }
+]

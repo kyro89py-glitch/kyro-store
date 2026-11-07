@@ -1,0 +1,76 @@
+<div class="page-width">
+  <header class="page-header">
+    <h1 class="page-header__title editorial">{{ 'search.title' | t }}</h1>
+    <form action="{{ routes.search_url }}" method="get" role="search" class="search-form">
+      <label class="visually-hidden" for="SearchQuery">{{ 'search.label' | t }}</label>
+      <input
+        class="field__input"
+        type="search"
+        id="SearchQuery"
+        name="q"
+        value="{{ search.terms | escape }}"
+        placeholder="{{ 'search.placeholder' | t }}"
+        autocomplete="off"
+      >
+      <input type="hidden" name="options[prefix]" value="last">
+      <button type="submit" class="button">{{ 'search.submit' | t }}</button>
+    </form>
+  </header>
+
+  {%- if search.performed -%}
+    {%- paginate search.results by 24 -%}
+      {%- assign terms = search.terms | escape -%}
+      {%- if search.results_count > 0 -%}
+        <p class="kicker">{{ 'search.results_count' | t: count: search.results_count, terms: terms }}</p>
+
+        {%- assign result_products = search.results | where: 'object_type', 'product' -%}
+        {%- assign result_pages = search.results | where: 'object_type', 'page' -%}
+        {%- assign result_articles = search.results | where: 'object_type', 'article' -%}
+        {%- assign result_other = result_pages | concat: result_articles -%}
+
+        {%- if result_products.size > 0 -%}
+          <div class="search-results__group section--tight">
+            <h2 class="visually-hidden">{{ 'search.products' | t }}</h2>
+            <div class="product-grid product-grid--4">
+              {%- for product in result_products -%}
+                {% render 'product-card', product: product, index: forloop.index0 %}
+              {%- endfor -%}
+            </div>
+          </div>
+        {%- endif -%}
+
+        {%- if result_other.size > 0 -%}
+          <div class="search-results__group">
+            <h2 class="kicker">{{ 'search.other_results' | t }}</h2>
+            <div class="text-results">
+              {%- for item in result_other -%}
+                <a class="text-result" href="{{ item.url }}">
+                  <span class="text-result__title">{{ item.title | escape }}</span>
+                  <span class="muted">{{ item.content | strip_html | truncatewords: 24 }}</span>
+                </a>
+              {%- endfor -%}
+            </div>
+          </div>
+        {%- endif -%}
+
+        {% render 'pagination', paginate: paginate %}
+      {%- else -%}
+        <div class="empty-state">
+          <h2 class="empty-state__title editorial">{{ 'search.no_results' | t: terms: terms }}</h2>
+          <p class="muted">{{ 'search.no_results_text' | t }}</p>
+        </div>
+      {%- endif -%}
+    {%- endpaginate -%}
+  {%- endif -%}
+</div>
+
+<div class="section"></div>
+
+{% schema %}
+{
+  "name": "Resultados de búsqueda",
+  "tag": "div",
+  "class": "section-main-search",
+  "settings": []
+}
+{% endschema %}
