@@ -11,7 +11,8 @@ como **borradores**.
 | Tema personalizado (Liquid, plantillas JSON, secciones y bloques editables) | Terminado y validado en local |
 | Acceso a la tienda KYRO desde el conector | Confirmado el 09-11-2026: `50upy1-b4.myshopify.com` («Mi tienda», plan Basic) |
 | Copia de seguridad del tema actual | Hecha: «Horizon – copia de seguridad 2026-11-09», sin publicar. Horizon sigue publicado y sin cambios |
-| Tema instalado en Shopify | Subido a mano por KYRO el 09-11-2026 como «kyro-tema-shopify», sin publicar, pero es la **primera versión** (sin la portada de campaña). **Pendiente**: subir el zip actualizado y revisarlo con «Vista previa» |
+| Tema instalado en Shopify | «kyro-tema-shopify» (`gid://shopify/OnlineStoreTheme/189999710422`), sin publicar: subido a mano por KYRO y actualizado el 09-11-2026 desde el conector con `themeFilesUpsert`, archivo por archivo desde GitHub. Sus 61 archivos son idénticos a los del repositorio (MD5 comprobado). **Pendiente**: revisarlo con «Vista previa» dentro de Shopify |
+| Tema «kyro-tema-shopify-1» | Subido a mano con un zip anterior: Shopify rechazó la sección del look y la plantilla de inicio, así que está incompleto. **Se puede eliminar** desde el panel; el conector no puede borrar temas |
 | Productos borrador | Fichas preparadas (abajo); se crean cuando haya acceso |
 | Precios, tallas a la venta, inventario | **Pendiente de KYRO**: no se inventan |
 | Pagos, envíos, impuestos, políticas, dominio | **Pendiente**: se configuran en el panel de Shopify con los datos legales de KYRO |
@@ -51,7 +52,9 @@ secciones de imagen (por ejemplo, «Imagen generada con IA»).
 ### Verificación
 
 - Theme Check de Shopify (`@shopify/theme-check-node` 3.24.0): 0 errores y 0 avisos en los 51
-  archivos Liquid y JSON (09-11-2026, con la portada de campaña).
+  archivos Liquid y JSON (09-11-2026, con la portada de campaña). Theme Check **no** comprueba
+  que las etiquetas de las opciones de un `select` tengan como máximo 50 caracteres, y Shopify
+  rechaza la sección si no es así: se revisan aparte.
 - Vista previa local con el Liquid real del tema y datos de prueba (no es Shopify): 10 páginas
   sin desbordamiento horizontal a 390 y 1440 px.
 - Accesibilidad (axe-core, WCAG 2.1 AA y buenas prácticas): 0 infracciones en 9 páginas, móvil
