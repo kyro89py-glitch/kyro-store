@@ -4,7 +4,7 @@
       "type": "hero",
       "settings": {
         "campaign_image": true,
-        "caption": "Imagen generada con IA",
+        "caption": "",
         "layout": "campaign",
         "height": "full",
         "alignment": "bottom",
@@ -64,7 +64,7 @@
             "asset": "kyro-92-detalle-escudo.jpg",
             "alt": "Escudo del Manchester United estampado en la manga izquierda de la remera",
             "label": "Escudo",
-            "credit": "Fotografía real"
+            "credit": ""
           }
         },
         "photo-trefoil": {
@@ -73,7 +73,7 @@
             "asset": "kyro-92-detalle-trebol.jpg",
             "alt": "Trébol de adidas Originals en contorno rojo estampado en la manga derecha de la remera",
             "label": "Trébol",
-            "credit": "Fotografía real"
+            "credit": ""
           }
         },
         "photo-devil": {
@@ -82,7 +82,7 @@
             "asset": "kyro-92-detalle-diablo.jpg",
             "alt": "Diablo con tridente en semitono azul estampado en la espalda de la remera",
             "label": "Diablo",
-            "credit": "Fotografía real"
+            "credit": ""
           }
         }
       },
@@ -99,10 +99,80 @@
       "settings": {
         "asset": "kyro-92-frente-remera.jpg",
         "alt": "Modelo de frente con gafas de sol y la remera blanca «'92» de Manchester United, con el trébol de adidas en la manga derecha y el escudo en la izquierda. Imagen generada con IA.",
-        "caption": "Imagen generada con IA",
+        "caption": "",
         "kicker": "Look «'92»",
         "heading": "<em>'92</em>",
         "text": "<p>La remera «'92» de adidas Originals × Manchester United con el pantalón cargo de camuflaje gris.</p>",
+        "link_label": "",
+        "link_url": ""
+      }
+    },
+    "look-212": {
+      "type": "look",
+      "blocks": {
+        "spec-front": {
+          "type": "detail",
+          "settings": {
+            "label": "Frente",
+            "text": "«THE 212» en naranja con contorno azul."
+          }
+        },
+        "spec-back": {
+          "type": "detail",
+          "settings": {
+            "label": "Espalda",
+            "text": "Cinco estrellas, el trébol, «NEW YORK» y los gráficos «NYC», en naranja y azul."
+          }
+        },
+        "spec-sleeve": {
+          "type": "detail",
+          "settings": {
+            "label": "Manga izquierda",
+            "text": "Logotipo de adidas."
+          }
+        },
+        "spec-cargo": {
+          "type": "detail",
+          "settings": {
+            "label": "Pantalón",
+            "text": "Cargo de corte holgado en ripstop gris claro, con ramas oscuras y salpicaduras blancas."
+          }
+        },
+        "photo-front": {
+          "type": "photo",
+          "settings": {
+            "asset": "kyro-212-frente.jpg",
+            "alt": "Remera blanca «THE 212» de adidas Originals extendida, vista de frente, con el estampado naranja con contorno azul",
+            "label": "Frente",
+            "credit": ""
+          }
+        },
+        "photo-cargo": {
+          "type": "photo",
+          "settings": {
+            "asset": "kyro-cargo-frente.jpg",
+            "alt": "Pantalón cargo de camuflaje gris extendido, vista de frente, con bolsillos de solapa y botones de presión",
+            "label": "Pantalón",
+            "credit": ""
+          }
+        }
+      },
+      "block_order": [
+        "spec-front",
+        "spec-back",
+        "spec-sleeve",
+        "spec-cargo",
+        "photo-front",
+        "photo-cargo"
+      ],
+      "settings": {
+        "asset": "kyro-212-espalda.jpg",
+        "figure_position": "right",
+        "alt": "Remera blanca «THE 212» de adidas Originals extendida, vista de espalda, con cinco estrellas naranjas, el trébol, el rótulo «NEW YORK» y los gráficos «NYC»",
+        "caption": "",
+        "kicker": "Look «THE 212»",
+        "heading": "<em>The 212</em>",
+        "text": "<p>La remera «NY City Tee» de adidas Originals con el pantalón cargo de camuflaje gris.</p>",
         "link_label": "",
         "link_url": ""
       }
@@ -172,6 +242,7 @@
   "order": [
     "hero",
     "look",
+    "look-212",
     "featured",
     "editorial",
     "collections",

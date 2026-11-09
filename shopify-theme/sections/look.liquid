@@ -14,7 +14,7 @@
 -%}
 
 <section class="look section">
-  <div class="page-width look__grid{% unless has_figure %} look__grid--text{% endunless %}">
+  <div class="page-width look__grid{% unless has_figure %} look__grid--text{% endunless %}{% if section.settings.figure_position == 'right' %} look__grid--reverse{% endif %}">
     {%- if has_figure -%}
       <figure class="look__figure" data-reveal>
         {% render 'campaign-media',
@@ -125,9 +125,21 @@
       "label": "Foto incluida en el tema",
       "options": [
         { "value": "none", "label": "Ninguna" },
-        { "value": "kyro-92-frente-remera.jpg", "label": "Look «'92» de frente, solo remera (IA)" }
+        { "value": "kyro-92-frente-remera.jpg", "label": "Look «'92» de frente, solo remera (IA)" },
+        { "value": "kyro-212-espalda.jpg", "label": "«THE 212»: espalda (foto real)" },
+        { "value": "kyro-212-frente.jpg", "label": "«THE 212»: frente (foto real)" }
       ],
       "default": "none"
+    },
+    {
+      "type": "select",
+      "id": "figure_position",
+      "label": "Posición de la foto en escritorio",
+      "options": [
+        { "value": "left", "label": "Izquierda" },
+        { "value": "right", "label": "Derecha" }
+      ],
+      "default": "left"
     },
     {
       "type": "text",
@@ -206,7 +218,10 @@
             { "value": "none", "label": "Ninguna" },
             { "value": "kyro-92-detalle-escudo.jpg", "label": "«'92»: escudo de la manga izquierda (foto real)" },
             { "value": "kyro-92-detalle-trebol.jpg", "label": "«'92»: trébol de la manga derecha (foto real)" },
-            { "value": "kyro-92-detalle-diablo.jpg", "label": "«'92»: diablo de la espalda (foto real)" }
+            { "value": "kyro-92-detalle-diablo.jpg", "label": "«'92»: diablo de la espalda (foto real)" },
+            { "value": "kyro-212-frente.jpg", "label": "«THE 212»: frente (foto real)" },
+            { "value": "kyro-212-espalda.jpg", "label": "«THE 212»: espalda (foto real)" },
+            { "value": "kyro-cargo-frente.jpg", "label": "Cargo: frente (foto real)" }
           ],
           "default": "none"
         },

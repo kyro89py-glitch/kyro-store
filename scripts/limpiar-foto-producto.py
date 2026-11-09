@@ -6,8 +6,10 @@
   globales tomadas del blanco de la propia prenda (la remera real es blanca). El estampado
   recibe las mismas ganancias, así que conserva sus colores relativos.
 - Fondo de estudio neutro con sombra suave; lienzo 4:5.
-Uso: python3 scripts/limpiar-foto-producto.py entrada.jpg salida.jpg [x y [white|grey]]
+Uso: python3 scripts/limpiar-foto-producto.py entrada.jpg salida.jpg [x y [white|grey [claro|oscuro]]]
   x y: un punto de la prenda (por defecto, el centro). grey: prenda gris sobre fondo azul.
+  oscuro: fondo de estudio oscuro (tema de KYRO) en lugar del gris claro de ficha.
+  Octavo argumento opcional: margen alrededor de la prenda (por defecto 0.08).
 Requiere: numpy, pillow y opencv-python-headless.
 """
 import sys
@@ -28,6 +30,7 @@ def fill_holes(m):
 
 
 MODE = 'white'
+FONDO = 'claro'
 
 
 def segment(img, seed):
@@ -121,8 +124,13 @@ def compose(img, alpha, out_size=(1200, 1500), margin=0.08):
     # fondo de estudio: gris cálido claro con caída suave hacia los bordes
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     d = np.sqrt(((xx - W / 2) / (W * 0.75)) ** 2 + ((yy - H * 0.45) / (H * 0.75)) ** 2)
-    base = np.array([236, 234, 230], np.float32)
-    bg = base[None, None, :] * (1 - 0.06 * np.clip(d, 0, 1.4) ** 2)[..., None]
+    if FONDO == 'oscuro':
+        # fondo de estudio oscuro, del tono de la campaña de KYRO
+        base = np.array([30, 29, 30], np.float32)
+        bg = base[None, None, :] * (1 - 0.45 * np.clip(d, 0, 1.4) ** 1.5)[..., None]
+    else:
+        base = np.array([236, 234, 230], np.float32)
+        bg = base[None, None, :] * (1 - 0.06 * np.clip(d, 0, 1.4) ** 2)[..., None]
     ox, oy = (W - nw) // 2, (H - nh) // 2
     if bottom_cut:
         # la prenda sale del encuadre por abajo en la foto real: se ancla al borde inferior
@@ -133,7 +141,7 @@ def compose(img, alpha, out_size=(1200, 1500), margin=0.08):
     sh[oy:oy + nh, ox:ox + nw] = a
     shifted = np.zeros_like(sh)
     shifted[14:] = sh[:-14]
-    sh = cv2.GaussianBlur(shifted, (0, 0), 18) * 0.22
+    sh = cv2.GaussianBlur(shifted, (0, 0), 18) * (0.5 if FONDO == 'oscuro' else 0.22)
     bg = bg * (1 - sh[..., None])
     full_a = np.zeros((H, W), np.float32)
     full_a[oy:oy + nh, ox:ox + nw] = a
@@ -161,12 +169,15 @@ if __name__ == '__main__':
     src, dst = sys.argv[1], sys.argv[2]
     if len(sys.argv) > 5:
         MODE = sys.argv[5]
+    if len(sys.argv) > 6:
+        FONDO = sys.argv[6]
+    MARGEN = float(sys.argv[7]) if len(sys.argv) > 7 else 0.08
     img = np.asarray(Image.open(src).convert('RGB')).astype(np.float32)
     seed = (int(sys.argv[3]), int(sys.argv[4])) if len(sys.argv) > 4 else (img.shape[1] // 2, img.shape[0] // 2)
     alpha = segment(img, seed)
     fixed = correct(img, alpha)
     fixed, alpha = decontaminate(fixed, alpha)
-    out = compose(fixed, alpha)
+    out = compose(fixed, alpha, margin=MARGEN)
     Image.fromarray(np.clip(out + 0.5, 0, 255).astype(np.uint8)).save(dst, quality=90, subsampling=0, optimize=True, progressive=True)
     np.save(dst + '.alpha.npy', alpha)
     print('guardado', dst)

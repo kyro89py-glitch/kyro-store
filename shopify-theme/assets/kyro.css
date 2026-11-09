@@ -1187,6 +1187,14 @@ body:has(.site-header--overlay) .main > .shopify-section:first-child .hero {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .look__grid--reverse {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  }
+
+  .look__grid--reverse .look__figure {
+    order: 2;
+  }
+
   .look__detail figcaption {
     font-size: 0.66rem;
     font-stretch: 108%;

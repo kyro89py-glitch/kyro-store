@@ -16,7 +16,8 @@ como **borradores**.
 | Productos borrador | Fichas preparadas (abajo); se crean cuando haya acceso |
 | Precios, tallas a la venta, inventario | **Pendiente de KYRO**: no se inventan |
 | Pagos, envíos, impuestos, políticas, dominio | **Pendiente**: se configuran en el panel de Shopify con los datos legales de KYRO |
-| Fotografías con modelo fieles a las prendas | Portada del tema: look «'92», generado con IA y retocado, más tres fotos reales de detalle (ver «Portada de campaña»). Resto **pendiente**: ver docs/MODA-IA.md |
+| Fotografías con modelo fieles a las prendas | Portada del tema: look «'92», generado con IA y retocado, más tres fotos reales de detalle (ver «Portada de campaña»). Look «THE 212»: solo fotos reales por ahora. Imágenes nuevas con modelo: **pendiente** (ver «Generación con IA») |
+| Fotos de producto | Reales y mejoradas sin IA en `fotos-producto/` (remera «THE 212», remera «'92» y cargo), listas para las fichas |
 | Nombre de la tienda en Shopify | **Pendiente de KYRO**: sigue siendo «Mi tienda» (títulos de página, correos, checkout). El tema muestra «KYRO» con el ajuste «Nombre de la marca», sin tocar la tienda |
 
 ## El tema
@@ -77,7 +78,15 @@ productos, precios, tallas ni existencias.
 | Imagen principal, composición «Campaña» | `kyro-92-espalda.jpg` entera, de la cabeza a los pies, sobre un fondo de estudio del mismo tono que el de la foto (`#181718` → obsidiana profundo), con los bordes fundidos y un grano común a foto y página. En escritorio, texto a la izquierda y figura a la derecha; en móvil y tableta, figura arriba (limitada a la altura de la pantalla) y el texto sobre el final fundido. Crédito «Look «'92»» e «Imagen generada con IA» arriba a la derecha (en vertical en móvil, para no tapar la cabeza) |
 | Look de campaña (`sections/look.liquid`, nueva) | Recorte de frente `kyro-92-frente-remera.jpg` (de la cabeza a la cintura) con «Imagen generada con IA»; título «'92»; el texto aprobado del look; los detalles comprobados de las prendas (frente, espalda, manga izquierda, manga derecha, pantalón) y tres fotos **reales** de detalle con «Fotografía real» |
 | Productos destacados, Colecciones | Sin cambios: solo aparecen cuando haya productos y colecciones reales |
+| Look «THE 212» (segunda sección «Look de campaña», foto a la derecha) | Espalda de la remera como foto principal, frente de la remera y frente del cargo en pequeño: las tres son **fotos reales** sobre fondo de estudio oscuro (`kyro-212-*.jpg`, `kyro-cargo-frente.jpg`); texto aprobado del look y detalles comprobados |
 | Texto destacado | Desactivado: repetía el título y el texto de la imagen principal. Se reactiva en el personalizador |
+
+**Indicación de IA (decisión de KYRO, 09-11-2026):** la portada ya no muestra pies visibles
+«Imagen generada con IA» ni «Fotografía real». Se mantiene la información en lo que no se ve:
+el texto alternativo de las dos imágenes generadas lo dice y los archivos conservan sus
+metadatos de origen (XMP de Canva y EXIF «AI generated»). Según el país donde venda KYRO puede
+haber obligación de indicarlo de forma visible (por ejemplo, en la UE para imágenes sintéticas
+realistas de personas); conviene confirmarlo con su asesoría.
 
 Todas las fotos van incluidas en el tema (`assets/`) y se usan solo si no se elige otra imagen en
 el personalizador (fragmento `snippets/campaign-media.liquid`): así la portada se ve completa
@@ -128,6 +137,18 @@ animación activada (`kyro.js` y `kyro.css`):
 a 390, 768, 1024, 1440 y 1920 px; título y botones sin solaparse; axe-core sin infracciones
 (WCAG 2.1 AA y buenas prácticas), en móvil y escritorio; contraste de los textos sobre la foto
 medido píxel a píxel con el texto oculto, de 6,1:1 como mínimo.
+
+### Generación con IA
+
+- **Figma Weave** (Nano Banana Pro, 11 créditos por imagen a 2K): la cuenta ya usó sus
+  ejecuciones gratuitas; hace falta un plan de pago. No se generó nada.
+- **Canva** (`generate-image` con referencias): acepta las fotos reales como referencia
+  (importadas desde sus direcciones públicas de GitHub). Su conector exige usar como
+  instrucción el texto literal de KYRO; con él salió una hoja de vistas sobre fondo urbano, no
+  una foto de campaña. Además, la red de este entorno bloquea `www.canva.com`, así que solo
+  llega una miniatura de 200 px: la imagen completa hay que descargarla desde Canva.
+- Cualquier imagen nueva pasa por el protocolo de fidelidad de docs/MODA-IA.md antes de
+  publicarse: estampados, logotipos y bolsillos idénticos a las fotos reales.
 
 ### Vista previa local
 
