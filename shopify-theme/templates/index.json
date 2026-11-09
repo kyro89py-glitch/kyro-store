@@ -3,6 +3,9 @@
     "hero": {
       "type": "hero",
       "settings": {
+        "campaign_image": true,
+        "caption": "Imagen generada con IA",
+        "layout": "split",
         "height": "full",
         "alignment": "bottom",
         "overlay": 70,

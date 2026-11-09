@@ -758,7 +758,7 @@ body:has(.site-header--overlay) .main > .shopify-section:first-child .hero {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(180deg, rgb(8 9 10 / 0.45) 0%, transparent 28%, transparent 48%, rgb(8 9 10 / var(--hero-overlay, 0.7)) 100%);
+    linear-gradient(180deg, rgb(8 9 10 / 0.45) 0%, transparent 24%, rgb(8 9 10 / calc(var(--hero-overlay, 0.7) * 0.6)) 50%, rgb(8 9 10 / var(--hero-overlay, 0.7)) 100%);
 }
 
 .hero__content {

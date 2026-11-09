@@ -4,6 +4,10 @@
     assign heading_tag = 'h1'
   endif
   assign overlay = section.settings.overlay | divided_by: 100.0
+  assign has_image = false
+  if section.settings.image != blank or section.settings.campaign_image
+    assign has_image = true
+  endif
 -%}
 
 <section class="hero hero--{{ section.settings.height }} hero--{{ section.settings.alignment }} hero--{{ section.settings.layout }}" style="--hero-overlay: {{ overlay }};">
@@ -29,6 +33,16 @@
           | image_tag: loading: 'eager', fetchpriority: 'high', sizes: '100vw', widths: '750, 960, 1280, 1600, 2000, 2400, 3000'
         }}
       {%- endif -%}
+    {%- elsif section.settings.campaign_image -%}
+      <img
+        src="{{ 'kyro-92-espalda.jpg' | asset_url }}"
+        alt="{{ 'hero.campaign_alt' | t | escape }}"
+        width="1024"
+        height="1536"
+        loading="eager"
+        fetchpriority="high"
+        style="object-position: 50% 0%;"
+      >
     {%- elsif request.design_mode -%}
       {{ 'lifestyle-1' | placeholder_svg_tag }}
     {%- endif -%}
@@ -60,7 +74,7 @@
     {%- endif -%}
   </div>
 
-  {%- if section.settings.caption != blank and section.settings.image != blank -%}
+  {%- if section.settings.caption != blank and has_image -%}
     <p class="media-caption">{{ section.settings.caption | escape }}</p>
   {%- endif -%}
 
@@ -86,6 +100,13 @@
       "id": "image_mobile",
       "label": "Imagen para móvil",
       "info": "Opcional. Fotografía vertical."
+    },
+    {
+      "type": "checkbox",
+      "id": "campaign_image",
+      "label": "Usar la foto de campaña incluida en el tema",
+      "info": "Look «'92» de espaldas, generado con IA y retocado. Solo se muestra si no hay una imagen elegida arriba. Queda mejor con la composición «Dividida».",
+      "default": false
     },
     {
       "type": "text",

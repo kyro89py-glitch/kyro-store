@@ -9,12 +9,13 @@ como **borradores**.
 | Parte | Estado |
 | --- | --- |
 | Tema personalizado (Liquid, plantillas JSON, secciones y bloques editables) | Terminado y validado en local |
-| Acceso a la tienda KYRO desde el conector | **Pendiente**: el conector estaba vinculado a otra tienda (HuellaEnManta), que no se tocó. Se revocó ese acceso; falta volver a autorizar el conector eligiendo la tienda KYRO |
-| Tema instalado en Shopify | Pendiente del acceso (o de subir el zip a mano, ver abajo) |
+| Acceso a la tienda KYRO desde el conector | Confirmado el 09-11-2026: `50upy1-b4.myshopify.com` («Mi tienda», plan Basic) |
+| Copia de seguridad del tema actual | Hecha: «Horizon – copia de seguridad 2026-11-09», sin publicar. Horizon sigue publicado y sin cambios |
+| Tema instalado en Shopify | **Pendiente**: la subida del zip desde el entorno de Claude quedó bloqueada por la política de permisos. Se puede subir a mano (ver abajo) o autorizar esa subida |
 | Productos borrador | Fichas preparadas (abajo); se crean cuando haya acceso |
 | Precios, tallas a la venta, inventario | **Pendiente de KYRO**: no se inventan |
 | Pagos, envíos, impuestos, políticas, dominio | **Pendiente**: se configuran en el panel de Shopify con los datos legales de KYRO |
-| Fotografías con modelo fieles a las prendas | **Pendiente**: ver docs/MODA-IA.md |
+| Fotografías con modelo fieles a las prendas | Portada del tema: look «'92» de espaldas, generado con IA y retocado (ver «Imagen de portada»). Resto **pendiente**: ver docs/MODA-IA.md |
 
 ## El tema
 
@@ -60,6 +61,36 @@ secciones de imagen (por ejemplo, «Imagen generada con IA»).
 - **No verificado**: el funcionamiento dentro de Shopify (checkout, pagos exprés,
   recomendaciones, filtros, formularios). Se comprobará en la vista previa del tema cuando esté
   instalado.
+
+### Imagen de portada
+
+`assets/kyro-92-espalda.jpg` (1024 × 1536) se muestra en la Imagen principal cuando no hay
+otra imagen elegida (casilla «Usar la foto de campaña incluida en el tema», activada en
+`templates/index.json` con la composición «Dividida» y el pie «Imagen generada con IA»).
+Si se elige una imagen en el personalizador, esa tiene prioridad.
+
+- **Origen:** imagen generada con IA en Canva y entregada por KYRO el 09-11-2026. Los
+  metadatos de origen (XMP de Canva y EXIF «AI generated») se conservan en el archivo.
+- **Referencias reales:** `src/content/looks/92/` (remera de frente, de espaldas, escudo y
+  trébol; cargo de frente y de espaldas).
+- **Comparación con las prendas reales:** el pantalón coincide (ripstop gris claro con ramas
+  oscuras y salpicaduras blancas). El diablo de la espalda está dibujado con un trazo más
+  simple que el semitono real (**no idéntico**). Los emblemas de las mangas estaban
+  intercambiados y el trébol salía relleno.
+- **Retoque de las mangas (sin IA):** se borraron los dos emblemas generados y se colocaron
+  los reales, tomados de `detalle-escudo.jpg` y `detalle-trebol.jpg`: escudo en la manga
+  izquierda de quien la viste y trébol en contorno, en la tinta roja del pecho, en la
+  derecha. La tinta se aplica como reflectancia sobre la tela, así que conserva pliegues y
+  luz. Donde el emblema viejo formaba el borde de la manga, el borde se reconstruyó a partir
+  de la silueta de arriba y de abajo.
+- **Acabado fotográfico** (para que no parezca tanto una imagen de IA): balance de blancos
+  neutro (la imagen tenía dominante magenta; la remera real es blanca), menos microcontraste
+  artificial, negros y altas luces de película, viñeteado suave y grano fino. Los colores de
+  las prendas se mantienen: diferencia media de unos 2 niveles sobre 255.
+- **Descartado:** la versión de frente del mismo look muestra un pantalón con otro estampado
+  (camuflaje de manchas negras), así que no se usa a cuerpo entero. Solo es válido un
+  recorte de la remera (de la cabeza a la cintura), que queda fuera del repositorio hasta que
+  se cree el producto.
 
 ## Instalar el tema sin publicarlo
 
