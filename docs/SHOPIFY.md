@@ -11,7 +11,7 @@ como **borradores**.
 | Tema personalizado (Liquid, plantillas JSON, secciones y bloques editables) | Terminado y validado en local |
 | Acceso a la tienda KYRO desde el conector | Confirmado el 09-11-2026: `50upy1-b4.myshopify.com` («Mi tienda», plan Basic) |
 | Copia de seguridad del tema actual | Hecha: «Horizon – copia de seguridad 2026-11-09», sin publicar. Horizon sigue publicado y sin cambios |
-| Tema instalado en Shopify | **Pendiente**: la subida del zip desde el entorno de Claude quedó bloqueada por la política de permisos. Se puede subir a mano (ver abajo) o autorizar esa subida |
+| Tema instalado en Shopify | Subido a mano por KYRO el 09-11-2026 como «kyro-tema-shopify», sin publicar, pero es la **primera versión** (sin la portada de campaña). **Pendiente**: subir el zip actualizado y revisarlo con «Vista previa» |
 | Productos borrador | Fichas preparadas (abajo); se crean cuando haya acceso |
 | Precios, tallas a la venta, inventario | **Pendiente de KYRO**: no se inventan |
 | Pagos, envíos, impuestos, políticas, dominio | **Pendiente**: se configuran en el panel de Shopify con los datos legales de KYRO |
