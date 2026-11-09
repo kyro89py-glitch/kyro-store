@@ -23,17 +23,32 @@
   /* Aparición al desplazarse */
   const revealTargets = document.querySelectorAll('[data-reveal]');
   if (root.classList.contains('motion') && 'IntersectionObserver' in window) {
+    // Un elemento que empieza recortado del todo (clip-path, como el título de la portada)
+    // tiene área visible cero y el observador nunca lo daría por visible: se observa su
+    // contenedor y se revela el elemento cuando aparece el contenedor.
+    const revealWith = new Map();
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
-          entry.target.classList.add('is-visible');
+          const shown = [...(revealWith.get(entry.target) || [])];
+          if (entry.target.hasAttribute('data-reveal')) shown.push(entry.target);
+          shown.forEach((el) => el.classList.add('is-visible'));
           observer.unobserve(entry.target);
         });
       },
       { rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
     );
-    revealTargets.forEach((el) => observer.observe(el));
+    revealTargets.forEach((el) => {
+      if (getComputedStyle(el).clipPath === 'none' || !el.parentElement) {
+        observer.observe(el);
+        return;
+      }
+      const box = el.parentElement;
+      if (!revealWith.has(box)) revealWith.set(box, []);
+      revealWith.get(box).push(el);
+      observer.observe(box);
+    });
   } else {
     revealTargets.forEach((el) => el.classList.add('is-visible'));
   }

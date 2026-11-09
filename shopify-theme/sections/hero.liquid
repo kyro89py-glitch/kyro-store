@@ -8,11 +8,25 @@
   if section.settings.image != blank or section.settings.campaign_image
     assign has_image = true
   endif
+  assign campaign_asset = ''
+  if section.settings.campaign_image
+    assign campaign_asset = 'kyro-92-espalda.jpg'
+  endif
+  assign campaign_alt = 'hero.campaign_alt' | t
 -%}
 
 <section class="hero hero--{{ section.settings.height }} hero--{{ section.settings.alignment }} hero--{{ section.settings.layout }}" style="--hero-overlay: {{ overlay }};">
   <div class="hero__media">
-    {%- if section.settings.image != blank -%}
+    {%- if section.settings.layout == 'campaign' and has_image -%}
+      {% render 'campaign-media',
+        image: section.settings.image,
+        asset: campaign_asset,
+        alt: campaign_alt,
+        sizes: '(min-width: 60em) 44vw, 100vw',
+        eager: true,
+        class: 'hero__photo'
+      %}
+    {%- elsif section.settings.image != blank -%}
       {%- if section.settings.image_mobile != blank -%}
         <picture>
           <source
@@ -34,15 +48,7 @@
         }}
       {%- endif -%}
     {%- elsif section.settings.campaign_image -%}
-      <img
-        src="{{ 'kyro-92-espalda.jpg' | asset_url }}"
-        alt="{{ 'hero.campaign_alt' | t | escape }}"
-        width="1024"
-        height="1536"
-        loading="eager"
-        fetchpriority="high"
-        style="object-position: 50% 0%;"
-      >
+      {% render 'campaign-media', asset: campaign_asset, alt: campaign_alt, sizes: '100vw', eager: true, class: 'hero__photo' %}
     {%- elsif request.design_mode -%}
       {{ 'lifestyle-1' | placeholder_svg_tag }}
     {%- endif -%}
@@ -74,8 +80,21 @@
     {%- endif -%}
   </div>
 
-  {%- if section.settings.caption != blank and has_image -%}
-    <p class="media-caption">{{ section.settings.caption | escape }}</p>
+  {%- if has_image -%}
+    {%- if section.settings.layout == 'campaign' -%}
+      {%- if section.settings.credit != blank or section.settings.caption != blank -%}
+        <p class="hero__credit">
+          {%- if section.settings.credit != blank -%}
+            <span class="hero__credit-title">{{ section.settings.credit | escape }}</span>
+          {%- endif -%}
+          {%- if section.settings.caption != blank -%}
+            <span>{{ section.settings.caption | escape }}</span>
+          {%- endif -%}
+        </p>
+      {%- endif -%}
+    {%- elsif section.settings.caption != blank -%}
+      <p class="media-caption">{{ section.settings.caption | escape }}</p>
+    {%- endif -%}
   {%- endif -%}
 
   {%- if section.settings.show_scroll_hint -%}
@@ -105,7 +124,7 @@
       "type": "checkbox",
       "id": "campaign_image",
       "label": "Usar la foto de campaña incluida en el tema",
-      "info": "Look «'92» de espaldas, generado con IA y retocado. Solo se muestra si no hay una imagen elegida arriba. Queda mejor con la composición «Dividida».",
+      "info": "Look «'92» de espaldas, generado con IA y retocado. Solo se muestra si no hay una imagen elegida arriba. Pensada para la composición «Campaña».",
       "default": false
     },
     {
@@ -113,6 +132,12 @@
       "id": "caption",
       "label": "Pie de la imagen",
       "info": "Por ejemplo, «Imagen generada con IA» cuando corresponda."
+    },
+    {
+      "type": "text",
+      "id": "credit",
+      "label": "Crédito de la imagen",
+      "info": "Por ejemplo, el nombre del look. Solo en la composición «Campaña», junto al pie."
     },
     {
       "type": "range",
@@ -130,10 +155,11 @@
       "label": "Composición",
       "options": [
         { "value": "full", "label": "Imagen a pantalla completa" },
-        { "value": "split", "label": "Dividida: texto e imagen vertical" }
+        { "value": "split", "label": "Dividida: texto e imagen vertical" },
+        { "value": "campaign", "label": "Campaña: figura entera fundida con el fondo" }
       ],
       "default": "full",
-      "info": "«Dividida» conserva entera una foto vertical en escritorio."
+      "info": "«Dividida» conserva entera una foto vertical en escritorio. «Campaña» muestra entera una foto vertical sobre fondo oscuro de estudio, con los bordes fundidos con la página."
     },
     {
       "type": "select",

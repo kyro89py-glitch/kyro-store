@@ -1,6 +1,6 @@
 {% doc %}
   Renders the brand: the official logo when one is uploaded in the theme settings,
-  otherwise the store name set as a typographic wordmark.
+  otherwise the brand name (theme setting, or the store name) as a typographic wordmark.
 
   @param {boolean} [eager] - Load the logo eagerly (header)
   @example
@@ -25,5 +25,5 @@
     }}
   </span>
 {%- else -%}
-  <span class="wordmark">{{ shop.name | escape }}</span>
+  <span class="wordmark">{{ settings.brand_name | default: shop.name | escape }}</span>
 {%- endif -%}

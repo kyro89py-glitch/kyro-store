@@ -102,7 +102,7 @@
     </div>
 
     <div class="site-footer__bottom">
-      <p>&copy; {{ 'now' | date: '%Y' }} {{ shop.name | escape }}</p>
+      <p>&copy; {{ 'now' | date: '%Y' }} {{ settings.brand_name | default: shop.name | escape }}</p>
 
       {%- if section.settings.show_country_selector and localization.available_countries.size > 1 -%}
         <div data-auto-submit>
@@ -131,7 +131,7 @@
   </div>
 
   {%- if section.settings.show_display_wordmark -%}
-    <span class="site-footer__display" aria-hidden="true" data-text="{{ shop.name | escape }}"></span>
+    <span class="site-footer__display" aria-hidden="true" data-text="{{ settings.brand_name | default: shop.name | escape }}"></span>
   {%- endif -%}
 </footer>
 

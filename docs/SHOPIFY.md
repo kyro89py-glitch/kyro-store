@@ -15,7 +15,8 @@ como **borradores**.
 | Productos borrador | Fichas preparadas (abajo); se crean cuando haya acceso |
 | Precios, tallas a la venta, inventario | **Pendiente de KYRO**: no se inventan |
 | Pagos, envíos, impuestos, políticas, dominio | **Pendiente**: se configuran en el panel de Shopify con los datos legales de KYRO |
-| Fotografías con modelo fieles a las prendas | Portada del tema: look «'92» de espaldas, generado con IA y retocado (ver «Imagen de portada»). Resto **pendiente**: ver docs/MODA-IA.md |
+| Fotografías con modelo fieles a las prendas | Portada del tema: look «'92», generado con IA y retocado, más tres fotos reales de detalle (ver «Portada de campaña»). Resto **pendiente**: ver docs/MODA-IA.md |
+| Nombre de la tienda en Shopify | **Pendiente de KYRO**: sigue siendo «Mi tienda» (títulos de página, correos, checkout). El tema muestra «KYRO» con el ajuste «Nombre de la marca», sin tocar la tienda |
 
 ## El tema
 
@@ -23,7 +24,7 @@ Online Store 2.0: todo se edita desde **Tienda online > Temas > Personalizar**, 
 
 | Página | Plantilla | Secciones |
 | --- | --- | --- |
-| Inicio | `templates/index.json` | Imagen principal (pantalla completa o dividida), Productos destacados, Imagen con texto (desactivada hasta tener foto y texto reales), Colecciones, Texto destacado |
+| Inicio | `templates/index.json` | Imagen principal (pantalla completa, dividida o «Campaña»), Look de campaña, Productos destacados y Colecciones (solo aparecen con datos reales), Imagen con texto y Texto destacado (desactivadas) |
 | Catálogo y colecciones | `collection.json` | Cabecera de colección, filtros de Shopify (Search & Discovery), orden, rejilla y paginación |
 | Lista de colecciones | `list-collections.json` | Mosaico de colecciones |
 | Producto | `product.json` | Galería (deslizable en móvil, miniaturas en escritorio, zoom a pantalla completa), título, precio, variantes, cantidad, añadir al carrito (AJAX, funciona sin JavaScript), pago exprés, descripción, desplegables, envíos y devoluciones, barra de compra fija en móvil, recomendaciones |
@@ -41,15 +42,16 @@ activos y redes (solo las que tengan enlace).
 Identidad: obsidiana `#0e1012`, obsidiana profundo `#08090a`, marfil `#f1ece3`, champán
 `#c8b38a` (editables en Configuración del tema > Colores); Bodoni Moda y Archivo alojadas en el
 propio tema (SIL Open Font License 1.1). Sin logotipo oficial, la marca se muestra como palabra
-tipográfica con el nombre de la tienda; el logotipo se carga en Configuración del tema > Marca.
+tipográfica con el ajuste «Nombre de la marca» (por defecto «KYRO»; si se vacía, el nombre de la
+tienda); el logotipo se carga en Configuración del tema > Marca.
 
 Las imágenes generadas con IA se pueden identificar con el campo «Pie de la imagen» de las
 secciones de imagen (por ejemplo, «Imagen generada con IA»).
 
 ### Verificación
 
-- Theme Check de Shopify (`@shopify/theme-check-node` 3.24.0): 0 errores y 0 avisos en los 49
-  archivos Liquid y JSON.
+- Theme Check de Shopify (`@shopify/theme-check-node` 3.24.0): 0 errores y 0 avisos en los 51
+  archivos Liquid y JSON (09-11-2026, con la portada de campaña).
 - Vista previa local con el Liquid real del tema y datos de prueba (no es Shopify): 10 páginas
   sin desbordamiento horizontal a 390 y 1440 px.
 - Accesibilidad (axe-core, WCAG 2.1 AA y buenas prácticas): 0 infracciones en 9 páginas, móvil
@@ -57,40 +59,80 @@ secciones de imagen (por ejemplo, «Imagen generada con IA»).
 - JavaScript: selector de variantes (precio, precio anterior, disponibilidad, URL), talla
   agotada deshabilitada, añadir al carrito por AJAX (cantidad e id correctos, aviso y contador),
   menú móvil, zoom y barra de compra fija.
-- Peso: CSS 7,9 KB y JavaScript 4,1 KB comprimidos, sin librerías.
+- Peso: CSS 9,5 KB y JavaScript 4,4 KB comprimidos, sin librerías.
 - **No verificado**: el funcionamiento dentro de Shopify (checkout, pagos exprés,
   recomendaciones, filtros, formularios). Se comprobará en la vista previa del tema cuando esté
   instalado.
 
-### Imagen de portada
+### Portada de campaña (look «'92»)
 
-`assets/kyro-92-espalda.jpg` (1024 × 1536) se muestra en la Imagen principal cuando no hay
-otra imagen elegida (casilla «Usar la foto de campaña incluida en el tema», activada en
-`templates/index.json` con la composición «Dividida» y el pie «Imagen generada con IA»).
-Si se elige una imagen en el personalizador, esa tiene prioridad.
+La portada se construye sobre la foto de campaña del look «'92» que entregó KYRO, sin mostrar
+productos, precios, tallas ni existencias.
 
-- **Origen:** imagen generada con IA en Canva y entregada por KYRO el 09-11-2026. Los
-  metadatos de origen (XMP de Canva y EXIF «AI generated») se conservan en el archivo.
+| Bloque | Qué muestra |
+| --- | --- |
+| Imagen principal, composición «Campaña» | `kyro-92-espalda.jpg` entera, de la cabeza a los pies, sobre un fondo de estudio del mismo tono que el de la foto (`#181718` → obsidiana profundo), con los bordes fundidos y un grano común a foto y página. En escritorio, texto a la izquierda y figura a la derecha; en móvil y tableta, figura arriba (limitada a la altura de la pantalla) y el texto sobre el final fundido. Crédito «Look «'92»» e «Imagen generada con IA» arriba a la derecha (en vertical en móvil, para no tapar la cabeza) |
+| Look de campaña (`sections/look.liquid`, nueva) | Recorte de frente `kyro-92-frente-remera.jpg` (de la cabeza a la cintura) con «Imagen generada con IA»; título «'92»; el texto aprobado del look; los detalles comprobados de las prendas (frente, espalda, manga izquierda, manga derecha, pantalón) y tres fotos **reales** de detalle con «Fotografía real» |
+| Productos destacados, Colecciones | Sin cambios: solo aparecen cuando haya productos y colecciones reales |
+| Texto destacado | Desactivado: repetía el título y el texto de la imagen principal. Se reactiva en el personalizador |
+
+Todas las fotos van incluidas en el tema (`assets/`) y se usan solo si no se elige otra imagen en
+el personalizador (fragmento `snippets/campaign-media.liquid`): así la portada se ve completa
+nada más instalar el zip, sin subir archivos aparte.
+
+| Archivo | Tamaño | Procedencia |
+| --- | --- | --- |
+| `kyro-92-espalda.jpg` | 1024 × 1536 | Generada con IA (Canva), retocada sin IA (abajo) |
+| `kyro-92-frente-remera.jpg` | 668 × 668 | Generada con IA (Canva), retocada sin IA; recorte por encima de la cintura |
+| `kyro-92-detalle-escudo.jpg` | 640 × 800 | Foto real: recorte de `src/content/looks/92/detalle-escudo.jpg` |
+| `kyro-92-detalle-trebol.jpg` | 640 × 800 | Foto real: recorte de `src/content/looks/92/detalle-trebol.jpg` |
+| `kyro-92-detalle-diablo.jpg` | 640 × 800 | Foto real: recorte de `src/content/looks/92/remera-espalda.jpg` |
+
+**Las dos imágenes generadas:**
+
+- **Origen:** imágenes generadas con IA en Canva y entregadas por KYRO el 09-11-2026. Los
+  metadatos de origen (XMP de Canva y EXIF «AI generated») se conservan en los archivos, y la
+  página lo indica en el pie y en el texto alternativo.
 - **Referencias reales:** `src/content/looks/92/` (remera de frente, de espaldas, escudo y
   trébol; cargo de frente y de espaldas).
-- **Comparación con las prendas reales:** el pantalón coincide (ripstop gris claro con ramas
-  oscuras y salpicaduras blancas). El diablo de la espalda está dibujado con un trazo más
-  simple que el semitono real (**no idéntico**). Los emblemas de las mangas estaban
-  intercambiados y el trébol salía relleno.
-- **Retoque de las mangas (sin IA):** se borraron los dos emblemas generados y se colocaron
-  los reales, tomados de `detalle-escudo.jpg` y `detalle-trebol.jpg`: escudo en la manga
-  izquierda de quien la viste y trébol en contorno, en la tinta roja del pecho, en la
-  derecha. La tinta se aplica como reflectancia sobre la tela, así que conserva pliegues y
-  luz. Donde el emblema viejo formaba el borde de la manga, el borde se reconstruyó a partir
-  de la silueta de arriba y de abajo.
+- **Comparación con las prendas reales:** en la de espaldas el pantalón coincide (ripstop gris
+  claro con ramas oscuras y salpicaduras blancas). El diablo de la espalda está dibujado con un
+  trazo más simple que el semitono real (**no idéntico**). En las dos, los emblemas de las
+  mangas estaban intercambiados y el trébol salía relleno.
+- **Retoque de las mangas (sin IA):** se borraron los emblemas generados y se colocaron los
+  reales, tomados de `detalle-escudo.jpg` y `detalle-trebol.jpg`: escudo en la manga izquierda
+  de quien la viste y trébol en contorno, en la tinta roja del pecho, en la derecha. La tinta se
+  aplica como reflectancia sobre la tela, así que conserva pliegues y luz. Donde el emblema
+  viejo formaba el borde de la manga, el borde se reconstruyó a partir de la silueta de arriba
+  y de abajo.
 - **Acabado fotográfico** (para que no parezca tanto una imagen de IA): balance de blancos
-  neutro (la imagen tenía dominante magenta; la remera real es blanca), menos microcontraste
-  artificial, negros y altas luces de película, viñeteado suave y grano fino. Los colores de
-  las prendas se mantienen: diferencia media de unos 2 niveles sobre 255.
-- **Descartado:** la versión de frente del mismo look muestra un pantalón con otro estampado
-  (camuflaje de manchas negras), así que no se usa a cuerpo entero. Solo es válido un
-  recorte de la remera (de la cabeza a la cintura), que queda fuera del repositorio hasta que
-  se cree el producto.
+  neutro (las imágenes tenían dominante magenta; la remera real es blanca), menos
+  microcontraste artificial, negros y altas luces de película, viñeteado suave y grano fino.
+  Los colores de las prendas se mantienen: diferencia media de unos 2 niveles sobre 255.
+- **Pantalón incorrecto:** la versión de frente muestra un pantalón con otro estampado
+  (camuflaje de manchas negras). No se usa a cuerpo entero: solo el recorte de la cabeza a la
+  cintura, con el borde inferior fundido, en el que el pantalón no aparece.
+
+**Correcciones de errores previos del tema**, encontradas al revisar la portada con la
+animación activada (`kyro.js` y `kyro.css`):
+
+- El título de la imagen principal («KYRO») no llegaba a aparecer nunca: empieza recortado del
+  todo y el observador de desplazamiento no lo daba por visible. Ahora se observa su contenedor.
+- Al aparecer, el título se quedaba 2,5 rem más abajo y montaba sobre el botón. Ahora vuelve a
+  su sitio.
+
+**Comprobado en la vista previa local** (no es Shopify; ver abajo): sin desbordamiento horizontal
+a 390, 768, 1024, 1440 y 1920 px; título y botones sin solaparse; axe-core sin infracciones
+(WCAG 2.1 AA y buenas prácticas), en móvil y escritorio; contraste de los textos sobre la foto
+medido píxel a píxel con el texto oculto, de 6,1:1 como mínimo.
+
+### Vista previa local
+
+Como el tema aún no está instalado, la portada se revisó con una vista previa local: el Liquid
+real del tema interpretado con `liquidjs`, con filtros y objetos de Shopify simplificados y con
+los datos que tiene hoy la tienda (sin productos ni colecciones, sin políticas, menús
+`main-menu` y `footer` reales). Sirve para revisar composición, encuadre y textos; **no**
+sustituye a la vista previa del tema dentro de Shopify.
 
 ## Instalar el tema sin publicarlo
 
@@ -99,6 +141,9 @@ Si se elige una imagen en el personalizador, esa tiene prioridad.
 2. **A mano**: Tienda online > Temas > Agregar tema > Subir archivo zip, con
    `kyro-tema-shopify.zip`. El tema queda en la biblioteca, sin publicar; «Vista previa» lo
    muestra con los datos reales de la tienda.
+
+El zip se genera comprimiendo el contenido de `shopify-theme/` (las carpetas `assets`,
+`config`, `layout`, `locales`, `sections`, `snippets` y `templates` en la raíz del zip).
 
 ## Productos (borradores)
 

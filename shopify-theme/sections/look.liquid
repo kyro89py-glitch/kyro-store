@@ -1,0 +1,238 @@
+{%- liquid
+  assign has_figure = false
+  if section.settings.image != blank or section.settings.asset != 'none'
+    assign has_figure = true
+  endif
+  assign photo_count = 0
+  for block in section.blocks
+    if block.type == 'photo'
+      if block.settings.image != blank or block.settings.asset != 'none'
+        assign photo_count = photo_count | plus: 1
+      endif
+    endif
+  endfor
+-%}
+
+<section class="look section">
+  <div class="page-width look__grid{% unless has_figure %} look__grid--text{% endunless %}">
+    {%- if has_figure -%}
+      <figure class="look__figure" data-reveal>
+        {% render 'campaign-media',
+          image: section.settings.image,
+          asset: section.settings.asset,
+          alt: section.settings.alt,
+          sizes: '(min-width: 60em) 40vw, 100vw',
+          class: 'look__photo'
+        %}
+        {%- if section.settings.caption != blank -%}
+          <figcaption class="look__caption">{{ section.settings.caption | escape }}</figcaption>
+        {%- endif -%}
+      </figure>
+    {%- endif -%}
+
+    <div class="look__body">
+      {%- if section.settings.kicker != blank -%}
+        <p class="kicker" data-reveal>{{ section.settings.kicker | escape }}</p>
+      {%- endif -%}
+      {%- if section.settings.heading != blank -%}
+        <h2 class="look__heading editorial" data-reveal>{{ section.settings.heading }}</h2>
+      {%- endif -%}
+      {%- if section.settings.text != blank -%}
+        <div class="look__text rte" data-reveal style="--reveal-index: 1;">{{ section.settings.text }}</div>
+      {%- endif -%}
+
+      {%- assign spec_count = 0 -%}
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'detail' and block.settings.label != blank -%}
+          {%- assign spec_count = spec_count | plus: 1 -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if spec_count > 0 -%}
+        <dl class="look__specs" data-reveal style="--reveal-index: 2;">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'detail' and block.settings.label != blank -%}
+              <div class="look__spec" {{ block.shopify_attributes }}>
+                <dt>{{ block.settings.label | escape }}</dt>
+                <dd>{{ block.settings.text | escape }}</dd>
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+        </dl>
+      {%- endif -%}
+
+      {%- if photo_count > 0 -%}
+        <ul class="look__details" role="list" style="--details: {{ photo_count | at_most: 4 }};">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'photo' -%}
+              {%- if block.settings.image != blank or block.settings.asset != 'none' -%}
+                <li class="look__detail" data-reveal style="--reveal-index: {{ forloop.index0 | at_most: 4 }};" {{ block.shopify_attributes }}>
+                  <figure>
+                    <div class="look__detail-media">
+                      {% render 'campaign-media',
+                        image: block.settings.image,
+                        asset: block.settings.asset,
+                        alt: block.settings.alt,
+                        sizes: '(min-width: 60em) 14vw, 31vw',
+                        class: 'look__detail-photo'
+                      %}
+                    </div>
+                    {%- if block.settings.label != blank or block.settings.credit != blank -%}
+                      <figcaption>
+                        {%- if block.settings.label != blank -%}
+                          <span class="look__detail-label">{{ block.settings.label | escape }}</span>
+                        {%- endif -%}
+                        {%- if block.settings.credit != blank -%}
+                          <span class="look__detail-credit">{{ block.settings.credit | escape }}</span>
+                        {%- endif -%}
+                      </figcaption>
+                    {%- endif -%}
+                  </figure>
+                </li>
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      {%- if section.settings.link_label != blank -%}
+        <a class="text-link" href="{{ section.settings.link_url | default: routes.all_products_collection_url }}" data-reveal style="--reveal-index: 3;">
+          {{- section.settings.link_label | escape -}}
+        </a>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Look de campaña",
+  "tag": "div",
+  "class": "section-look",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Presenta un look con su foto principal, los detalles comprobados de cada prenda y fotos de detalle. No muestra precios, tallas ni existencias: eso sale de los productos de Shopify."
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Imagen",
+      "info": "Si no eliges ninguna, se usa la foto incluida en el tema."
+    },
+    {
+      "type": "select",
+      "id": "asset",
+      "label": "Foto incluida en el tema",
+      "options": [
+        { "value": "none", "label": "Ninguna" },
+        { "value": "kyro-92-frente-remera.jpg", "label": "Look «'92» de frente: solo la remera (generada con IA)" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "text",
+      "id": "alt",
+      "label": "Texto alternativo de la foto incluida",
+      "info": "Las imágenes elegidas arriba usan su propio texto alternativo de Shopify."
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "label": "Pie de la imagen",
+      "info": "Por ejemplo, «Imagen generada con IA» cuando corresponda."
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Antetítulo"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Título"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Texto"
+    },
+    {
+      "type": "text",
+      "id": "link_label",
+      "label": "Texto del enlace"
+    },
+    {
+      "type": "url",
+      "id": "link_url",
+      "label": "Enlace",
+      "info": "Si se deja vacío, lleva al catálogo."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "detail",
+      "name": "Detalle de la prenda",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Etiqueta",
+          "info": "Por ejemplo, «Manga izquierda»."
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Descripción",
+          "info": "Solo lo que se puede comprobar en la prenda real."
+        }
+      ]
+    },
+    {
+      "type": "photo",
+      "name": "Foto de detalle",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Imagen",
+          "info": "Si no eliges ninguna, se usa la foto incluida en el tema."
+        },
+        {
+          "type": "select",
+          "id": "asset",
+          "label": "Foto incluida en el tema",
+          "options": [
+            { "value": "none", "label": "Ninguna" },
+            { "value": "kyro-92-detalle-escudo.jpg", "label": "«'92»: escudo de la manga izquierda (foto real)" },
+            { "value": "kyro-92-detalle-trebol.jpg", "label": "«'92»: trébol de la manga derecha (foto real)" },
+            { "value": "kyro-92-detalle-diablo.jpg", "label": "«'92»: diablo de la espalda (foto real)" }
+          ],
+          "default": "none"
+        },
+        {
+          "type": "text",
+          "id": "alt",
+          "label": "Texto alternativo de la foto incluida"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Etiqueta"
+        },
+        {
+          "type": "text",
+          "id": "credit",
+          "label": "Procedencia",
+          "info": "Por ejemplo, «Fotografía real» o «Imagen generada con IA»."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Look de campaña"
+    }
+  ]
+}
+{% endschema %}

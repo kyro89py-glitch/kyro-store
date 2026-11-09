@@ -1,0 +1,57 @@
+{% doc %}
+  Renders a campaign photo: the image chosen in the theme editor or, when there is none,
+  a photo bundled with the theme in assets/. The image chosen in the editor always wins.
+
+  @param {object} [image] - Image chosen in the theme editor
+  @param {string} [asset] - File name of the bundled photo (fallback); 'none' means no photo
+  @param {string} [alt] - Alt text for the bundled photo
+  @param {string} sizes - Value of the sizes attribute
+  @param {boolean} [eager] - Load eagerly with high priority (first screen)
+  @param {string} [class] - Class for the img element
+  @example
+  {% render 'campaign-media', image: section.settings.image, asset: 'kyro-92-espalda.jpg', alt: 'Look', sizes: '100vw', eager: true %}
+{% enddoc %}
+
+{%- liquid
+  if eager
+    assign media_loading = 'eager'
+    assign media_priority = 'high'
+  else
+    assign media_loading = 'lazy'
+    assign media_priority = 'auto'
+  endif
+-%}
+
+{%- if image != blank -%}
+  {{
+    image
+    | image_url: width: 2400
+    | image_tag: loading: media_loading, fetchpriority: media_priority, sizes: sizes, widths: '480, 640, 800, 1066, 1400, 1800, 2400', class: class
+  }}
+{%- elsif asset != blank and asset != 'none' -%}
+  {%- liquid
+    case asset
+      when 'kyro-92-espalda.jpg'
+        assign media_width = 1024
+        assign media_height = 1536
+      when 'kyro-92-frente-remera.jpg'
+        assign media_width = 668
+        assign media_height = 668
+      else
+        assign media_width = 640
+        assign media_height = 800
+    endcase
+  -%}
+  <img
+    src="{{ asset | asset_url }}"
+    alt="{{ alt | escape }}"
+    width="{{ media_width }}"
+    height="{{ media_height }}"
+    loading="{{ media_loading }}"
+    fetchpriority="{{ media_priority }}"
+    decoding="async"
+    {% if class != blank %}
+      class="{{ class }}"
+    {% endif %}
+  >
+{%- endif -%}

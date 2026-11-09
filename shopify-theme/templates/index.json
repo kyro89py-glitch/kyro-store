@@ -5,7 +5,7 @@
       "settings": {
         "campaign_image": true,
         "caption": "Imagen generada con IA",
-        "layout": "split",
+        "layout": "campaign",
         "height": "full",
         "alignment": "bottom",
         "overlay": 70,
@@ -16,7 +16,95 @@
         "button_link": "",
         "link_label": "Colecciones",
         "link_url": "",
-        "show_scroll_hint": true
+        "show_scroll_hint": true,
+        "credit": "Look «'92»"
+      }
+    },
+    "look": {
+      "type": "look",
+      "blocks": {
+        "spec-front": {
+          "type": "detail",
+          "settings": {
+            "label": "Frente",
+            "text": "«'92» en semitono azul y «Manchester United» en rojo."
+          }
+        },
+        "spec-back": {
+          "type": "detail",
+          "settings": {
+            "label": "Espalda",
+            "text": "El diablo con tridente, en semitono azul."
+          }
+        },
+        "spec-left": {
+          "type": "detail",
+          "settings": {
+            "label": "Manga izquierda",
+            "text": "Escudo del Manchester United."
+          }
+        },
+        "spec-right": {
+          "type": "detail",
+          "settings": {
+            "label": "Manga derecha",
+            "text": "Trébol de adidas Originals en contorno rojo."
+          }
+        },
+        "spec-cargo": {
+          "type": "detail",
+          "settings": {
+            "label": "Pantalón",
+            "text": "Cargo de corte holgado en ripstop gris claro, con ramas oscuras y salpicaduras blancas."
+          }
+        },
+        "photo-crest": {
+          "type": "photo",
+          "settings": {
+            "asset": "kyro-92-detalle-escudo.jpg",
+            "alt": "Escudo del Manchester United estampado en la manga izquierda de la remera",
+            "label": "Escudo",
+            "credit": "Fotografía real"
+          }
+        },
+        "photo-trefoil": {
+          "type": "photo",
+          "settings": {
+            "asset": "kyro-92-detalle-trebol.jpg",
+            "alt": "Trébol de adidas Originals en contorno rojo estampado en la manga derecha de la remera",
+            "label": "Trébol",
+            "credit": "Fotografía real"
+          }
+        },
+        "photo-devil": {
+          "type": "photo",
+          "settings": {
+            "asset": "kyro-92-detalle-diablo.jpg",
+            "alt": "Diablo con tridente en semitono azul estampado en la espalda de la remera",
+            "label": "Diablo",
+            "credit": "Fotografía real"
+          }
+        }
+      },
+      "block_order": [
+        "spec-front",
+        "spec-back",
+        "spec-left",
+        "spec-right",
+        "spec-cargo",
+        "photo-crest",
+        "photo-trefoil",
+        "photo-devil"
+      ],
+      "settings": {
+        "asset": "kyro-92-frente-remera.jpg",
+        "alt": "Modelo de frente con gafas de sol y la remera blanca «'92» de Manchester United, con el trébol de adidas en la manga derecha y el escudo en la izquierda. Imagen generada con IA.",
+        "caption": "Imagen generada con IA",
+        "kicker": "Look «'92»",
+        "heading": "<em>'92</em>",
+        "text": "<p>La remera «'92» de adidas Originals × Manchester United con el pantalón cargo de camuflaje gris.</p>",
+        "link_label": "",
+        "link_url": ""
       }
     },
     "featured": {
@@ -77,11 +165,13 @@
         "text": "<p>Ropa, zapatillas y accesorios.</p>",
         "button_label": "Ver la tienda",
         "button_link": ""
-      }
+      },
+      "disabled": true
     }
   },
   "order": [
     "hero",
+    "look",
     "featured",
     "editorial",
     "collections",
